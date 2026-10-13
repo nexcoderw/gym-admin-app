@@ -11,11 +11,17 @@ export function serverEnvironment() {
 			if (!raw) throw new Error();
 			const url = new URL(raw);
 			const local = ['localhost', '127.0.0.1', '[::1]'].includes(url.hostname);
-			if (url.username || url.password || url.pathname !== '/' || url.search || url.hash) throw new Error();
-			if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local && !secure)) throw new Error();
+			if (url.username || url.password || url.pathname !== '/' || url.search || url.hash)
+				throw new Error();
+			if (url.protocol !== 'https:' && !(url.protocol === 'http:' && local && !secure))
+				throw new Error();
 			return url.origin;
 		} catch {
-			throw new BffError(503, 'CONFIGURATION_UNAVAILABLE', 'Administration is not configured. Contact your operator.');
+			throw new BffError(
+				503,
+				'CONFIGURATION_UNAVAILABLE',
+				'Administration is not configured. Contact your operator.',
+			);
 		}
 	}
 	return {
