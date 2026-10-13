@@ -15,20 +15,6 @@
 }
 .brand {
 	grid-column: 1 / -1;
-	font-family: var(--font-heading);
-	font-size: var(--text-subheading);
-	font-weight: 700;
-	letter-spacing: -0.02em;
-	color: var(--primary);
-}
-.brand span {
-	display: inline;
-	font-family: var(--font-body);
-	font-size: var(--text-caption);
-	font-weight: 400;
-	letter-spacing: 0;
-	color: var(--text-muted);
-	margin-inline-start: var(--space-3);
 }
 .account {
 	min-width: 0;
@@ -100,17 +86,11 @@
 	.brand {
 		padding-inline: var(--space-3);
 	}
-	.brand span {
-		display: block;
-		margin-inline-start: 0;
-		margin-block-start: var(--space-1);
-	}
 	.topbar {
 		display: flex;
 	}
 }
 @media (max-width: 40rem) {
-	.brand span,
 	.name {
 		display: none;
 	}
