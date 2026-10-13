@@ -1,11 +1,80 @@
-.page { min-height: 100svh; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); max-width: 1440px; margin-inline: auto; }
-.introduction { padding: clamp(var(--space-8), 6vw, 6rem); display: flex; flex-direction: column; justify-content: space-between; gap: var(--space-12); }
-.brand { font-weight: 700; font-size: 1.125rem; letter-spacing: -0.02em; }
-.brand span { color: var(--text-muted); font-weight: 400; margin-inline-start: var(--space-3); }
-.introduction h1 { font-size: clamp(2.5rem, 5vw, 4.5rem); line-height: 1.06; max-width: 12ch; }
-.description { margin-block-start: var(--space-6); max-width: 35ch; color: var(--text-secondary); font-size: 1.125rem; }
-.boundary { color: var(--text-muted); font-size: var(--text-small); max-width: 42ch; }
-.signIn { padding: var(--space-8); display: flex; flex-direction: column; justify-content: center; gap: var(--space-5); max-width: 560px; width: 100%; margin-inline: auto; }
-.footer { color: var(--text-muted); text-align: center; font-size: var(--text-small); }
-@media (max-width: 800px) { .page { grid-template-columns: minmax(0, 1fr); } .introduction { padding: var(--space-8); gap: var(--space-8); } .introduction h1 { font-size: clamp(2.25rem, 7vw, 3rem); max-width: none; } .boundary { display: none; } .signIn { padding-block-start: 0; } }
-@media (max-width: 400px) { .introduction, .signIn { padding-inline: var(--space-4); } }
+.page {
+	min-height: 100svh;
+	display: grid;
+	grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+	max-width: 1440px;
+	margin-inline: auto;
+}
+.introduction {
+	padding: clamp(var(--space-8), 6vw, 6rem);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	gap: var(--space-12);
+}
+.brand {
+	font-weight: 700;
+	font-size: 1.125rem;
+	letter-spacing: -0.02em;
+}
+.brand span {
+	color: var(--text-muted);
+	font-weight: 400;
+	margin-inline-start: var(--space-3);
+}
+.introduction h1 {
+	font-size: clamp(2.5rem, 5vw, 4.5rem);
+	line-height: 1.06;
+	max-width: 12ch;
+}
+.description {
+	margin-block-start: var(--space-6);
+	max-width: 35ch;
+	color: var(--text-secondary);
+	font-size: 1.125rem;
+}
+.boundary {
+	color: var(--text-muted);
+	font-size: var(--text-small);
+	max-width: 42ch;
+}
+.signIn {
+	padding: var(--space-8);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	gap: var(--space-5);
+	max-width: 560px;
+	width: 100%;
+	margin-inline: auto;
+}
+.footer {
+	color: var(--text-muted);
+	text-align: center;
+	font-size: var(--text-small);
+}
+@media (max-width: 800px) {
+	.page {
+		grid-template-columns: minmax(0, 1fr);
+	}
+	.introduction {
+		padding: var(--space-8);
+		gap: var(--space-8);
+	}
+	.introduction h1 {
+		font-size: clamp(2.25rem, 7vw, 3rem);
+		max-width: none;
+	}
+	.boundary {
+		display: none;
+	}
+	.signIn {
+		padding-block-start: 0;
+	}
+}
+@media (max-width: 400px) {
+	.introduction,
+	.signIn {
+		padding-inline: var(--space-4);
+	}
+}
