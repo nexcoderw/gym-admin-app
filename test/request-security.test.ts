@@ -8,14 +8,14 @@ import { serverEnvironment } from '@/lib/server/environment';
 
 beforeEach(() => {
 	vi.stubEnv('NODE_ENV', 'development');
-	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:3000');
-	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3001');
+	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:4000');
+	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3000');
 });
 afterEach(() => vi.unstubAllEnvs());
 
 describe('BFF request boundaries', () => {
-	function request(origin = 'http://localhost:3000', csrfHeader = csrf) {
-		return new Request('http://localhost:3000/api/auth/mfa/verify', {
+	function request(origin = 'http://localhost:4000', csrfHeader = csrf) {
+		return new Request('http://localhost:4000/api/auth/mfa/verify', {
 			method: 'POST',
 			headers: {
 				Origin: origin,
@@ -31,7 +31,7 @@ describe('BFF request boundaries', () => {
 			csrf,
 		});
 	});
-	it.each(['https://attacker.example', 'null', 'http://localhost:3000.attacker.example'])(
+	it.each(['https://attacker.example', 'null', 'http://localhost:4000.attacker.example'])(
 		'rejects %s Origin',
 		(origin) => {
 			expect(() => mutationContext(request(origin), false)).toThrow();
@@ -40,16 +40,16 @@ describe('BFF request boundaries', () => {
 	it('rejects a missing Origin and mismatched or missing CSRF', () => {
 		expect(() =>
 			mutationContext(
-				new Request('http://localhost:3000/api/auth/login', { method: 'POST' }),
+				new Request('http://localhost:4000/api/auth/login', { method: 'POST' }),
 				false,
 			),
 		).toThrow();
 		expect(() => mutationContext(request(undefined, token), true)).toThrow();
 		expect(() =>
 			mutationContext(
-				new Request('http://localhost:3000/api/auth/logout', {
+				new Request('http://localhost:4000/api/auth/logout', {
 					method: 'POST',
-					headers: { Origin: 'http://localhost:3000' },
+					headers: { Origin: 'http://localhost:4000' },
 				}),
 				true,
 			),
@@ -64,12 +64,12 @@ describe('BFF request boundaries', () => {
 		vi.stubEnv('GYM_API_BASE_URL', 'https://name:password@api.example.invalid');
 		expect(serverEnvironment).toThrow();
 		vi.stubEnv('NODE_ENV', 'production');
-		vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3001');
+		vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3000');
 		expect(serverEnvironment).toThrow();
 	});
 	it('normalizes valid JSON and rejects extra authorization fields', async () => {
 		const input = (body: object) =>
-			new Request('http://localhost:3000/api/auth/login', {
+			new Request('http://localhost:4000/api/auth/login', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify(body),
@@ -104,7 +104,7 @@ describe('BFF request boundaries', () => {
 			body,
 			duplex: 'half',
 		};
-		const request = new Request('http://localhost:3000/api/auth/login', init);
+		const request = new Request('http://localhost:4000/api/auth/login', init);
 		await expect(requestBody(request, loginRequestSchema)).rejects.toMatchObject({ status: 413 });
 	});
 });
