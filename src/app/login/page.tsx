@@ -9,31 +9,17 @@ export const metadata: Metadata = { title: 'Sign in' };
 export default function LoginPage() {
 	return (
 		<main id="main" tabIndex={-1} className={styles.page}>
-			<section className={styles.introduction} aria-labelledby="welcome-title">
+			<header className={styles.brandHeader}>
 				<p className={styles.brand}>
-					NEXCODE <span>Platform</span>
+					NEXCODE <span>Gym platform</span>
 				</p>
-				<div>
-					<h1 id="welcome-title">
-						One platform.
-						<br />A clear perspective.
-					</h1>
-					<p className={styles.description}>
-						A private workspace for the people responsible for NEXCODE Gym.
-					</p>
-				</div>
-				<p className={styles.boundary}>
-					Platform administration only.
-					<br />
-					Gym management and member services live in their own workspaces.
-				</p>
-			</section>
+			</header>
 			<section className={styles.signIn} aria-label="Administrator sign-in">
-				<Card>
+				<Card className={styles.panel}>
 					<LoginForm />
 				</Card>
-				<p className={styles.footer}>Access is limited to authorized platform staff.</p>
 			</section>
+			<p className={styles.footer}>Private workspace. Authorized platform staff only.</p>
 		</main>
 	);
 }
