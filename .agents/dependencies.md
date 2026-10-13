@@ -1,17 +1,57 @@
-# Dependencies
+# Dependencies and lockfiles
+
+## Purpose
+
+Keep dependency changes deliberate, reproducible and compatible. Humans own installation and npm's
+generated lockfile; agents may propose reviewed changes, not fabricate resolved dependency data.
 
 ## Mandatory requirements
 
-Preserve reviewed Next/React versions. Humans install official Hugeicons, server-only, Zod and test tooling with --save-exact and generate the lockfile. Review peer support, Node engines, licenses and security before release. Keep npm lockfile paired with manifest changes.
+1. Preserve the reviewed Next/React combination unless an upgrade is explicitly in scope. Check
+   installed engines, peer requirements, license, maintenance and security implications for additions.
+2. Use existing packages before introducing alternatives. Official Hugeicons, server-only, Zod and
+   the established test tools already have defined purposes; avoid duplicate libraries for the same job.
+3. New direct dependencies must use reviewed exact versions. Do not add `latest`, wildcard or
+   speculative ranges. Existing scaffold ranges are not permission to broaden new dependencies.
+4. Humans execute installs with `--save-exact` and let npm produce `package-lock.json`.
+   Agents must not execute install/ci, edit lockfile integrity/resolved data or invent a lockfile.
+5. Review manifest and lockfile together after human execution. A manifest change with an unrelated,
+   absent or stale lockfile is incomplete for a reproducible handoff.
+6. Commit a changed manifest and its corresponding human-generated lockfile as consecutive separate
+   commits: manifest first. Do not confuse a legitimate npm lockfile with generated build output.
+7. Do not introduce Tailwind, a heavy UI framework, another icon set or a state/animation library
+   without an explicit scoped need and approval. Do not install packages just to inspect their docs.
 
-## Prohibited patterns
+## Do
 
-No agent installs, fabricated lockfiles, latest in committed manifests, Tailwind, UI frameworks, extra icon packages or speculative libraries.
+For an explicitly approved installation at the version currently declared in this project, the
+human command is:
 
-## Good example
+```bash
+npm install --save-exact zod@4.6.7
+```
 
-npm install --save-exact @hugeicons/react @hugeicons/core-free-icons server-only zod is a human command.
+This is an example, not an instruction to reinstall an already present package or upgrade it.
+For another approved version, substitute that reviewed exact version. Inspect both package files
+afterward and verify compatibility with existing schemas.
 
-## Review criteria
+## Do not
 
-Check resolved versions, React compatibility, transitive scope, dependency purpose and legitimate lockfile generation.
+```json
+{
+	"dependencies": {
+		"zod": "latest",
+		"unreviewed-ui-framework": "*"
+	}
+}
+```
+
+Do not hand-edit a lockfile to make versions appear installed or claim `npm audit` passed when it
+was not run. A package being popular is not evidence it is safe or needed.
+
+## Prevented failures and review checklist
+
+- Exact reviewed additions and a matching lockfile prevent non-reproducible installations.
+- Purpose/compatibility review prevents unnecessary weight and peer-version breakage.
+- Confirm version provenance, engines, purpose, manifest/lockfile parity and human-only execution.
+- See [icons.md](icons.md), [performance.md](performance.md) and [git.md](git.md).
