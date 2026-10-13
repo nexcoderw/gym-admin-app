@@ -8,7 +8,7 @@ import { serverEnvironment } from '../environment';
 import { BffError, upstreamFailure } from './errors';
 import { boundedJson } from './json';
 
-// Exceeds the API session's bounded 5s acquisition + 10s execution budget, with transport headroom.
+// Leaves transport headroom beyond the API's 18s total session validation budget.
 const UPSTREAM_TIMEOUT_MS = 20_000;
 
 export interface ForwardContext {
@@ -51,7 +51,11 @@ export async function upstream<T>(
 		});
 		if (options && response.headers.getSetCookie().length > 0) {
 			await response.body?.cancel();
-			throw new BffError(502, 'INVALID_SERVICE_RESPONSE', 'Organization management returned an incompatible response.');
+			throw new BffError(
+				502,
+				'INVALID_SERVICE_RESPONSE',
+				'Organization management returned an incompatible response.',
+			);
 		}
 		if (!response.ok) {
 			if (options) {
@@ -59,8 +63,21 @@ export async function upstream<T>(
 				if (response.status === 503 || response.status === 409) {
 					try {
 						const error: unknown = await boundedJson(response.body, 8192);
-						if (typeof error === 'object' && error !== null && 'code' in error && typeof error.code === 'string' && ['ORGANIZATION_AUDIT_UNAVAILABLE', 'ORGANIZATION_SLUG_CONFLICT', 'ORGANIZATION_TRANSITION_CONFLICT'].includes(error.code)) code = error.code;
-					} catch { /* Only an allowlisted code is useful; never expose malformed provider errors. */ }
+						if (
+							typeof error === 'object' &&
+							error !== null &&
+							'code' in error &&
+							typeof error.code === 'string' &&
+							[
+								'ORGANIZATION_AUDIT_UNAVAILABLE',
+								'ORGANIZATION_SLUG_CONFLICT',
+								'ORGANIZATION_TRANSITION_CONFLICT',
+							].includes(error.code)
+						)
+							code = error.code;
+					} catch {
+						/* Only an allowlisted code is useful; never expose malformed provider errors. */
+					}
 				} else await response.body?.cancel();
 				const safe = organizationFailure(response.status, code);
 				throw new BffError(safe.status, safe.code, safe.message);
@@ -105,8 +122,12 @@ export async function upstream<T>(
 	} catch (error) {
 		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT')
 			throw error;
-		throw new BffError(options ? 503 : 502, 'SERVICE_UNAVAILABLE', options
-			? 'The result could not be confirmed. Reload current records before retrying a change.'
-			: 'The service is unavailable. Try again.');
+		throw new BffError(
+			options ? 503 : 502,
+			'SERVICE_UNAVAILABLE',
+			options
+				? 'The result could not be confirmed. Reload current records before retrying a change.'
+				: 'The service is unavailable. Try again.',
+		);
 	}
 }
