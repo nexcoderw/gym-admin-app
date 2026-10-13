@@ -2,7 +2,14 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight01Icon, LockPasswordIcon, Mail01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
+import {
+	LockPasswordIcon,
+	Mail01Icon,
+	ShieldKeyIcon,
+	ViewIcon,
+	ViewOffSlashIcon,
+} from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
@@ -17,12 +24,14 @@ export function LoginForm() {
 	const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState('');
+	const [passwordVisible, setPasswordVisible] = useState(false);
 
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (pending) return;
 		const form = event.currentTarget;
 		const data = new FormData(form);
+		setPasswordVisible(false);
 		setPending(true);
 		setError('');
 		try {
@@ -87,19 +96,37 @@ export function LoginForm() {
 				label="Password"
 				icon={LockPasswordIcon}
 				placeholder="Enter your password"
-				type="password"
+				type={passwordVisible ? 'text' : 'password'}
 				autoComplete="current-password"
 				minLength={12}
 				maxLength={1024}
 				required
 				disabled={pending}
+				trailingAction={
+					<button
+						type="button"
+						className={styles.revealButton}
+						aria-label={passwordVisible ? 'Hide password' : 'Show password'}
+						aria-controls="password"
+						aria-pressed={passwordVisible}
+						disabled={pending}
+						onClick={() => setPasswordVisible((visible) => !visible)}
+					>
+						<HugeiconsIcon
+							icon={passwordVisible ? ViewOffSlashIcon : ViewIcon}
+							size={18}
+							color="currentColor"
+							aria-hidden="true"
+						/>
+					</button>
+				}
 			/>
 			{error ? (
 				<p role="alert" className="error-message">
 					{error}
 				</p>
 			) : null}
-			<Button type="submit" icon={ArrowRight01Icon} width="full" pending={pending}>
+			<Button type="submit" icon={ShieldKeyIcon} width="full" pending={pending}>
 				Continue to verification
 			</Button>
 			<p className={styles.note}>
