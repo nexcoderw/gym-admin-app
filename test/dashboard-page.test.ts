@@ -17,8 +17,8 @@ const fetchMock = vi.fn<typeof fetch>();
 
 beforeEach(() => {
 	vi.stubEnv('NODE_ENV', 'development');
-	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:3000');
-	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3001');
+	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:4000');
+	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3000');
 	fetchMock.mockReset();
 	vi.stubGlobal('fetch', fetchMock);
 	vi.mocked(redirect).mockClear();
