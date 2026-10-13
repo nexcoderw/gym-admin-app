@@ -13,6 +13,7 @@ import GlobalError from '@/app/global-error';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { summary } from './fixtures';
 import { BrandLogo } from '@/components/shared/brand-logo';
+import { OrganizationProblem } from '@/components/organizations/organization-problem';
 
 vi.mock('@/app/fonts', () => ({
 	headingFont: { variable: 'heading-font' },
@@ -73,8 +74,27 @@ describe('workspace recovery and empty states', () => {
 		expect(retry).toHaveBeenCalledOnce();
 		expect(reset).not.toHaveBeenCalled();
 		expect(screen.queryByText(/never-render/)).toBeNull();
-		expect(screen.queryByRole('main')).toBeNull();
+		expect(screen.getByRole('main').id).toBe('main');
 	});
+
+	it.each([401, 403, 404, 429, 500, 503])(
+		'groups organization recovery actions inside its standalone %s canvas',
+		(status) => {
+			const view = render(<OrganizationProblem status={status} message="Safe recovery guidance." />);
+			const main = screen.getByRole('main');
+			expect(view.container.children).toHaveLength(1);
+			expect(main.querySelector('[data-layout="page"]')).not.toBeNull();
+			const back = screen.getByRole('link', { name: 'Back to gyms' });
+			expect(back.getAttribute('href')).toBe('/organizations');
+			const actionGroup = back.parentElement;
+			expect(actionGroup?.children).toHaveLength(2);
+			if (status === 403) {
+				expect(actionGroup).toBe(screen.getByRole('button', { name: 'Check access' }).parentElement);
+			}
+			expect(screen.queryByRole('complementary')).toBeNull();
+			expect(screen.queryByText('Restart organization list')).toBeNull();
+		},
+	);
 
 	it('keeps the shared loading indicator and label while retry is pending', async () => {
 		let releaseRetry: (() => void) | undefined;
