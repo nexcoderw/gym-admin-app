@@ -11,6 +11,8 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # NEXCODE Gym Admin instructions
 
 Every coding agent MUST read `.agents/README.md` and all relevant topic rules before editing.
+Read `.agents/prettier.md` before every authored code or configuration change. Match the committed
+Prettier configuration and the formatted shared Button; do not invent manual alignment conventions.
 Follow `.agents/git.md` and `.agents/agent-workflow.md` on every task. Humans execute scaffolding,
 installation, formatting, linting, type-checking, tests, builds, servers, Git writes and deployment.
 This project owns the superadmin frontend and explicit BFF adapters only. NestJS remains the source
