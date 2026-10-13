@@ -7,6 +7,7 @@ import { routes } from '@/constants/routes';
 import { Button } from './button';
 import { ButtonLink } from './button-link';
 import { StatePanel } from './state-panel';
+import { RecoveryLayout } from './recovery-layout';
 import type { StateKind } from './state-content';
 
 /** Retry is operator-triggered only; errors never start an automatic credential/request loop. */
@@ -16,17 +17,22 @@ export function RecoveryState({
 	title,
 	description,
 	onRetry,
+	secondaryAction,
 }: {
 	readonly kind: Exclude<StateKind, 'loading'>;
 	readonly layout?: 'page' | 'section' | 'compact';
 	readonly title?: string;
 	readonly description?: string;
 	readonly onRetry?: () => void | Promise<void>;
+	readonly secondaryAction?: { readonly href: string; readonly label: string };
 }) {
 	const [transitionPending, startTransition] = useTransition();
 	const [reloading, setReloading] = useState(false);
 	const pending = transitionPending || reloading;
-	const canRetry = kind !== '401' && kind !== '404' && (onRetry !== undefined || layout !== 'page');
+	const canRetry =
+		kind !== '401' &&
+		kind !== '404' &&
+		(onRetry !== undefined || layout !== 'page' || secondaryAction !== undefined);
 	const panel = (
 		<StatePanel
 			kind={kind}
@@ -59,19 +65,19 @@ export function RecoveryState({
 			)}
 			{layout !== 'compact' ? (
 				<ButtonLink
-					href={kind === '401' ? routes.home : routes.login}
-					icon={kind === '401' ? DashboardSquare01Icon : Login01Icon}
+					href={secondaryAction?.href ?? (kind === '401' ? routes.home : routes.login)}
+					icon={
+						secondaryAction ? RefreshIcon : kind === '401' ? DashboardSquare01Icon : Login01Icon
+					}
 					variant="secondary"
 				>
-					{kind === '401' ? 'Workspace home' : 'Sign in'}
+					{secondaryAction?.label ?? (kind === '401' ? 'Workspace home' : 'Sign in')}
 				</ButtonLink>
 			) : null}
 		</StatePanel>
 	);
 	return layout === 'page' ? (
-		<main id="main" tabIndex={-1}>
-			{panel}
-		</main>
+		<RecoveryLayout>{panel}</RecoveryLayout>
 	) : (
 		panel
 	);
