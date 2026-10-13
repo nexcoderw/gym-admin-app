@@ -146,6 +146,17 @@ redirect only to /login. Permission denial produces an explicit access-required 
 platform.owner role name grants no bypass. Nest independently enforces its own live guards.
 Private API and dashboard responses are no-store; no fabricated zero statistics appear on failure.
 
+`/login` and `/401` check the live Nest session on the server before rendering. A valid session
+redirects to `/dashboard`; only a confirmed 401 allows anonymous authentication UI. Network failures,
+rate limits, or service outages surface as errors, not logout. Future authentication pages must use
+the same `requireAnonymousSession` guard. The session-read BFF expires both local platform cookies on
+401, preserving HttpOnly/Secure/SameSite attributes; it does not clear them on an upstream outage.
+While the dashboard is open, a lightweight lifecycle check runs at the known absolute expiry and on
+tab visibility/focus. It does not poll in the background, which would extend the backend idle window.
+Absolute expiry is scheduled; idle expiry and revocation are detected on focus or the next protected
+request. Browser timers can be delayed in suspended tabs. Nest remains authoritative for every
+protected operation, including when JavaScript is disabled or the network is unavailable.
+
 ## Recovery, empty states, and branding
 
 The shared state panel provides centered, responsive SVG illustrations for missing pages, sign-in,
