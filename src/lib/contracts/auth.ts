@@ -16,12 +16,24 @@ export const challengeSchema = z.object({
 	csrfToken: opaqueToken,
 	expiresAt: utcDate,
 	methods: z
-		.array(z.enum(['totp', 'recovery_code']))
+		.array(z.enum(['email_otp', 'totp', 'recovery_code']))
 		.min(1)
-		.max(2),
+		.max(3),
+});
+
+export const emailOtpRequestSchema = z.object({ challengeToken: opaqueToken }).strict();
+export const emailOtpSentSchema = z.object({
+	status: z.literal('sent'),
+	expiresAt: utcDate,
+	retryAfterSeconds: z.number().int().min(60).max(300),
 });
 
 export const verifyMfaRequestSchema = z.discriminatedUnion('method', [
+	z.object({
+		challengeToken: opaqueToken,
+		method: z.literal('email_otp'),
+		emailOtpCode: z.string().regex(/^\d{6}$/u),
+	}).strict(),
 	z
 		.object({
 			challengeToken: opaqueToken,
