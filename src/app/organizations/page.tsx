@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHeader } from '@/components/shared/page-header';
+import { AppShell } from '@/components/shared/app-shell';
 import { OrganizationList } from '@/components/organizations/organization-list';
 import { OrganizationProblem } from '@/components/organizations/organization-problem';
 import { organizationPermissions, organizationListQuerySchema } from '@/lib/contracts/organizations';
@@ -17,9 +18,9 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
 	});
 	if (!result.ok) return <OrganizationProblem status={result.status} message={result.message} />;
 	return (
-		<>
+		<AppShell permissions={result.permissions} displayName={result.displayName}>
 			<PageHeader title="Organizations" description="Manage the gym registry and platform lifecycle approvals." />
 			<OrganizationList {...result.value} canCreate={result.permissions.includes(organizationPermissions.create)} />
-		</>
+		</AppShell>
 	);
 }
