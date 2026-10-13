@@ -1,0 +1,155 @@
+.panel {
+	position: relative;
+	display: grid;
+	place-content: center;
+	justify-items: center;
+	min-inline-size: 0;
+	padding: var(--space-8) var(--space-4);
+	text-align: center;
+}
+.panel[data-layout='page'] {
+	min-block-size: 100svh;
+	padding-block: calc(var(--space-16) * 2);
+}
+.panel[data-layout='section'] {
+	min-block-size: min(36rem, 70svh);
+}
+.panel[data-layout='compact'] {
+	padding-block: var(--space-8);
+}
+.brand {
+	position: absolute;
+	inset-block-start: var(--space-8);
+	inset-inline: var(--space-4);
+}
+.illustration {
+	position: relative;
+	inline-size: 14rem;
+	max-inline-size: 100%;
+	block-size: 10rem;
+	margin-block-end: var(--space-6);
+	color: var(--primary);
+	animation: arrive 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.scene {
+	display: block;
+	inline-size: 100%;
+	block-size: 100%;
+	overflow: visible;
+}
+.frame {
+	fill: var(--surface-raised);
+	stroke: var(--border);
+	stroke-width: 1.5;
+}
+.rule {
+	fill: none;
+	stroke: var(--border);
+	stroke-width: 1.5;
+	stroke-linecap: round;
+}
+.accent {
+	fill: var(--accent);
+}
+.detail {
+	fill: var(--border);
+}
+.glyph {
+	position: absolute;
+	inset-block-start: 3rem;
+	inset-inline-start: calc(50% - 2.5rem);
+	display: grid;
+	place-items: center;
+	inline-size: 5rem;
+	block-size: 5rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+	box-shadow: var(--shadow-panel);
+}
+.code {
+	display: inline-flex;
+	margin-block-end: var(--space-3);
+	padding: var(--space-1) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	color: var(--text-secondary);
+	font-size: var(--text-caption);
+	font-variant-numeric: tabular-nums;
+}
+.title {
+	max-inline-size: 28ch;
+	font-size: clamp(1.25rem, 3vw, 1.5rem);
+}
+.description {
+	max-inline-size: 46ch;
+	margin-block-start: var(--space-3);
+	color: var(--text-secondary);
+	font-size: var(--text-body);
+	text-wrap: pretty;
+}
+.actions {
+	display: flex;
+	justify-content: center;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+	inline-size: 100%;
+	max-inline-size: 26rem;
+	margin-block-start: var(--space-6);
+}
+.hint {
+	max-inline-size: 48ch;
+	margin-block-start: var(--space-6);
+	color: var(--text-muted);
+	font-size: var(--text-small);
+}
+.status {
+	margin-block-start: var(--space-6);
+	color: var(--primary);
+	font-size: var(--text-small);
+}
+.panel[data-layout='compact'] .illustration {
+	inline-size: 11rem;
+	block-size: 8rem;
+	margin-block-end: var(--space-4);
+}
+.panel[data-layout='compact'] .glyph {
+	inset-block-start: 2rem;
+}
+@keyframes arrive {
+	from {
+		opacity: 0;
+		transform: translateY(0.75rem) scale(0.96);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
+}
+@media (max-width: 30rem) {
+	.actions {
+		flex-direction: column;
+		align-items: center;
+		max-inline-size: 20rem;
+	}
+	.actions > * {
+		inline-size: 100%;
+	}
+}
+@media (prefers-reduced-motion: reduce) {
+	.illustration {
+		animation: none;
+	}
+}
+@media (forced-colors: active) {
+	.frame,
+	.rule,
+	.glyph {
+		stroke: CanvasText;
+		border-color: CanvasText;
+	}
+	.accent,
+	.detail {
+		fill: CanvasText;
+	}
+}
