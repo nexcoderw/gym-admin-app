@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Keep styles local, predictable and consistent with the shared dark design system.
+Keep styles local, predictable and consistent with the shared light design system.
 
 ## Mandatory requirements
 
 1. Use colocated CSS Modules for component styles. Global CSS is limited to tokens, reset,
-   document-level defaults and genuinely shared semantic utilities.
+   document-level defaults (including native form controls) and shared semantic utilities.
 2. Use existing semantic variables for colors, spacing, radii, shadows, typography and motion.
    A new literal belongs in the token layer when it expresses a reusable design decision.
 3. Prefer logical properties such as `margin-block`, `padding-inline` and `inset-inline-start`.
@@ -19,6 +19,10 @@ Keep styles local, predictable and consistent with the shared dark design system
 6. Let content determine breakpoints and wrapping. Long labels and error messages must not overflow.
    Use static class composition instead of inline presentation objects for ordinary styles.
 7. Follow [prettier.md](prettier.md): tab indentation, readable declarations and LF.
+8. Native text inputs, selects and textareas share the low-specificity global control baseline.
+   Input modules own field layout, labels and hints; buttons own their pill/variant styles.
+   Keep native select keyboard behavior. The browser's options popup can vary by operating system;
+   do not claim an exact custom-popup match from CSS tokens alone.
 
 ## Do
 
