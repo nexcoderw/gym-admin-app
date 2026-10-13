@@ -1,0 +1,16 @@
+.panel {
+	max-width: 38rem;
+	min-width: 0;
+}
+.form {
+	display: grid;
+	gap: var(--space-5);
+}
+.form p {
+	margin: 0;
+	overflow-wrap: anywhere;
+}
+.note {
+	font-size: var(--text-small);
+	color: var(--text-secondary);
+}
