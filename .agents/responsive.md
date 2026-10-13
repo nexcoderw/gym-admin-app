@@ -18,6 +18,11 @@ Keep all admin actions and information usable across small screens, desktop, zoo
    heights that clip text. Reserve reasonable loading space to limit disruptive layout shifts.
 6. Review portrait/landscape and zoom as well as width. Browser emulation is useful but not proof of
    actual mobile device behavior. Humans run browser verification.
+7. Below 40rem, secondary descriptions and redundant shell metadata may be hidden to reduce noise.
+   Keep metric labels/counts, permission errors, form labels, MFA choices, navigation and logout
+   available. Never hide core actions or fabricate replacement data to make a layout fit.
+8. Follow the compact type tokens from globals.css. Keep form inputs at 16px, touch controls at
+   least 44px high, and natural text wrapping; do not shrink everything to fit a desktop layout.
 
 ## Do
 
