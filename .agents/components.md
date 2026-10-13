@@ -19,12 +19,20 @@ presentation and native behavior; they do not own authentication policy or backe
    `'use client'` only when browser APIs, hooks or event handlers require it.
 6. Review components around 200 lines for responsibility splits, not mechanical fragmentation.
    Preserve useful native behavior when extracting a wrapper.
+7. Every shared Button and text Input requires a named Hugeicons definition through its `icon` prop.
+   Primitives render that decorative icon; callers must not duplicate icons inside button children.
+   Labels remain visible and accessible. Radio/checkbox choices retain their native controls.
+8. Button `width` is `full` (100% of its container), `medium` (12rem, the default), or `small`
+   (8rem). All widths are capped at 100% and retain the same 48px minimum control height.
+9. Only the shared Button owns loading presentation. Set `pending`; it disables the button, sets
+   aria-busy and replaces the icon with the same 18px spinner in a fixed slot. Keep the action text
+   unchanged. Do not add caller-specific spinners, changing pending labels or different animations.
 
 ## Do
 
 ```tsx
 <>
-	<Button type="submit" pending={pending}>
+	<Button type="submit" icon={ArrowRight01Icon} width="full" pending={pending}>
 		Sign in
 	</Button>
 	<Card>
