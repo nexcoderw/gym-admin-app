@@ -1,8 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { HugeiconsIcon } from '@hugeicons/react';
-import { DashboardSquare01Icon } from '@hugeicons/core-free-icons';
+import { ArrowLeft01Icon, Key01Icon, ShieldKeyIcon } from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
@@ -66,9 +65,9 @@ export function MfaForm({
 			aria-busy={pending}
 		>
 			<div>
-				<h2 ref={heading} tabIndex={-1}>
+				<h1 ref={heading} tabIndex={-1}>
 					Verify it’s you
-				</h2>
+				</h1>
 				<p className={styles.help}>Complete this one-time check to open your platform.</p>
 			</div>
 			<fieldset disabled={pending} className={styles.methods}>
@@ -91,6 +90,8 @@ export function MfaForm({
 				id="verification-code"
 				name="code"
 				label={method === 'totp' ? 'Six-digit code' : 'Recovery code'}
+				icon={method === 'totp' ? ShieldKeyIcon : Key01Icon}
+				placeholder={method === 'totp' ? '000000' : 'Enter a recovery code'}
 				autoComplete={method === 'totp' ? 'one-time-code' : 'off'}
 				inputMode={method === 'totp' ? 'numeric' : 'text'}
 				pattern={method === 'totp' ? '[0-9]{6}' : undefined}
@@ -104,18 +105,16 @@ export function MfaForm({
 					{error}
 				</p>
 			) : null}
-			<Button type="submit" pending={pending}>
-				{pending ? null : (
-					<HugeiconsIcon
-						icon={DashboardSquare01Icon}
-						size={18}
-						color="currentColor"
-						aria-hidden="true"
-					/>
-				)}
-				{pending ? 'Verifying…' : 'Open platform'}
+			<Button type="submit" icon={ShieldKeyIcon} width="full" pending={pending}>
+				Open platform
 			</Button>
-			<Button variant="secondary" onClick={onRestart} disabled={pending}>
+			<Button
+				variant="secondary"
+				icon={ArrowLeft01Icon}
+				width="full"
+				onClick={onRestart}
+				disabled={pending}
+			>
 				Start sign-in again
 			</Button>
 		</form>
