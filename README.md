@@ -117,8 +117,11 @@ forwarding, reset-password or domain endpoints that do not exist.
 ## Cookie, CSRF and permission boundary
 
 The browser calls the admin BFF only. Adapters use a configured trusted Nest origin, no-store fetch,
-redirect rejection and a 10-second timeout. Only platform cookies, the configured approved Origin,
-JSON headers and the validated CSRF header are forwarded. Browser role/tenant/forwarding headers
+redirect rejection and a 20-second timeout. The deadline accommodates the API session's bounded
+5-second transaction acquisition and 10-second execution limits, with transport headroom. These are
+failure bounds, not latency targets; slow queries and pool contention still require investigation.
+Only platform cookies, the configured approved Origin, JSON headers and the validated CSRF header
+are forwarded. Browser role/tenant/forwarding headers
 are not trusted or relayed. JSON inputs have an 8KiB streaming limit; upstream JSON has a 64KiB limit.
 Errors expose stable safe codes/messages, never raw upstream messages, stack traces or hostnames.
 
