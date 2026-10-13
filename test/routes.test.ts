@@ -21,6 +21,27 @@ afterEach(() => {
 });
 
 describe('frontend-owned BFF routes', () => {
+	it.each([
+		{ email: 'not-an-email', password: 'fictional long password' },
+		{ email: 'operator@example.invalid', password: '12345678' },
+		{ email: 'operator@example.invalid', password: '12345678901' },
+		{
+			email: 'operator@example.invalid',
+			password: 'fictional long password',
+			role: 'platform.owner',
+		},
+	])('rejects invalid login DTOs before forwarding: %#', async (body) => {
+		const response = await login(
+			new Request('http://localhost:4000/api/auth/login', {
+				method: 'POST',
+				headers: { Origin: 'http://localhost:4000', 'Content-Type': 'application/json' },
+				body: JSON.stringify(body),
+			}),
+		);
+		expect(response.status).toBe(400);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
 	it('does not clear credentials for an anonymous session read', async () => {
 		const response = await getSession(new Request('http://localhost:4000/api/auth/session'));
 		expect(response.status).toBe(401);
