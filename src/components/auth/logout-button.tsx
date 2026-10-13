@@ -25,7 +25,20 @@ export function LogoutButton() {
 			router.refresh();
 		} catch (failure) {
 			setError(failure instanceof Error ? failure.message : 'Sign-out failed. Try again.');
-		} finally { setPending(false); }
+		} finally {
+			setPending(false);
+		}
 	}
-	return <div className={styles.container}><Button variant="secondary" pending={pending} onClick={signOut}>Sign out</Button>{error ? <p role="alert" className="error-message">{error}</p> : null}</div>;
+	return (
+		<div className={styles.container}>
+			<Button variant="secondary" pending={pending} onClick={signOut}>
+				Sign out
+			</Button>
+			{error ? (
+				<p role="alert" className="error-message">
+					{error}
+				</p>
+			) : null}
+		</div>
+	);
 }
