@@ -32,7 +32,9 @@ This excerpt illustrates formatting, not a complete replacement implementation:
 ```tsx
 export function Button({
 	pending = false,
+	icon,
 	variant = 'primary',
+	width = 'medium',
 	disabled,
 	children,
 	...props
@@ -44,15 +46,23 @@ export function Button({
 			disabled={disabled || pending}
 			aria-busy={pending}
 			data-variant={variant}
+			data-width={width}
 		>
-			{pending ? <span className={styles.spinner} aria-hidden="true" /> : null}
-			{children}
+			<span className={styles.icon} aria-hidden="true">
+				{pending ? (
+					<span className={styles.spinner} data-loading-indicator />
+				) : (
+					<HugeiconsIcon icon={icon} size={18} color="currentColor" />
+				)}
+			</span>
+			<span className={styles.label}>{children}</span>
 		</button>
 	);
 }
 ```
 
 The short spinner stays inline intentionally; do not force every element to be multiline.
+The shared icon/loading slot belongs to Button; callers only pass an icon and pending state.
 
 ## Do not
 
