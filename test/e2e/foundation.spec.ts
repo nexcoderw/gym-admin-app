@@ -6,8 +6,16 @@ test('anonymous dashboard requests redirect to the fixed login page', async ({ p
 	await expect(page.getByLabel('Email address')).toBeVisible();
 });
 
-test('login is labelled, keyboard reachable, responsive, and reports safe authentication errors', async ({ page }) => {
-	await page.route('**/api/auth/login', (route) => route.fulfill({ status: 401, contentType: 'application/json', body: JSON.stringify({ error: { code: 'AUTHENTICATION_REQUIRED' } }) }));
+test('login is labelled, keyboard reachable, responsive, and reports safe authentication errors', async ({
+	page,
+}) => {
+	await page.route('**/api/auth/login', (route) =>
+		route.fulfill({
+			status: 401,
+			contentType: 'application/json',
+			body: JSON.stringify({ error: { code: 'AUTHENTICATION_REQUIRED' } }),
+		}),
+	);
 	await page.goto('/login');
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
@@ -16,5 +24,7 @@ test('login is labelled, keyboard reachable, responsive, and reports safe authen
 	await page.getByRole('button', { name: 'Continue to verification' }).click();
 	await expect(page.getByRole('alert')).toContainText('Authentication was not accepted');
 	await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
-	expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+	expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+		true,
+	);
 });
