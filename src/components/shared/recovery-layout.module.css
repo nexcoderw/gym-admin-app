@@ -1,0 +1,6 @@
+.layout {
+	display: grid;
+	min-inline-size: 0;
+	min-block-size: 100svh;
+	background: var(--surface-raised);
+}
