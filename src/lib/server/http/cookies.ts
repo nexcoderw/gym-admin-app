@@ -8,6 +8,20 @@ import { BffError } from './errors';
 
 const TOKEN = /^[A-Za-z0-9_-]{32,256}$/u;
 
+/** Expire local credentials only after a confirmed unauthenticated response, not a provider outage. */
+export function clearPlatformCookies(response: NextResponse): void {
+	const env = serverEnvironment();
+	for (const name of [env.sessionCookie, env.csrfCookie]) {
+		response.cookies.set(name, '', {
+			httpOnly: name === env.sessionCookie,
+			secure: env.secure,
+			sameSite: 'strict',
+			path: '/',
+			expires: new Date(0),
+		});
+	}
+}
+
 export function platformCookies(header: string | null): Map<string, string> {
 	const env = serverEnvironment();
 	const allowed = new Set([env.sessionCookie, env.csrfCookie]);
