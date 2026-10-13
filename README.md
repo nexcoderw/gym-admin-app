@@ -57,6 +57,35 @@ Below 40rem, secondary metric descriptions and redundant metadata are hidden, bu
 labels, errors and actions remain available. Grids reflow from one to two to four columns as space
 allows. Motion respects reduced-motion preferences; no automatic dark theme or fake metrics exist.
 
+## Shared controls and login
+
+Login uses one centered, responsive sign-in panel with concise copy rather than a marketing column.
+Both password and MFA steps retain their existing validation and authentication behavior.
+Every text Input has a required decorative `icon` alongside its visible label. Buttons also require
+an `icon`; shared Button owns rendering it and replaces it with one consistent spinner when pending.
+Action labels stay unchanged while loading, so accessible names and control widths remain stable.
+
+Button widths are `full` (100%), `medium` (12rem, default) and `small` (8rem), capped to the container.
+All retain a 48px minimum height. Use full width for authentication submits, medium for ordinary
+actions and small for compact actions such as logout. Do not implement caller-specific spinners.
+
+```tsx
+<>
+	<Button icon={ArrowRight01Icon} width="full" pending={pending}>
+		Continue to verification
+	</Button>
+	<Button icon={RefreshIcon} width="medium">
+		Try again
+	</Button>
+	<Button icon={Logout01Icon} width="small" variant="secondary">
+		Sign out
+	</Button>
+</>
+```
+
+The excerpt assumes imports from the shared Button and official Hugeicons package, plus a real
+pending state and handlers in the owning feature.
+
 ## Verified endpoint registry
 
 Browser paths live only in src/constants/routes.ts. Each row owns a dedicated route.ts and
