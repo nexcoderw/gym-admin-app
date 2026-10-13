@@ -303,7 +303,12 @@ as zero, and no future staff-creation endpoint is invented as an empty-state act
 Visit `/401`, `/403`, `/404`, `/429`, `/500`, and `/503` to inspect the designs. `/404` invokes the actual
 Next not-found boundary; the other numbered routes are informational recovery pages, not middleware
 that sets those HTTP statuses. Actual API/BFF statuses remain unchanged. Anonymous dashboard requests
-still redirect to `/login`; verified permission denial displays the 403 state in the shell. Root and
+still redirect to `/login`. Full-page recovery states use a standalone, centered canvas without the
+sidebar or topbar, including organization permission denials and route error boundaries. Protected
+layouts retain their live session checks and lifecycle handling; only successful pages render the
+workspace shell. Organization recovery actions share one centered, responsive action group rather
+than placing a restart button below the state. Loading fallbacks also provide their own main landmark.
+In-form validation and mutation errors remain inline so users do not lose their input. Root and
 dashboard error boundaries prefer Next 16.4 `retry()` with legacy `reset()` compatibility. Fatal root
 layout errors have an independent document with the same light styles and two font families.
 
