@@ -8,5 +8,9 @@ export const runtime = 'nodejs';
 
 export default async function DashboardLayout({ children }: { children: ReactNode }) {
 	const session = await requirePlatformSession();
-	return <AppShell permissions={session.permissions} displayName={session.displayName}>{children}</AppShell>;
+	return (
+		<AppShell permissions={session.permissions} displayName={session.displayName}>
+			{children}
+		</AppShell>
+	);
 }
