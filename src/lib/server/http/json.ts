@@ -3,7 +3,10 @@ import 'server-only';
 import { BffError } from './errors';
 
 /** Enforces a streaming byte limit, including chunked bodies without Content-Length. */
-export async function boundedJson(body: ReadableStream<Uint8Array> | null, maximum: number): Promise<unknown> {
+export async function boundedJson(
+	body: ReadableStream<Uint8Array> | null,
+	maximum: number,
+): Promise<unknown> {
 	if (!body) throw new BffError(400, 'INVALID_INPUT', 'A JSON body is required.');
 	const reader = body.getReader();
 	const decoder = new TextDecoder();
