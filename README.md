@@ -222,16 +222,26 @@ server-only endpoint module. No catch-all proxy or client-visible upstream origi
 | Browser/BFF path       | Module under src/lib/server/endpoints | Confirmed Nest contract                                             | Method and security                                                       |
 | ---------------------- | ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | /api/auth/login        | auth/login.ts                         | PlatformAuthController.login; PlatformLoginDto                      | POST, exact Origin; email/password -> challenge, CSRF, expiry             |
+| /api/auth/mfa/email | auth/send-email-otp.ts | PlatformAuthController.sendEmailOtp; PlatformEmailOtpRequestDto | POST, Origin + CSRF; challenge -> safe send confirmation, no cookies |
 | /api/auth/mfa/verify   | auth/verify-mfa.ts                    | PlatformAuthController.verifyMfa; PlatformMfaVerifyDto              | POST, Origin + CSRF; challenge/TOTP or recovery code -> safe confirmation |
 | /api/auth/session      | auth/get-session.ts                   | PlatformAuthController.getSession; PlatformSessionResponseDto       | GET, live session -> own safe identity and effective permissions          |
 | /api/auth/logout       | auth/logout.ts                        | PlatformAuthController.logout                                       | POST, Origin + CSRF -> idempotent 204 and cookie clearing                 |
 | /api/dashboard/summary | dashboard/get-summary.ts              | PlatformDashboardController.getSummary; PlatformDashboardSummaryDto | GET, live session + platform.dashboard.read -> actual aggregate counts    |
 
-Confirmed upstream paths: /api/v1/platform/auth/login, /api/v1/platform/auth/mfa/verify,
+Confirmed upstream paths: /api/v1/platform/auth/login, /api/v1/platform/auth/mfa/email, /api/v1/platform/auth/mfa/verify,
 /api/v1/platform/auth/session, /api/v1/platform/auth/logout and /api/v1/platform/dashboard/summary.
 The dashboard was confirmed in backend source, not assumed from a roadmap. Endpoint modules own
 fixed paths/methods and schema mapping. Shared non-secret DTO schemas live in lib/contracts; response
 object schemas strip unknown fields rather than relaying internal payload extensions.
+
+When Nest advertises `email_otp`, the verification screen puts Email code above Authenticator and
+Recovery code. Selecting a method never sends an email: use the explicit Send email code button.
+Shared loading indicators, duplicate-send protection and a cooldown apply. The form submits
+`emailOtpCode`, then confirms a live backend session before navigation. Email delivery is not
+authentication. Resend configuration lives only in Nest, and enabling this weaker fallback requires
+the reviewed DB migration and rebuilt DB package. Authenticator/recovery login remains unchanged
+when Nest does not advertise email. A backend 503 remains a safe 503; temporary service failures
+preserve cookies, while only a confirmed session 401 clears them.
 
 To register another operation: inspect the actual Nest controller/DTO; add its contract; add one
 server-only operation with a literal path/method; add one independently protected route.ts; add a
