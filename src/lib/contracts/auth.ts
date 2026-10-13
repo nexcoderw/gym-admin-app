@@ -3,22 +3,39 @@ import { z } from 'zod';
 export const opaqueToken = z.string().regex(/^[A-Za-z0-9_-]{32,256}$/u);
 const utcDate = z.string().datetime();
 
-export const loginRequestSchema = z.object({
-	email: z.string().trim().toLowerCase().email().max(254),
-	// Matches the currently implemented Nest DTO, not the separate bootstrap policy.
-	password: z.string().min(12).max(1024),
-}).strict();
+export const loginRequestSchema = z
+	.object({
+		email: z.string().trim().toLowerCase().email().max(254),
+		// Matches the currently implemented Nest DTO, not the separate bootstrap policy.
+		password: z.string().min(12).max(1024),
+	})
+	.strict();
 
 export const challengeSchema = z.object({
 	challengeToken: opaqueToken,
 	csrfToken: opaqueToken,
 	expiresAt: utcDate,
-	methods: z.array(z.enum(['totp', 'recovery_code'])).min(1).max(2),
+	methods: z
+		.array(z.enum(['totp', 'recovery_code']))
+		.min(1)
+		.max(2),
 });
 
 export const verifyMfaRequestSchema = z.discriminatedUnion('method', [
-	z.object({ challengeToken: opaqueToken, method: z.literal('totp'), totpCode: z.string().regex(/^\d{6}$/u) }).strict(),
-	z.object({ challengeToken: opaqueToken, method: z.literal('recovery_code'), recoveryCode: z.string().min(12).max(128) }).strict(),
+	z
+		.object({
+			challengeToken: opaqueToken,
+			method: z.literal('totp'),
+			totpCode: z.string().regex(/^\d{6}$/u),
+		})
+		.strict(),
+	z
+		.object({
+			challengeToken: opaqueToken,
+			method: z.literal('recovery_code'),
+			recoveryCode: z.string().min(12).max(128),
+		})
+		.strict(),
 ]);
 
 export const verifiedSchema = z.object({
