@@ -21,6 +21,68 @@ afterEach(() => {
 });
 
 describe('frontend-owned BFF routes', () => {
+	it('does not clear credentials for an anonymous session read', async () => {
+		const response = await getSession(new Request('http://localhost:4000/api/auth/session'));
+		expect(response.status).toBe(401);
+		expect(response.headers.get('set-cookie')).toBeNull();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('expires both local cookies after a confirmed backend session rejection', async () => {
+		fetchMock.mockResolvedValueOnce(Response.json({}, { status: 401 }));
+		const response = await getSession(
+			new Request('http://localhost:4000/api/auth/session', {
+				headers: { Cookie: `nexcode-platform-session=${token}; nexcode-platform-csrf=${csrf}` },
+			}),
+		);
+		expect(response.status).toBe(401);
+		for (const name of ['nexcode-platform-session', 'nexcode-platform-csrf']) {
+			expect(response.cookies.get(name)?.value).toBe('');
+			expect(response.cookies.get(name)?.expires).toEqual(new Date(0));
+		}
+		expect(response.headers.get('cache-control')).toBe('no-store');
+	});
+
+	it('keeps cookies when the session service is unavailable', async () => {
+		fetchMock.mockResolvedValueOnce(Response.json({}, { status: 500 }));
+		const response = await getSession(
+			new Request('http://localhost:4000/api/auth/session', {
+				headers: { Cookie: `nexcode-platform-session=${token}` },
+			}),
+		);
+		expect(response.status).toBe(502);
+		expect(response.headers.get('set-cookie')).toBeNull();
+	});
+
+	it('preserves secure cookie attributes when expiring a rejected production session', async () => {
+		vi.stubEnv('NODE_ENV', 'production');
+		vi.stubEnv('ADMIN_ORIGIN', 'https://admin.example.invalid');
+		vi.stubEnv('GYM_API_BASE_URL', 'https://api.example.invalid');
+		fetchMock.mockResolvedValueOnce(Response.json({}, { status: 401 }));
+		const response = await getSession(
+			new Request('https://admin.example.invalid/api/auth/session', {
+				headers: { Cookie: `__Host-nexcode-platform-session=${token}` },
+			}),
+		);
+		expect(response.status).toBe(401);
+		const sessionCookie = response.cookies.get('__Host-nexcode-platform-session');
+		const csrfCookie = response.cookies.get('__Host-nexcode-platform-csrf');
+		expect(sessionCookie).toMatchObject({
+			value: '',
+			secure: true,
+			httpOnly: true,
+			path: '/',
+			sameSite: 'strict',
+		});
+		expect(csrfCookie).toMatchObject({
+			value: '',
+			secure: true,
+			httpOnly: false,
+			path: '/',
+			sameSite: 'strict',
+		});
+	});
+
 	it('rejects foreign Origin before login forwarding', async () => {
 		const response = await login(
 			new Request('http://localhost:4000/api/auth/login', {
