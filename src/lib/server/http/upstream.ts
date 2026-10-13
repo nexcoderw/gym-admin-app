@@ -29,7 +29,7 @@ export async function upstream<T>(
 		readonly query?: URLSearchParams;
 		readonly ifMatch?: string;
 	},
-): Promise<{ data: T; cookies: string[]; etag: string | null }> {
+): Promise<{ data: T; cookies: string[]; etag?: string | null }> {
 	const env = serverEnvironment();
 	try {
 		const url = new URL(path, env.apiOrigin);
@@ -97,7 +97,11 @@ export async function upstream<T>(
 				'INVALID_SERVICE_RESPONSE',
 				'The service returned an incompatible response.',
 			);
-		return { data: parsed.data, cookies: response.headers.getSetCookie(), etag: response.headers.get('etag') };
+		return {
+			data: parsed.data,
+			cookies: response.headers.getSetCookie(),
+			...(options === undefined ? {} : { etag: response.headers.get('etag') }),
+		};
 	} catch (error) {
 		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT')
 			throw error;
