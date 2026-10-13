@@ -1,17 +1,104 @@
-# Formatting
+# Formatting and editor alignment
+
+## Source of truth
+
+The root `.prettierrc.json` controls formatting. `.editorconfig` supplies editor defaults and
+`.vscode/settings.json` selects the Prettier extension. The formatted
+`src/components/shared/button.tsx` is the visual reference, not a file to rewrite on every task.
+Read this rule before editing authored code or configuration.
 
 ## Mandatory requirements
 
-Use tabs, width 100, single quotes, semicolons, trailing commas and LF in authored TS/JS/CSS. Let Prettier choose syntax-specific formatting for JSON/Markdown. Humans run format and inspect the diff; exclude generated output and lockfiles.
+1. Use tabs for code indentation, displayed at a width of two spaces. Add one tab per nesting level.
+   Do not insert repeated spaces to align assignments, values or JSX attributes into columns.
+2. Use a preferred print width of 100, single-quoted JS/TS strings, double-quoted JSX attributes,
+   semicolons and trailing commas where Prettier and syntax allow them. A rest parameter such as
+   `...props` must not receive a manually added trailing comma.
+3. Use UTF-8, LF, a final newline and no trailing whitespace except meaningful Markdown whitespace.
+   Markdown and YAML indentation uses spaces. Let Prettier format each language appropriately.
+4. Let Prettier decide wrapping. Long prop lists wrap; short elements may remain inline.
+   `printWidth` is a wrapping preference, not a hard character-count limit for every line.
+5. Put multiline JSX closing brackets on their own line and parenthesize multiline JSX returns.
+   Use spaces around operators. Separate import groups intentionally; Prettier does not sort imports.
+6. Humans run formatting and inspect its diff. Agents manually author matching formatting and supply
+   commands, but must not run Prettier, format-on-save automation or a formatting wrapper themselves.
+7. Respect `.prettierignore`. Do not format dependencies, generated files, secrets, build output or
+   the lockfile. Do not mix unrelated whole-project formatting into a targeted behavior fix.
 
-## Prohibited patterns
+## Do: match the shared Button
 
-No agent formatting commands, mixed indentation, generated-file edits or broad unrelated formatting.
+This excerpt illustrates formatting, not a complete replacement implementation:
 
-## Good example
+```tsx
+export function Button({
+	pending = false,
+	variant = 'primary',
+	disabled,
+	children,
+	...props
+}: ButtonProps) {
+	return (
+		<button
+			{...props}
+			type="button"
+			disabled={disabled || pending}
+			aria-busy={pending}
+			data-variant={variant}
+		>
+			{pending ? <span className={styles.spinner} aria-hidden="true" /> : null}
+			{children}
+		</button>
+	);
+}
+```
 
-A colocated CSS Module and its TSX component share the committed formatter configuration.
+The short spinner stays inline intentionally; do not force every element to be multiline.
 
-## Review criteria
+## Do not
 
-Check formatter configuration, deterministic output, scoped changes and human-provided results.
+```text
+// WRONG: compressed JSX, inconsistent quotes and manual column alignment.
+const pending       =false
+const variant       ="primary"
+return <button type="button" disabled={disabled||pending}>{children}</button>
+```
+
+Do not introduce a competing formatter, change settings to silence a single diff, or assume
+formatting proves lint, types or runtime behavior are correct.
+
+## Human editor setup
+
+Open `app/admin` as a VS Code folder or workspace folder. Install the recommended **Prettier - Code
+formatter** extension. Nested `.vscode` settings do not automatically apply to a window opened only
+at the parent `gym` folder; add the admin folder to the workspace or configure that window explicitly.
+
+On macOS, Option+Shift+F invokes Format Document, not necessarily Prettier. If necessary choose
+**Format Document With… → Configure Default Formatter → Prettier**. Ensure any language-specific
+user override also selects Prettier. The workspace enables format-on-save and requires a config.
+
+## Human commands
+
+From `app/admin`, format the rule/configuration changes without formatting unrelated source:
+
+```bash
+npx prettier --write .agents .prettierrc.json .vscode AGENTS.md CLAUDE.md
+npm run format:check
+```
+
+Do not pass `.editorconfig` to Prettier: it has no built-in parser for that file. A whole-project
+check may report older, unformatted files. For an intentional whole-project pass, the human runs:
+
+```bash
+npm run format
+npm run format:check
+npm run lint
+```
+
+Inspect every changed file and use one-file commits. No formatter was run merely by authoring rules.
+
+## Prevented failures and review checklist
+
+- Shared settings prevent editor/CLI drift and invisible indentation differences.
+- Review tabs, wrapping, quotes, LF, ignored files and behavior-preserving changes.
+- Report formatting as unverified until the human supplies actual results.
+- See [git.md](git.md) and [code-quality.md](code-quality.md).
