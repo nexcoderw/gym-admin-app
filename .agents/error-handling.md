@@ -28,7 +28,9 @@ database is not an error.
 <section aria-labelledby="summary-error">
 	<h2 id="summary-error">Summary unavailable</h2>
 	<p>The summary could not be loaded. Try again.</p>
-	<Button onClick={retry}>Try again</Button>
+	<Button icon={RefreshIcon} onClick={retry}>
+		Try again
+	</Button>
 </section>
 ```
 
