@@ -10,8 +10,8 @@ import { csrf, token, expiration } from './fixtures';
 const fetchMock = vi.fn<typeof fetch>();
 beforeEach(() => {
 	vi.stubEnv('NODE_ENV', 'development');
-	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:3000');
-	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3001');
+	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:4000');
+	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3000');
 	fetchMock.mockReset();
 	vi.stubGlobal('fetch', fetchMock);
 });
@@ -23,7 +23,7 @@ afterEach(() => {
 describe('frontend-owned BFF routes', () => {
 	it('rejects foreign Origin before login forwarding', async () => {
 		const response = await login(
-			new Request('http://localhost:3000/api/auth/login', {
+			new Request('http://localhost:4000/api/auth/login', {
 				method: 'POST',
 				headers: { Origin: 'https://attacker.example' },
 			}),
@@ -34,9 +34,9 @@ describe('frontend-owned BFF routes', () => {
 	});
 	it('rejects malformed JSON and missing MFA/logout CSRF before forwarding', async () => {
 		const response = await login(
-			new Request('http://localhost:3000/api/auth/login', {
+			new Request('http://localhost:4000/api/auth/login', {
 				method: 'POST',
-				headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' },
+				headers: { Origin: 'http://localhost:4000', 'Content-Type': 'application/json' },
 				body: '{bad',
 			}),
 		);
@@ -45,9 +45,9 @@ describe('frontend-owned BFF routes', () => {
 			expect(
 				(
 					await handler(
-						new Request('http://localhost:3000/api/auth/logout', {
+						new Request('http://localhost:4000/api/auth/logout', {
 							method: 'POST',
-							headers: { Origin: 'http://localhost:3000' },
+							headers: { Origin: 'http://localhost:4000' },
 						}),
 					)
 				).status,
@@ -57,7 +57,7 @@ describe('frontend-owned BFF routes', () => {
 	});
 	it('protects session and dashboard routes independently of page layouts', async () => {
 		for (const handler of [getSession, summary]) {
-			const response = await handler(new Request('http://localhost:3000/api/dashboard/summary'));
+			const response = await handler(new Request('http://localhost:4000/api/dashboard/summary'));
 			expect(response.status).toBe(401);
 		}
 		expect(fetchMock).not.toHaveBeenCalled();
@@ -80,9 +80,9 @@ describe('frontend-owned BFF routes', () => {
 			),
 		);
 		const response = await login(
-			new Request('http://localhost:3000/api/auth/login', {
+			new Request('http://localhost:4000/api/auth/login', {
 				method: 'POST',
-				headers: { Origin: 'http://localhost:3000', 'Content-Type': 'application/json' },
+				headers: { Origin: 'http://localhost:4000', 'Content-Type': 'application/json' },
 				body: JSON.stringify({
 					email: 'operator@example.invalid',
 					password: 'fictional long password',
@@ -111,13 +111,13 @@ describe('frontend-owned BFF routes', () => {
 			),
 		);
 		const browserHeaders = {
-			Origin: 'http://localhost:3000',
+			Origin: 'http://localhost:4000',
 			'Content-Type': 'application/json',
 			Cookie: `nexcode-platform-session=${token}; nexcode-platform-csrf=${csrf}`,
 			'x-platform-csrf-token': csrf,
 		};
 		const response = await verify(
-			new Request('http://localhost:3000/api/auth/mfa/verify', {
+			new Request('http://localhost:4000/api/auth/mfa/verify', {
 				method: 'POST',
 				headers: browserHeaders,
 				body: JSON.stringify({ challengeToken: token, method: 'totp', totpCode: '123456' }),
@@ -134,7 +134,7 @@ describe('frontend-owned BFF routes', () => {
 		);
 		fetchMock.mockResolvedValueOnce(new Response(null, { status: 204, headers: cleared }));
 		const result = await logout(
-			new Request('http://localhost:3000/api/auth/logout', {
+			new Request('http://localhost:4000/api/auth/logout', {
 				method: 'POST',
 				headers: browserHeaders,
 			}),
