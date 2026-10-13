@@ -12,22 +12,6 @@
 	min-width: 0;
 	text-align: center;
 }
-.brand {
-	font-family: var(--font-heading);
-	color: var(--primary);
-	font-weight: 700;
-	font-size: 1.375rem;
-	letter-spacing: -0.02em;
-}
-.brand span {
-	display: block;
-	margin-block-start: var(--space-1);
-	font-family: var(--font-body);
-	font-size: var(--text-small);
-	color: var(--text-muted);
-	font-weight: 400;
-	letter-spacing: 0;
-}
 .signIn {
 	min-width: 0;
 }
