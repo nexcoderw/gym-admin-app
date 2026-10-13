@@ -1,5 +1,6 @@
 import type { DashboardSummary } from '@/lib/contracts/dashboard';
 import { Card } from '@/components/shared/card';
+import { RecoveryState } from '@/components/shared/recovery-state';
 import { StatCard } from './stat-card';
 import styles from './dashboard-overview.module.css';
 
@@ -39,17 +40,21 @@ export function DashboardOverview({ summary }: { summary: DashboardSummary }) {
 					<h2>Staff assignment status</h2>
 					<p>Database status—not online activity or complete access eligibility.</p>
 				</div>
-				<dl className={styles.statuses}>
-					{statuses.map((status) => (
-						<div key={status.key}>
-							<dt>
-								{status.label}
-								<span>{status.description}</span>
-							</dt>
-							<dd>{summary.platformStaff[status.key]}</dd>
-						</div>
-					))}
-				</dl>
+				{summary.platformStaff.total === 0 ? (
+					<RecoveryState kind="empty" layout="compact" />
+				) : (
+					<dl className={styles.statuses}>
+						{statuses.map((status) => (
+							<div key={status.key}>
+								<dt>
+									{status.label}
+									<span>{status.description}</span>
+								</dt>
+								<dd>{summary.platformStaff[status.key]}</dd>
+							</div>
+						))}
+					</dl>
+				)}
 			</Card>
 			<p className={styles.timestamp}>
 				Snapshot response generated{' '}
