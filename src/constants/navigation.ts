@@ -1,4 +1,4 @@
-import { DashboardSquare01Icon } from '@hugeicons/core-free-icons';
+import { Building03Icon, DashboardSquare01Icon } from '@hugeicons/core-free-icons';
 
 import { routes } from './routes';
 
@@ -9,6 +9,14 @@ export const navigation = [
 		href: routes.dashboard,
 		icon: DashboardSquare01Icon,
 		requiredPermission: 'platform.dashboard.read',
+		group: 'Platform',
+	},
+	{
+		key: 'organizations',
+		label: 'Organizations',
+		href: routes.organizations,
+		icon: Building03Icon,
+		requiredPermission: 'platform.organizations.read',
 		group: 'Platform',
 	},
 ] as const;
