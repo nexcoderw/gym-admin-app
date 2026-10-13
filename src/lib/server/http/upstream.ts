@@ -42,18 +42,37 @@ export async function upstream<T>(
 		}
 		if (response.status !== expectedStatus) {
 			await response.body?.cancel();
-			throw new BffError(502, 'INVALID_SERVICE_RESPONSE', 'The service returned an incompatible response.');
+			throw new BffError(
+				502,
+				'INVALID_SERVICE_RESPONSE',
+				'The service returned an incompatible response.',
+			);
 		}
-		if (response.status !== 204 && response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() !== 'application/json') {
+		if (
+			response.status !== 204 &&
+			response.headers.get('content-type')?.split(';')[0]?.trim().toLowerCase() !==
+				'application/json'
+		) {
 			await response.body?.cancel();
-			throw new BffError(502, 'INVALID_SERVICE_RESPONSE', 'The service returned an incompatible response.');
+			throw new BffError(
+				502,
+				'INVALID_SERVICE_RESPONSE',
+				'The service returned an incompatible response.',
+			);
 		}
-		const json: unknown = response.status === 204 ? undefined : await boundedJson(response.body, 65_536);
+		const json: unknown =
+			response.status === 204 ? undefined : await boundedJson(response.body, 65_536);
 		const parsed = schema.safeParse(json);
-		if (!parsed.success) throw new BffError(502, 'INVALID_SERVICE_RESPONSE', 'The service returned an incompatible response.');
+		if (!parsed.success)
+			throw new BffError(
+				502,
+				'INVALID_SERVICE_RESPONSE',
+				'The service returned an incompatible response.',
+			);
 		return { data: parsed.data, cookies: response.headers.getSetCookie() };
 	} catch (error) {
-		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT') throw error;
+		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT')
+			throw error;
 		throw new BffError(502, 'SERVICE_UNAVAILABLE', 'The service is unavailable. Try again.');
 	}
 }
