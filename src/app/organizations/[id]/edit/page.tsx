@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHeader } from '@/components/shared/page-header';
+import { AppShell } from '@/components/shared/app-shell';
 import { OrganizationForm } from '@/components/organizations/organization-form';
 import { OrganizationProblem } from '@/components/organizations/organization-problem';
 import { organizationPermissions } from '@/lib/contracts/organizations';
@@ -13,12 +14,12 @@ export default async function EditOrganizationPage({ params }: { params: Promise
 	const result = await organizationPage(organizationPermissions.update, async () => getOrganization((await params).id, await serverContext()));
 	if (!result.ok) return <OrganizationProblem status={result.status} message={result.message} />;
 	return (
-		<>
+		<AppShell permissions={result.permissions} displayName={result.displayName}>
 			<PageHeader
 				title="Edit gym name"
 				description="Save a conditional name change without replacing concurrent updates."
 			/>
 			<OrganizationForm mode="edit" {...result.value} key={result.value.etag} />
-		</>
+		</AppShell>
 	);
 }
