@@ -25,6 +25,34 @@ afterEach(() => {
 });
 
 describe('verified fixed upstream operations', () => {
+	it('maps a recovery-code request without inventing a TOTP field', async () => {
+		fetchMock.mockResolvedValueOnce(
+			Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
+		);
+		await verifyMfa(
+			{ challengeToken: token, method: 'recovery_code', recoveryCode: 'fictional-recovery-code' },
+			context,
+		);
+		expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(
+			JSON.stringify({
+				challengeToken: token,
+				method: 'recovery_code',
+				recoveryCode: 'fictional-recovery-code',
+			}),
+		);
+	});
+
+	it.each([429, 500, 503])(
+		'maps login failures safely without accepting a challenge: %s',
+		async (status) => {
+			fetchMock.mockResolvedValueOnce(Response.json({ secret: 'private' }, { status }));
+			await expect(
+				login({ email: 'operator@example.invalid', password: '123456789012' }, context),
+			).rejects.toMatchObject({ status: status === 429 ? 429 : 502 });
+			expect(fetchMock).toHaveBeenCalledOnce();
+		},
+	);
+
 	it('keeps a bounded deadline beyond the backend session transaction budget', async () => {
 		const deadline = vi.spyOn(AbortSignal, 'timeout');
 		try {
