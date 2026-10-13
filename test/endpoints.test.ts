@@ -14,8 +14,8 @@ const context = {
 };
 beforeEach(() => {
 	vi.stubEnv('NODE_ENV', 'development');
-	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:3000');
-	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3001');
+	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:4000');
+	vi.stubEnv('GYM_API_BASE_URL', 'http://127.0.0.1:3000');
 	fetchMock.mockReset();
 	vi.stubGlobal('fetch', fetchMock);
 });
@@ -41,20 +41,20 @@ describe('verified fixed upstream operations', () => {
 		);
 		expect(result.data).not.toHaveProperty('internalHost');
 		expect(String(fetchMock.mock.calls[0]?.[0])).toBe(
-			'http://127.0.0.1:3001/api/v1/platform/auth/login',
+			'http://127.0.0.1:3000/api/v1/platform/auth/login',
 		);
 		expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
 			method: 'POST',
 			cache: 'no-store',
 			redirect: 'error',
-			headers: { Origin: 'http://localhost:3000' },
+			headers: { Origin: 'http://localhost:4000' },
 		});
 		fetchMock.mockResolvedValueOnce(
 			Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
 		);
 		await verifyMfa({ challengeToken: token, method: 'totp', totpCode: '123456' }, context);
 		expect(String(fetchMock.mock.calls[1]?.[0])).toBe(
-			'http://127.0.0.1:3001/api/v1/platform/auth/mfa/verify',
+			'http://127.0.0.1:3000/api/v1/platform/auth/mfa/verify',
 		);
 		expect(fetchMock.mock.calls[1]?.[1]?.headers).toMatchObject({ 'x-platform-csrf-token': csrf });
 	});
@@ -83,7 +83,7 @@ describe('verified fixed upstream operations', () => {
 			.mockResolvedValueOnce(Response.json(summary));
 		await expect(getSummary(context)).resolves.toEqual(summary);
 		expect(String(fetchMock.mock.calls[1]?.[0])).toBe(
-			'http://127.0.0.1:3001/api/v1/platform/dashboard/summary',
+			'http://127.0.0.1:3000/api/v1/platform/dashboard/summary',
 		);
 	});
 	it('fails before fetching when no platform session exists', async () => {
