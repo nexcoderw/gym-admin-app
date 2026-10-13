@@ -1,11 +1,12 @@
 .overview {
 	display: grid;
-	gap: var(--space-6);
+	min-width: 0;
+	gap: var(--space-5);
 }
 .metrics {
 	display: grid;
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-	gap: var(--space-4);
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-3);
 }
 .sectionHeading {
 	display: grid;
@@ -19,6 +20,7 @@
 }
 .statuses {
 	margin: 0;
+	min-width: 0;
 }
 .statuses div {
 	display: flex;
@@ -35,17 +37,27 @@
 }
 .statuses dd {
 	margin: 0;
-	font-size: 1.5rem;
+	flex-shrink: 0;
+	font-size: var(--text-subheading);
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
 }
-@media (max-width: 1200px) {
+@media (min-width: 24rem) {
 	.metrics {
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
-@media (max-width: 540px) {
+@media (min-width: 64rem) {
 	.metrics {
-		grid-template-columns: minmax(0, 1fr);
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+	}
+}
+@media (max-width: 40rem) {
+	.statuses dt span,
+	.sectionHeading p {
+		display: none;
+	}
+	.timestamp {
+		font-size: var(--text-caption);
 	}
 }
