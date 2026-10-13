@@ -138,7 +138,10 @@ describe('accessible UI foundation', () => {
 	it('keeps route constants frontend-only and filters navigation by permission, not role', () => {
 		expect(routes.dashboard).toBe('/dashboard');
 		expect(
-			Object.values(browserApi).every((path) => path.startsWith('/api/') && !path.includes('/v1/')),
+			Object.values(browserApi).every((value) => {
+				const path = typeof value === 'function' ? value('2f5298af-cf42-4e66-8968-a42be74cb34b') : value;
+				return path.startsWith('/api/') && !path.includes('/v1/');
+			}),
 		).toBe(true);
 		expect(visibleNavigation([])).toHaveLength(0);
 		expect(visibleNavigation(['platform.owner'])).toHaveLength(0);
