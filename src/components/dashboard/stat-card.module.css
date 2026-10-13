@@ -3,15 +3,21 @@
 	color: var(--text-secondary);
 }
 .value {
-	font-size: clamp(2rem, 4vw, 3rem);
-	line-height: 1.4;
-	letter-spacing: -0.04em;
+	font-family: var(--font-body);
+	font-size: var(--text-metric);
+	line-height: 1.25;
+	letter-spacing: -0.01em;
 	font-weight: 600;
 	font-variant-numeric: tabular-nums;
-	margin-block: var(--space-3);
+	margin-block: var(--space-2);
 }
 .description {
 	color: var(--text-muted);
 	font-size: var(--text-small);
 	max-width: 30ch;
+}
+@media (max-width: 40rem) {
+	.description {
+		display: none;
+	}
 }
