@@ -5,5 +5,11 @@ import { upstream, type ForwardContext } from '../../http/upstream';
 
 /** Nest PlatformAuthController.verifyMfa / PlatformMfaVerifyDto. Requires challenge and CSRF. */
 export function verifyMfa(input: MfaRequest, context: ForwardContext) {
-	return upstream('/api/v1/platform/auth/mfa/verify', 'POST', verifiedSchema, context, verifyMfaRequestSchema.parse(input));
+	return upstream(
+		'/api/v1/platform/auth/mfa/verify',
+		'POST',
+		verifiedSchema,
+		context,
+		verifyMfaRequestSchema.parse(input),
+	);
 }
