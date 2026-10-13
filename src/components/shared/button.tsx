@@ -8,8 +8,26 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	readonly children: ReactNode;
 }
 
-export function Button({ pending = false, variant = 'primary', disabled, className = '', children, type = 'button', ...props }: ButtonProps) {
-	return <button {...props} type={type} disabled={disabled || pending} aria-busy={pending} data-variant={variant} className={`${styles.button} ${className}`}>
-		{pending ? <span className={styles.spinner} aria-hidden="true" /> : null}{children}
-	</button>;
+export function Button({
+	pending = false,
+	variant = 'primary',
+	disabled,
+	className = '',
+	children,
+	type = 'button',
+	...props
+}: ButtonProps) {
+	return (
+		<button
+			{...props}
+			type={type}
+			disabled={disabled || pending}
+			aria-busy={pending}
+			data-variant={variant}
+			className={`${styles.button} ${className}`}
+		>
+			{pending ? <span className={styles.spinner} aria-hidden="true" /> : null}
+			{children}
+		</button>
+	);
 }
