@@ -27,19 +27,37 @@ describe('host-only BFF cookie relay', () => {
 		expect(cookies.join(';')).not.toContain('Domain');
 		expect(cookies.join(';')).toContain('SameSite=strict');
 	});
-	it.each(['; Domain=.gym.rw', '; SameSite=None', '; Path=/other'])('rejects incompatible attributes %s before setting any cookie', (extra) => {
-		const response = NextResponse.json({});
-		expect(() => relayCookies([`${lines()[0]}${extra}`, ...lines().slice(1)], response, 'session', csrf)).toThrow();
-		expect(response.headers.getSetCookie()).toHaveLength(0);
-	});
+	it.each(['; Domain=.gym.rw', '; SameSite=None', '; Path=/other'])(
+		'rejects incompatible attributes %s before setting any cookie',
+		(extra) => {
+			const response = NextResponse.json({});
+			expect(() =>
+				relayCookies([`${lines()[0]}${extra}`, ...lines().slice(1)], response, 'session', csrf),
+			).toThrow();
+			expect(response.headers.getSetCookie()).toHaveLength(0);
+		},
+	);
 	it('rejects missing, duplicate, non-secure, unexpected and body-mismatched cookies', () => {
-		for (const cookies of [[], [lines()[0] ?? ''], [...lines(), lines()[0] ?? ''], lines().map((line) => line.replace('; Secure', '')), ['other=secret'], lines()]) {
+		for (const cookies of [
+			[],
+			[lines()[0] ?? ''],
+			[...lines(), lines()[0] ?? ''],
+			lines().map((line) => line.replace('; Secure', '')),
+			['other=secret'],
+			lines(),
+		]) {
 			expect(() => relayCookies(cookies, NextResponse.json({}), 'session', token)).toThrow();
 		}
 	});
 	it('clears both frontend cookies after a compatible upstream logout', () => {
 		const response = new NextResponse(null, { status: 204 });
-		relayCookies(['__Host-nexcode-platform-session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=Strict'], response, 'logout');
+		relayCookies(
+			[
+				'__Host-nexcode-platform-session=; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Secure; HttpOnly; SameSite=Strict',
+			],
+			response,
+			'logout',
+		);
 		expect(response.cookies.get('__Host-nexcode-platform-session')?.value).toBe('');
 		expect(response.cookies.get('__Host-nexcode-platform-csrf')?.value).toBe('');
 	});
