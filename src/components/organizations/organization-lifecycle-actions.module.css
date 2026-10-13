@@ -1,0 +1,26 @@
+.actions {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-3);
+}
+.dialog {
+	width: min(32rem, calc(100% - var(--space-8)));
+	max-height: calc(100svh - var(--space-8));
+	overflow: auto;
+	padding: var(--space-6);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+	color: var(--text-primary);
+}
+.dialog::backdrop {
+	background: var(--border-control);
+	opacity: 0.6;
+}
+.dialog h2 {
+	font-size: var(--text-subheading);
+	overflow-wrap: anywhere;
+}
+.dialog p {
+	margin-block: var(--space-4) var(--space-6);
+}
