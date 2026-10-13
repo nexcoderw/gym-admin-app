@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { PageHeader } from '@/components/shared/page-header';
+import { AppShell } from '@/components/shared/app-shell';
 import { OrganizationDetails } from '@/components/organizations/organization-details';
 import { OrganizationProblem } from '@/components/organizations/organization-problem';
 import { organizationPermissions } from '@/lib/contracts/organizations';
@@ -13,7 +14,7 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
 	const result = await organizationPage(organizationPermissions.read, async () => getOrganization((await params).id, await serverContext()));
 	if (!result.ok) return <OrganizationProblem status={result.status} message={result.message} />;
 	return (
-		<>
+		<AppShell permissions={result.permissions} displayName={result.displayName}>
 			<PageHeader
 				title={result.value.organization.name}
 				description="The current registry record and platform lifecycle."
@@ -22,6 +23,6 @@ export default async function OrganizationPage({ params }: { params: Promise<{ i
 				organization={result.value.organization}
 				permissions={result.permissions}
 			/>
-		</>
+		</AppShell>
 	);
 }
