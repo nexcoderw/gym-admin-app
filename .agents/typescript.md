@@ -24,8 +24,7 @@ A TypeScript interface is not a substitute for checking a network response.
 
 ```ts
 type LoginPhase =
-	| { readonly step: 'password' }
-	| { readonly step: 'mfa'; readonly challengeToken: string };
+	{ readonly step: 'password' } | { readonly step: 'mfa'; readonly challengeToken: string };
 
 const parsed = loginRequestSchema.safeParse(untrustedBody);
 
