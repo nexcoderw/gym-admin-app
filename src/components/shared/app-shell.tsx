@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 
 import { LogoutButton } from '@/components/auth/logout-button';
 import { Navbar } from './navbar';
+import { BrandLogo } from './brand-logo';
 import styles from './app-shell.module.css';
 
 export function AppShell({
@@ -17,7 +18,7 @@ export function AppShell({
 		<div className={styles.shell}>
 			<aside className={styles.sidebar} aria-label="Platform workspace">
 				<div className={styles.brand}>
-					NEXCODE<span>Platform administration</span>
+					<BrandLogo subtitle="Platform administration" />
 				</div>
 				<Navbar permissions={permissions} />
 				<div className={styles.account}>
