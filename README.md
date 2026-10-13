@@ -336,3 +336,107 @@ References: [Next Route Handlers](https://nextjs.org/docs/app/api-reference/file
 [async cookies](https://nextjs.org/docs/app/api-reference/functions/cookies),
 [Cache Components](https://nextjs.org/docs/app/api-reference/config/next-config-js/cacheComponents),
 [official Hugeicons React setup](https://hugeicons.com/docs/integrations/react/quick-start).
+
+## Step 9 authentication integration
+
+The five fixed BFF operations remain: POST login (200 challenge), POST MFA verification (200 safe
+confirmation), GET session (200 safe principal), POST logout (204) and GET summary (200 aggregates).
+Each maps to the corresponding `/api/v1/platform/...` Nest operation through its server-only module.
+Login never creates a session. MFA requires exact Origin and matching CSRF; session and summary
+require live backend identity, and summary additionally requires `platform.dashboard.read`.
+`platform.owner` alone is not an authorization bypass. DTO validation, expected upstream status,
+bounded JSON, no-store and safe errors remain enforced; no generic proxy or browser API origin was
+introduced. Expired/revoked sessions produce authentication recovery, denied permissions produce
+403, and outages/rate limits do not fabricate statistics or successful logout.
+
+MFA now validates the newly issued session through the fixed BFF before navigating. If confirmation
+temporarily fails, Open platform retries only the session read, not the already consumed MFA code.
+The verification input is disabled and cleared after issuance. Browser requests have a 25-second
+deadline, beyond the BFF's 20-second upstream deadline; there are no automatic credential retries
+or added background polls. Dashboard guards still independently revalidate the session/permission.
+Existing absolute-expiry, focus revalidation and authenticated redirects away from auth pages remain.
+
+For HTTPS `admin.gym.rw` → `api.gym.rw`, cookies are validated and reissued host-only on the admin
+host, never widened to `.gym.rw`. Session cookies use `__Host-`, Secure, HttpOnly, Path=/ and
+SameSite=Strict. CSRF cookies deliberately remain readable, with matching mode and expiry. Local
+HTTP uses the existing unprefixed/non-Secure mode on both sides. Cookie relay validates the entire
+allowlisted set before writing and rejects unknown/duplicate names and attributes, Domain, wrong
+mode, missing expected cookies and invalid expiry. Logout confirms upstream revocation before
+clearing; confirmed session 401 clears local credentials, while 429/5xx preserve them. Session
+tokens must never appear in JSON, storage, logs or screenshots.
+
+### Human-operated full-stack smoke test
+
+This is separate from mocked Vitest/Playwright coverage. No live result is claimed.
+
+1. Resolve the API's missing gym-db lockfile entry and approved artifact first, as documented in its
+   README. Review actual migration status, grants and connected identity before starting services.
+2. Use an approved isolated, empty non-production database with a fictional owner you control.
+   Keep ordinary development, shadow and destructive test databases separate, even when they share
+   a Neon development branch. Configure the existing API runtime/bootstrap profiles to that same
+   intended database; verify host, database, least-privilege role and provisioned marker. Do not
+   reuse the opt-in bootstrap test database while automated tests can delete its fixtures.
+3. If no fictional account exists, provisioning is a human prerequisite. Only on the approved empty
+   target run the existing first-owner CLI below; do not rerun initialization against an existing
+   owner, reset credentials, disable guards or edit production data to make this check pass:
+
+   ```bash
+   cd /Users/dvniels/Desktop/projects/gym/api/api
+   npm run build
+   PLATFORM_OWNER_BOOTSTRAP_ENABLED=true npm run bootstrap:platform-owner:init
+   PLATFORM_OWNER_BOOTSTRAP_ENABLED=true npm run bootstrap:platform-owner:activate
+   ```
+
+   Complete exact database confirmation, independent mailbox verification and real authenticator
+   enrollment/activation. Use a new compliant password. Store secrets/recovery codes privately,
+   not in this README, shell arguments, exported logs or test artifacts. Wait for a new TOTP time
+   step after activation; the activation code cannot be replayed for login. Disable bootstrap after
+   completion and verify the regular runtime target is unchanged.
+
+4. Run API checks, then start the API in one terminal:
+
+   ```bash
+   cd /Users/dvniels/Desktop/projects/gym/api/api
+   npm run start:dev
+   ```
+
+5. Configure admin's server-only API origin to `http://127.0.0.1:3000`, admin origin to
+   `http://localhost:4000`, and both projects' local cookie mode consistently. In a second terminal:
+
+   ```bash
+   cd /Users/dvniels/Desktop/projects/gym/app/admin
+   npm run dev
+   ```
+
+6. Open a private browser at `http://localhost:4000/login`. Verify anonymous dashboard access
+   redirects there. Test invalid email, too-short password and wrong credentials with safe messages.
+7. Submit the fictional account's real password. Verify a challenge appears but no session cookie,
+   dashboard data or authenticated navigation occurs yet. Inspect only metadata, not secret bodies.
+8. Submit a current authenticator code. Verify MFA 200 is followed by session 200 before dashboard
+   navigation. Check host-only HttpOnly session and readable CSRF cookie metadata, no tokens in
+   storage/JSON, and only frontend-owned `/api/...` requests in browser Network.
+9. Check actual summary counts against the isolated database; refresh and visit login/401/auth
+   routes while authenticated. They must redirect to dashboard without flashing login controls.
+10. Exercise recovery-code login with one approved code; verify consumption prevents reuse. Test
+    incorrect/expired MFA challenges and CSRF mismatch without disabling guards.
+11. Verify logout succeeds, clears cookies and prevents dashboard access. Separately simulate an
+    API outage: session/dashboard must show safe recovery, and failed logout must not claim success.
+12. With separately authorized fixture administration, test expired/revoked sessions and removal of
+    `platform.dashboard.read` on a fictional account. Next protected request must enforce 401/403,
+    even with role `platform.owner`. If those fixtures/administration are unavailable, record these
+    live cases as blocked; do not invent an API for changing permissions or mutate a real owner.
+13. Exercise 429 on the isolated target at a controlled rate; account for shared BFF-peer limits.
+    Verify safe recovery without clearing a valid session. Never load-test production here.
+14. Repeat cookie metadata checks on an approved HTTPS staging deployment using production mode.
+    Local non-Secure tests do not prove real `admin.gym.rw`/`api.gym.rw` cookie interoperability.
+
+After normal checks and a human-started Next server, run `npm run test:e2e` in a third terminal.
+The new browser case mocks only frontend HTTP responses; it verifies no navigation during a failed
+session confirmation and no MFA replay. It does not prove real PostgreSQL/MFA authentication.
+Record only pass/fail, safe status codes and non-secret request IDs; never share HAR files, cookies,
+passwords, MFA/recovery material or terminal enrollment output. Clean up only the specifically
+approved isolated fixture through the human's established procedure, not automated broad deletion.
+
+Release blockers remain until the approved database artifact/lockfile, current migration status,
+fictional fixture, real smoke results and deployment limiting topology are verified. This step adds
+no schema, new endpoints, public recovery, distributed limiting or Step 10 functionality.
