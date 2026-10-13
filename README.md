@@ -51,13 +51,13 @@ there is no nonfunctional theme toggle. Counts are never replaced with decorativ
 Browser paths live only in src/constants/routes.ts. Each row owns a dedicated route.ts and
 server-only endpoint module. No catch-all proxy or client-visible upstream origin exists.
 
-| Browser/BFF path | Module under src/lib/server/endpoints | Confirmed Nest contract | Method and security |
-| --- | --- | --- | --- |
-| /api/auth/login | auth/login.ts | PlatformAuthController.login; PlatformLoginDto | POST, exact Origin; email/password -> challenge, CSRF, expiry |
-| /api/auth/mfa/verify | auth/verify-mfa.ts | PlatformAuthController.verifyMfa; PlatformMfaVerifyDto | POST, Origin + CSRF; challenge/TOTP or recovery code -> safe confirmation |
-| /api/auth/session | auth/get-session.ts | PlatformAuthController.getSession; PlatformSessionResponseDto | GET, live session -> own safe identity and effective permissions |
-| /api/auth/logout | auth/logout.ts | PlatformAuthController.logout | POST, Origin + CSRF -> idempotent 204 and cookie clearing |
-| /api/dashboard/summary | dashboard/get-summary.ts | PlatformDashboardController.getSummary; PlatformDashboardSummaryDto | GET, live session + platform.dashboard.read -> actual aggregate counts |
+| Browser/BFF path       | Module under src/lib/server/endpoints | Confirmed Nest contract                                             | Method and security                                                       |
+| ---------------------- | ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| /api/auth/login        | auth/login.ts                         | PlatformAuthController.login; PlatformLoginDto                      | POST, exact Origin; email/password -> challenge, CSRF, expiry             |
+| /api/auth/mfa/verify   | auth/verify-mfa.ts                    | PlatformAuthController.verifyMfa; PlatformMfaVerifyDto              | POST, Origin + CSRF; challenge/TOTP or recovery code -> safe confirmation |
+| /api/auth/session      | auth/get-session.ts                   | PlatformAuthController.getSession; PlatformSessionResponseDto       | GET, live session -> own safe identity and effective permissions          |
+| /api/auth/logout       | auth/logout.ts                        | PlatformAuthController.logout                                       | POST, Origin + CSRF -> idempotent 204 and cookie clearing                 |
+| /api/dashboard/summary | dashboard/get-summary.ts              | PlatformDashboardController.getSummary; PlatformDashboardSummaryDto | GET, live session + platform.dashboard.read -> actual aggregate counts    |
 
 Confirmed upstream paths: /api/v1/platform/auth/login, /api/v1/platform/auth/mfa/verify,
 /api/v1/platform/auth/session, /api/v1/platform/auth/logout and /api/v1/platform/dashboard/summary.
@@ -120,19 +120,22 @@ Private API and dashboard responses are no-store; no fabricated zero statistics 
 
 ## Human installation and environment
 
-The scaffold already exists. Do not rerun create-next-app over it. Runtime/test package versions
-are deliberately not invented in package.json; the commands below resolve and pin them and generate
-the real lockfile. Until installation, those imports and tooling remain unavailable. Review engine,
-peer compatibility, licenses and advisories before release. No lockfile was authored by the agent.
+The scaffold already exists. Do not rerun create-next-app over it. Runtime/test dependencies are
+declared in package.json and the human-generated package-lock.json records their resolution.
+For a clean checkout with the reviewed matching lockfile, the human installs with npm ci. For an
+approved dependency change, follow [.agents/dependencies.md](.agents/dependencies.md); review engine,
+peer compatibility, licenses and advisories before release. Agents do not install or edit lockfiles.
 
 From gym/app/admin:
 
 ```bash
 node --version
-npm view @hugeicons/react version peerDependencies
-npm view vitest version engines
-npm install --save-exact @hugeicons/react @hugeicons/core-free-icons server-only zod
-npm install --save-dev --save-exact prettier vitest jsdom @testing-library/react @playwright/test
+npm ci
+```
+
+Only when `.env.local` does not already exist, create it from the fictional example:
+
+```bash
 cp .env.local.example .env.local
 chmod 600 .env.local
 ```
@@ -149,6 +152,27 @@ database URL, API session secret, MFA key or Prisma dependency belongs here. Pro
 HTTPS origins through managed configuration. Real dotenv files are ignored; fake examples are tracked.
 Never expose a development server to production users or use it with real administrator secrets;
 development framework diagnostics are not the production error-disclosure boundary.
+
+## Formatting and editor setup
+
+Read [.agents/prettier.md](.agents/prettier.md) for the exact formatting contract and examples.
+Use tabs with a two-space display width, 100-column preferred wrapping, single-quoted TypeScript
+strings, double-quoted JSX attributes, semicolons and LF. The shared Button is the visual reference;
+Prettier decides whether short elements stay inline and long props wrap.
+
+Open `app/admin` as a VS Code workspace folder, install the recommended Prettier extension and select
+Prettier as the default formatter. Option+Shift+F on macOS runs Format Document; format-on-save uses
+the same committed configuration. Nested `.vscode` settings do not automatically apply when only
+the parent `gym` folder is open. Do not use repeated spaces for manual column alignment.
+
+Humans run formatters and inspect the diff. For just the rule/configuration updates:
+
+```bash
+npx prettier --write .agents .prettierrc.json .vscode AGENTS.md CLAUDE.md README.md
+```
+
+Do not pass `.editorconfig` to Prettier. For an intentional whole-project formatting pass and
+verification, use the following commands; formatting alone does not establish runtime correctness.
 
 ## Human verification
 
@@ -196,17 +220,22 @@ No installs, formatting, lint, typecheck, tests, builds, servers or screenshots 
 
 ## Git handoff
 
-No Git repository existed at inspection. Human initialization, if desired:
+Read [.agents/git.md](.agents/git.md) before preparing any commit. Inspect current status rather than
+reusing the historical initial-scaffold state or a stale commit plan:
 
 ```bash
-git init -b main
+git status --short
+git diff
+git diff --cached
 ```
 
-Use [COMMIT_PLAN.md](COMMIT_PLAN.md) for one file per commit in dependency order. The rule group is
-uninterrupted. The plan includes the initial scaffold files because the new repository has no
-tracked files. Only run it after installation/verification and review. The human-generated
-package-lock.json goes immediately after package.json; never commit generated Next files or real
-dotenv files. No remote repository was created, configured or pushed.
+Only the human stages and commits. Use one exact file per commit in dependency order, with all
+changed `.agents/` files forming one uninterrupted group of individual commits. Inspect the staging
+area before each commit: it must contain only the intended file. A changed package-lock.json goes
+immediately after its matching package.json. Exclude secrets, ignored files and generated output.
+Preserve user deletions and unrelated changes; do not recreate a removed commit-plan document.
+Agents provide per-file messages/commands and explicitly report unexecuted checks; they never
+initialize, mutate or push the repository as part of that handoff.
 
 ## Deferred functionality and references
 
