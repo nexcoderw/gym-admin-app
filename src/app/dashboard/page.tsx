@@ -3,12 +3,13 @@ import { redirect } from 'next/navigation';
 
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { PageHeader } from '@/components/shared/page-header';
+import { AppShell } from '@/components/shared/app-shell';
 import { RecoveryState } from '@/components/shared/recovery-state';
 import { routes } from '@/constants/routes';
 import type { DashboardSummary } from '@/lib/contracts/dashboard';
 import { getSummary } from '@/lib/server/endpoints/dashboard/get-summary';
 import { BffError } from '@/lib/server/http/errors';
-import { serverContext } from '@/lib/server/session';
+import { requirePlatformSession, serverContext } from '@/lib/server/session';
 
 export const metadata: Metadata = { title: 'Overview' };
 
@@ -29,20 +30,20 @@ export default async function DashboardPage() {
 		return (
 			<RecoveryState
 				kind="403"
-				layout="section"
 				title="Dashboard access required"
 				description="Your session is valid, but it does not include the dashboard permission. Ask your platform operator to review your access."
 			/>
 		);
 	}
+	const session = await requirePlatformSession();
 
 	return (
-		<>
+		<AppShell permissions={session.permissions} displayName={session.displayName}>
 			<PageHeader
 				title="Platform overview"
 				description="A current view of platform identity and authorization records."
 			/>
 			<DashboardOverview summary={summary} />
-		</>
+		</AppShell>
 	);
 }
