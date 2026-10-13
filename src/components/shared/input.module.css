@@ -8,7 +8,25 @@
 	font-weight: 600;
 }
 .input {
+	display: block;
 	width: 100%;
+	padding-inline-start: var(--space-12);
+}
+.control {
+	position: relative;
+	min-width: 0;
+}
+.icon {
+	position: absolute;
+	inset-inline-start: var(--space-4);
+	inset-block-start: 50%;
+	transform: translateY(-50%);
+	display: inline-flex;
+	color: var(--text-muted);
+	pointer-events: none;
+}
+.control:focus-within .icon {
+	color: var(--primary);
 }
 .hint {
 	font-size: var(--text-small);
