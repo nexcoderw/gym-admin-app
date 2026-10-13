@@ -25,6 +25,28 @@ afterEach(() => {
 });
 
 describe('verified fixed upstream operations', () => {
+	it('keeps a bounded deadline beyond the backend session transaction budget', async () => {
+		const deadline = vi.spyOn(AbortSignal, 'timeout');
+		try {
+			fetchMock.mockResolvedValueOnce(Response.json(session));
+			await getSession(context);
+			expect(deadline).toHaveBeenCalledWith(20_000);
+		} finally {
+			deadline.mockRestore();
+		}
+	});
+	it('fails closed with a safe error when the upstream request times out', async () => {
+		fetchMock.mockRejectedValueOnce(
+			new DOMException('fictional private provider detail', 'TimeoutError'),
+		);
+		await expect(getSession(context)).rejects.toMatchObject({
+			status: 502,
+			code: 'SERVICE_UNAVAILABLE',
+			message: 'The service is unavailable. Try again.',
+		});
+		expect(fetchMock).toHaveBeenCalledTimes(1);
+	});
+
 	it('maps login and MFA requests and strips unknown response fields', async () => {
 		fetchMock.mockResolvedValueOnce(
 			Response.json({
