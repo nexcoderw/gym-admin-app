@@ -14,7 +14,7 @@ export async function post<T>(
 			credentials: 'same-origin',
 			cache: 'no-store',
 			redirect: 'error',
-			signal: AbortSignal.timeout(15_000),
+			signal: AbortSignal.timeout(25_000),
 			headers: {
 				'Content-Type': 'application/json',
 				...(csrf ? { 'x-platform-csrf-token': csrf } : {}),
