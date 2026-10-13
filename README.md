@@ -64,6 +64,10 @@ Both password and MFA steps retain their existing validation and authentication 
 Every text Input has a required decorative `icon` alongside its visible label. Buttons also require
 an `icon`; shared Button owns rendering it and replaces it with one consistent spinner when pending.
 Action labels stay unchanged while loading, so accessible names and control widths remain stable.
+Input's optional `trailingAction` slot supports feature-owned controls without embedding password
+policy in the primitive. The login eye button has a 44px target, an accessible show/hide label and
+`type="button"`; it never submits the form. Revealing preserves the value and autocomplete. Login
+hides the password before sending and clears it afterward; the eye control is disabled while pending.
 
 Button widths are `full` (100%), `medium` (12rem, default) and `small` (8rem), capped to the container.
 All retain a 48px minimum height. Use full width for authentication submits, medium for ordinary
@@ -141,6 +145,9 @@ Private API and dashboard responses are no-store; no fabricated zero statistics 
 
 ## Known backend and release concerns
 
+- First-owner initialization is not activation. Nest deliberately rejects pending users/staff or
+  unverified mailboxes with a generic 401. Finish the approved operator activation flow with the
+  original authenticator factor; never bypass those checks or reinitialize an existing owner.
 - Password mismatch: the inspected login DTO requires 12 characters, while first-owner bootstrap
   permits 8 bytes. Shorter existing bootstrap passwords cannot pass that login DTO. This frontend
   follows the confirmed login contract. Resolve the backend policy or credential recovery through
