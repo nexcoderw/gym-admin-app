@@ -1,12 +1,60 @@
 import { expect, test } from '@playwright/test';
 
+test('does not navigate from MFA while live session confirmation is unavailable', async ({
+	page,
+}) => {
+	let verificationRequests = 0;
+	await page.route('**/api/auth/login', (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				challengeToken: 'a'.repeat(43),
+				csrfToken: 'b'.repeat(43),
+				expiresAt: new Date(Date.now() + 300_000).toISOString(),
+				methods: ['totp'],
+			}),
+		}),
+	);
+	await page.route('**/api/auth/mfa/verify', (route) => {
+		verificationRequests += 1;
+		return route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				status: 'authenticated',
+				expiresAt: new Date(Date.now() + 300_000).toISOString(),
+				csrfToken: 'b'.repeat(43),
+			}),
+		});
+	});
+	await page.route('**/api/auth/session', (route) =>
+		route.fulfill({ status: 503, contentType: 'application/json', body: '{}' }),
+	);
+	await page.goto('/login');
+	await page.getByLabel('Email address').fill('operator@example.invalid');
+	await page.getByLabel('Password', { exact: true }).fill('fictional long password');
+	await page.getByRole('button', { name: 'Continue to verification' }).click();
+	await page.getByLabel('Six-digit code').fill('000123');
+	await page.getByRole('button', { name: 'Open platform' }).click();
+	await expect(page.getByRole('alert')).toContainText('Your session could not be confirmed');
+	await expect(page).toHaveURL(/\/login$/u);
+	await expect(page.getByLabel('Six-digit code')).toBeDisabled();
+	await page.getByRole('button', { name: 'Open platform' }).click();
+	await expect(page.getByRole('button', { name: 'Open platform' })).toBeEnabled();
+	await expect(page).toHaveURL(/\/login$/u);
+	expect(verificationRequests).toBe(1);
+});
+
 test('anonymous dashboard requests redirect to the fixed login page', async ({ page }) => {
 	await page.goto('/dashboard?returnTo=https%3A%2F%2Fattacker.example');
 	await expect(page).toHaveURL(/\/login$/u);
 	await expect(page.getByLabel('Email address')).toBeVisible();
 });
 
-test('light login uses the two font roles and remains usable at compact widths', async ({ page }) => {
+test('light login uses the two font roles and remains usable at compact widths', async ({
+	page,
+}) => {
 	await page.goto('/login');
 	await expect(page.locator('html')).toHaveCSS('color-scheme', 'light');
 	await expect(page.locator('body')).toHaveCSS('background-color', 'rgb(255, 255, 255)');
@@ -33,7 +81,9 @@ test('light login uses the two font roles and remains usable at compact widths',
 	}
 });
 
-test('password and mfa actions share loading treatment and preserve their labels', async ({ page }) => {
+test('password and mfa actions share loading treatment and preserve their labels', async ({
+	page,
+}) => {
 	const loginGate = Promise.withResolvers<void>();
 	const mfaGate = Promise.withResolvers<void>();
 	const challengeToken = 'a'.repeat(43);
