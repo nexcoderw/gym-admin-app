@@ -14,10 +14,32 @@ export const metadata: Metadata = { title: 'Overview' };
 export default async function DashboardPage() {
 	try {
 		const summary = await getSummary(await serverContext());
-		return <><PageHeader title="Platform overview" description="A current view of platform identity and authorization records." /><DashboardOverview summary={summary} /></>;
+		return (
+			<>
+				<PageHeader
+					title="Platform overview"
+					description="A current view of platform identity and authorization records."
+				/>
+				<DashboardOverview summary={summary} />
+			</>
+		);
 	} catch (error) {
 		if (error instanceof BffError && error.status === 401) redirect(routes.login);
-		if (error instanceof BffError && error.status === 403) return <><PageHeader title="Dashboard access required" description="Your session is valid, but it does not include the dashboard permission." /><Card><p>Ask an authorized platform operator to review your access. A role name alone does not grant dashboard access.</p></Card></>;
+		if (error instanceof BffError && error.status === 403)
+			return (
+				<>
+					<PageHeader
+						title="Dashboard access required"
+						description="Your session is valid, but it does not include the dashboard permission."
+					/>
+					<Card>
+						<p>
+							Ask an authorized platform operator to review your access. A role name alone does not
+							grant dashboard access.
+						</p>
+					</Card>
+				</>
+			);
 		throw error;
 	}
 }
