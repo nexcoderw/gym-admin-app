@@ -1,2 +1,8 @@
-.container { display: grid; gap: var(--space-2); }
-.container p { max-width: 28ch; font-size: var(--text-small); }
+.container {
+	display: grid;
+	gap: var(--space-2);
+}
+.container p {
+	max-width: 28ch;
+	font-size: var(--text-small);
+}
