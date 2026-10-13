@@ -1,8 +1,131 @@
 # NEXCODE Gym Admin
 
 Private superadmin frontend foundation for admin.gym.rw; proposed repository: nexcoderw/gym-admin.
-Next.js owns the UI and five explicit BFF adapters. NestJS owns authentication and effective
+Next.js owns the UI and eleven explicit BFF adapters. NestJS owns authentication and effective
 permissions. gym-db owns every schema and migration. No sibling project was changed.
+
+## Organization management — Step 13
+
+Implemented pages: `/organizations`, `/organizations/new`, `/organizations/[id]` and
+`/organizations/[id]/edit`. List/detail pages read current authorized records through server-only
+adapters, not self-HTTP. Registration creates PENDING records only, editing changes name only, and
+activation/suspension require an explicit confirmation. No delete, archive, slug editing, tenant
+login, owner/subscription data, permission provisioning or audit-history UI is included.
+
+### Backend prerequisites are still blocking live mutations
+
+The inspected gym-api module still binds `UnavailableOrganizationAudit`; mutations are therefore
+blocked with `ORGANIZATION_AUDIT_UNAVAILABLE`. Step 12's DB checks, audit migration/triggers/grants,
+durable provider and controlled permission provisioning must be reviewed and verified separately.
+The five organization permissions have not been confirmed provisioned to an administrator. The
+existing owner role is not expanded by this frontend. No frontend flag, fake data or role-name
+shortcut enables unaudited writes. Reads also require independently provisioned read permission.
+Mocked successful responses in authored tests are not live audit/database evidence.
+
+### Registered endpoint contracts
+
+All backend paths below have prefix `/api/v1/platform`; they exist only in guarded server adapters.
+Browser components use the centralized frontend paths and same-origin cookies.
+
+| Frontend BFF method/path | Backend method/path | Required permission suffix |
+| --- | --- | --- |
+| GET `/api/organizations` | GET `/organizations` | `read` |
+| GET `/api/organizations/[id]` | GET `/organizations/:id` | `read` |
+| POST `/api/organizations` | POST `/organizations` (201) | `create` |
+| PATCH `/api/organizations/[id]` | PATCH `/organizations/:id` | `update` |
+| POST `/api/organizations/[id]/activation` | POST `/organizations/:id/activation` | `activate` |
+| POST `/api/organizations/[id]/suspension` | POST `/organizations/:id/suspension` | `suspend` |
+
+The full permission names are `platform.organizations.<suffix>`. Each adapter checks a live Nest
+session and its exact permission before calling the organization operation. Pages enforce their
+own permission independently; edit also needs read permission to load its current record. Navbar
+visibility uses effective permissions and stays active for nested routes, but does not authorize
+anything. Expiry/revocation follows existing fixed-login recovery; confirmed BFF 401 responses clear
+only supplied platform cookies. Service outages do not falsely log an administrator out.
+
+Requests and responses use strict browser-safe Zod contracts. Name normalization/Unicode bounds,
+slug grammar and all 31 reserved names match the inspected Nest DTOs. Create sends only name/slug;
+update sends only name. Unknown fields, malformed UUIDs, duplicate/unknown query fields and invalid
+If-Match values fail before the organization request. POST/PATCH validate exact Origin and CSRF
+before reading/forwarding input, using the existing timing-safe cookie proof. Arbitrary browser
+Authorization, permission, actor, URL and query headers are not forwarded.
+
+List state is shareable through limit (default 20, max 50), status and optional UUID cursor.
+Ordering remains Nest's createdAt descending / UUID ascending; next results use the returned
+nextCursor with the same filter. Changing the status clears the cursor. Restart returns the first
+result set without inventing page numbers or downloading every organization. Invalid/expired
+cursors show recovery, never an empty registry. Zero items appears only after a validated success.
+Native controls and the responsive list keep essential actions available at 320px; registered date
+is hidden on smaller lists but remains in details. Dates display in Africa/Kigali.
+
+Detail GET requires a valid ETag exactly quoting the returned canonical UTC updatedAt. Name editing
+preserves that ETag and sends If-Match; 412 means stale organization, **not** MFA enrollment.
+Authentication's existing 412 interpretation remains unchanged. Stale edits require reload, not
+automatic resubmission. Activation is PENDING/SUSPENDED → ACTIVE, suspension ACTIVE → SUSPENDED.
+The dialog names the gym, focuses Cancel, contains keyboard focus natively, restores trigger focus
+and supports Escape except while a request is pending. It re-reads the latest version before sending
+expectedUpdatedAt; a changed version requires a new confirmation. These transitions do not grant
+subscriptions, provision a domain, cancel billing or delete members.
+
+Shared transport now supports PATCH, exact 201, allowlisted query/If-Match and validated ETag without
+removing redirects, no-store, timeouts, cookie allowlists or JSON bounds. Organization Set-Cookie
+headers are rejected, not relayed. Only allowlisted domain codes distinguish slug conflict,
+lifecycle conflict and incomplete audit setup; raw provider messages/SQL/hosts never reach the UI.
+Every button uses Hugeicons and the same shared loading treatment; Button accepts a native React 19
+ref solely for dialog focus management. The light palette, fonts and existing component system are
+unchanged. No installs or package/lockfile changes were needed.
+
+Pending submissions are guarded synchronously as well as visually. Success navigation requires the
+expected status and validated response. An ambiguous registration/network outcome disables another
+submission and directs the administrator to review the registry; there is no automatic POST retry
+or reload-to-retry button. Unknown outcomes must be reconciled before attempting another creation.
+Late responses from an unmounted form cannot navigate or update its state.
+
+### Human verification (not executed by the agent)
+
+From app/admin, format only the changed areas and inspect the diff:
+
+```bash
+cd /Users/dvniels/Desktop/projects/gym/app/admin
+npx prettier --write src/lib/contracts/organizations.ts src/lib/server/http/upstream.ts src/lib/server/organizations-access.ts src/lib/server/organization-pages.ts src/lib/server/endpoints/organizations src/lib/client/mutations.ts src/constants/routes.ts src/constants/navigation.ts src/components/shared/button.tsx src/components/shared/navbar.tsx src/components/organizations src/app/organizations src/app/api/organizations test/components.test.tsx test/organization-fixtures.ts test/organizations-contracts.test.ts test/organizations-routes.test.ts test/organizations-pages.test.ts test/organizations-ui.test.tsx test/e2e/organizations.spec.ts README.md
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Tests cover strict contracts, each fixed operation/permission, Origin/CSRF rejection, forged claims,
+expired/rejected sessions, safe errors, PATCH/201/ETag, cookie rejection, pages, empty/real rows,
+filter/cursor behavior, duplicate prevention, stale editing, modal focus, lifecycle confirmation
+and audit-unavailable registration. Existing auth/dashboard tests remain regression coverage.
+No tests, build, formatting, browser automation or database commands were executed by the agent.
+
+Browser verification requires human-started admin (4000) and an approved development/test backend
+(3000) with matching admin Origin/cookie mode. Complete Step 12 permissions before using protected
+organization pages. Use a fictional gym and an approved test administrator, never production
+credentials. Record a fresh test login/MFA session privately through the existing browser tooling:
+
+```bash
+npx playwright codegen --save-storage=/private/tmp/gym-admin-organization-session.json http://localhost:4000
+chmod 600 /private/tmp/gym-admin-organization-session.json
+PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE=/private/tmp/gym-admin-organization-session.json npm run test:e2e -- test/e2e/organizations.spec.ts
+```
+
+Close codegen after successful test login/MFA. Its credential-bearing storage file and retained
+traces must stay private/uncommitted and be removed by the human when no longer required. Refresh
+the session when expired. Missing test-session configuration fails protected scenarios explicitly,
+not as a silent skip. The focused browser test mocks only the browser's organization mutation
+response; initial server-page/session/permission checks remain real. It verifies unavailable-state
+presentation and responsive keyboard use, not real mutation/audit persistence.
+
+Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists; register
+Soho Gym with a unique nonreserved slug; verify real 201 and returned detail UUID; rename using a
+current ETag; change the same gym in another window and confirm stale saves cannot overwrite it;
+check each lifecycle confirmation and invalid transition; remove a test permission/revoke the test
+session and confirm direct page/BFF rejection; inspect at 320/768/1440px and 200% zoom with keyboard
+and screen reader. Verify actual durable audit rows through an authorized backend/database review,
+not this UI. Do not declare production readiness until that separate evidence exists.
 
 ## Inspection and scope
 
@@ -15,7 +138,8 @@ After installation, read node_modules/next/dist/docs before subsequent framework
 Implemented: responsive light login/MFA and dashboard shells; shared Button/Input/Card/navigation;
 real aggregate summary presentation; fixed typed BFF endpoints; strict validation; host-only cookie
 relay; safe errors; loading, error and not-found states; authored tests and engineering rules.
-No fake metrics, organization/staff CRUD, billing, payments, subscriptions or additional domains.
+Organization registry management is implemented as described in Step 13 below. No fake metrics,
+gym staff CRUD, billing, payments or subscriptions are implemented.
 
 ## Structure
 
