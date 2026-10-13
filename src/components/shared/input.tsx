@@ -1,15 +1,17 @@
 import type { InputHTMLAttributes } from 'react';
+import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 
 import styles from './input.module.css';
 
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
 	readonly id: string;
 	readonly label: string;
+	readonly icon: IconSvgElement;
 	readonly hint?: string;
 	readonly error?: string;
 }
 
-export function Input({ id, label, hint, error, className = '', ...props }: InputProps) {
+export function Input({ id, label, icon, hint, error, className = '', ...props }: InputProps) {
 	const describedBy =
 		[hint ? `${id}-hint` : '', error ? `${id}-error` : '', props['aria-describedby'] ?? '']
 			.filter(Boolean)
@@ -17,13 +19,18 @@ export function Input({ id, label, hint, error, className = '', ...props }: Inpu
 	return (
 		<div className={styles.field}>
 			<label htmlFor={id}>{label}</label>
-			<input
-				{...props}
-				id={id}
-				aria-describedby={describedBy}
-				aria-invalid={error ? true : props['aria-invalid']}
-				className={`${styles.input} ${className}`}
-			/>
+			<div className={styles.control}>
+				<span className={styles.icon} aria-hidden="true">
+					<HugeiconsIcon icon={icon} size={18} color="currentColor" />
+				</span>
+				<input
+					{...props}
+					id={id}
+					aria-describedby={describedBy}
+					aria-invalid={error ? true : props['aria-invalid']}
+					className={`${styles.input} ${className}`}
+				/>
+			</div>
 			{hint ? (
 				<p className={styles.hint} id={`${id}-hint`}>
 					{hint}
