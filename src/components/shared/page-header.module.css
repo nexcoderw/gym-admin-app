@@ -1,0 +1,2 @@
+.header { display: grid; gap: var(--space-3); margin-block-end: var(--space-8); }
+.header p { max-width: 65ch; color: var(--text-secondary); }
