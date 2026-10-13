@@ -1,17 +1,56 @@
 # Hugeicons
 
+## Purpose
+
+Use one consistent, accessible icon system without unnecessary package weight.
+
 ## Mandatory requirements
 
-Use @hugeicons/react HugeiconsIcon with individually imported definitions from @hugeicons/core-free-icons. Icons complement text; decorative icons have aria-hidden and interactive icon-only controls require an accessible name. CurrentColor follows semantic text tokens.
+1. Render icons with `HugeiconsIcon` from `@hugeicons/react` and named definitions from
+   `@hugeicons/core-free-icons`. Confirm an icon export exists in the installed package.
+2. Import only the definitions a component or registry uses. Do not import the complete namespace
+   or guess unsupported deep paths to work around an export error.
+3. Icons support text, not replace it without an accessible name. Decorative icons use
+   `aria-hidden="true"`; an icon-only button needs a meaningful `aria-label`.
+4. Let icon color follow semantic text color/currentColor. Keep size and stroke treatment consistent
+   with the control and readable at small sizes.
+5. Reference navigation icons from the central registry, not duplicated feature-specific arrays.
+   Humans install/update packages; agents may not run install commands.
 
-## Prohibited patterns
+## Do
 
-No other icon libraries, emoji icons, complete namespace imports, or unverified deep package paths.
+```tsx
+import { DashboardSquare01Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 
-## Good example
+export function OverviewLabel() {
+	return (
+		<>
+			<HugeiconsIcon icon={DashboardSquare01Icon} size={20} aria-hidden="true" />
+			<span>Overview</span>
+		</>
+	);
+}
+```
 
-Import DashboardSquare01Icon and render it alongside the Overview label.
+Compose this decorative icon and visible label inside the actual navigation link.
 
-## Review criteria
+## Do not
 
-Check official package names, import granularity, contrast and accessible button labels.
+```tsx
+// WRONG: namespace import and a control with no accessible name.
+import * as icons from '@hugeicons/core-free-icons';
+
+<button>
+	<HugeiconsIcon icon={icons.DashboardSquare01Icon} />
+</button>;
+```
+
+Do not mix in another icon library, emoji substitutes or copied unreviewed SVG assets.
+
+## Prevented failures and review checklist
+
+- One icon system prevents inconsistent appearance and unnecessary dependencies.
+- Named imports keep usage explicit; labels prevent silent screen-reader controls.
+- Verify official package names, available exports, size, contrast and accessible names.
+- See [navigation.md](navigation.md), [accessibility.md](accessibility.md) and [dependencies.md](dependencies.md).
