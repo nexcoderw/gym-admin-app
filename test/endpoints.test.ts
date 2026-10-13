@@ -48,7 +48,7 @@ describe('verified fixed upstream operations', () => {
 			fetchMock.mockResolvedValueOnce(Response.json({ secret: 'private' }, { status }));
 			await expect(
 				login({ email: 'operator@example.invalid', password: '123456789012' }, context),
-			).rejects.toMatchObject({ status: status === 429 ? 429 : 502 });
+			).rejects.toMatchObject({ status: status === 500 ? 502 : status });
 			expect(fetchMock).toHaveBeenCalledOnce();
 		},
 	);
