@@ -8,6 +8,7 @@ import { Input } from '@/components/shared/input';
 import { browserApi } from '@/constants/routes';
 import { verifiedSchema, type MfaChallenge } from '@/lib/contracts/auth';
 import { post } from '@/lib/client/mutations';
+import { readLiveSession } from '@/lib/client/session';
 import styles from './mfa-form.module.css';
 
 export function MfaForm({
@@ -27,6 +28,7 @@ export function MfaForm({
 		challenge.methods.includes('totp') ? 'totp' : 'recovery_code',
 	);
 	const [pending, setPending] = useState(false);
+	const [sessionEstablished, setSessionEstablished] = useState(false);
 	const [error, setError] = useState('');
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -36,18 +38,22 @@ export function MfaForm({
 		setPending(true);
 		setError('');
 		try {
-			if (Date.parse(challenge.expiresAt) <= Date.now())
-				throw new Error('Verification expired. Start sign-in again.');
-			await post(
-				browserApi.verifyMfa,
-				{
-					challengeToken: challenge.challengeToken,
-					method,
-					...(method === 'totp' ? { totpCode: code } : { recoveryCode: code }),
-				},
-				verifiedSchema,
-				challenge.csrfToken,
-			);
+			if (!sessionEstablished) {
+				if (Date.parse(challenge.expiresAt) <= Date.now())
+					throw new Error('Verification expired. Start sign-in again.');
+				await post(
+					browserApi.verifyMfa,
+					{
+						challengeToken: challenge.challengeToken,
+						method,
+						...(method === 'totp' ? { totpCode: code } : { recoveryCode: code }),
+					},
+					verifiedSchema,
+					challenge.csrfToken,
+				);
+				setSessionEstablished(true);
+			}
+			await readLiveSession();
 			onAuthenticated();
 		} catch (failure) {
 			setError(failure instanceof Error ? failure.message : 'Verification failed. Try again.');
@@ -70,7 +76,7 @@ export function MfaForm({
 				</h1>
 				<p className={styles.help}>Complete this one-time check to open your platform.</p>
 			</div>
-			<fieldset disabled={pending} className={styles.methods}>
+			<fieldset disabled={pending || sessionEstablished} className={styles.methods}>
 				<legend>Verification method</legend>
 				{challenge.methods.map((value) => (
 					<label key={value}>
@@ -98,7 +104,7 @@ export function MfaForm({
 				minLength={method === 'totp' ? 6 : 12}
 				maxLength={method === 'totp' ? 6 : 128}
 				required
-				disabled={pending}
+				disabled={pending || sessionEstablished}
 			/>
 			{error ? (
 				<p role="alert" className="error-message">
