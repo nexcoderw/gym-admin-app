@@ -146,6 +146,28 @@ redirect only to /login. Permission denial produces an explicit access-required 
 platform.owner role name grants no bypass. Nest independently enforces its own live guards.
 Private API and dashboard responses are no-store; no fabricated zero statistics appear on failure.
 
+## Recovery, empty states, and branding
+
+The shared state panel provides centered, responsive SVG illustrations for missing pages, sign-in,
+permission denial, rate limiting, failures, loading, and confirmed empty staff results. Decorative
+illustration wrappers have one short entrance animation; reduced-motion users receive a static
+illustration. Retry actions use the existing shared Button loading treatment. Navigation uses real
+links with the same visual style, not buttons nested inside links. No unavailable data is rendered
+as zero, and no future staff-creation endpoint is invented as an empty-state action.
+
+Visit `/401`, `/403`, `/404`, `/429`, `/500`, and `/503` to inspect the designs. `/404` invokes the actual
+Next not-found boundary; the other numbered routes are informational recovery pages, not middleware
+that sets those HTTP statuses. Actual API/BFF statuses remain unchanged. Anonymous dashboard requests
+still redirect to `/login`; verified permission denial displays the 403 state in the shell. Root and
+dashboard error boundaries prefer Next 16.4 `retry()` with legacy `reset()` compatibility. Fatal root
+layout errors have an independent document with the same light styles and two font families.
+
+The NEXCODE brand uses a custom white N monogram with a blue signal detail, paired with an Albert Sans
+wordmark. `public/nexcode-mark.svg` is used on login, recovery pages, and the workspace shell.
+`src/app/icon.svg` contains the matching browser mark; Next automatically registers it as the favicon.
+Keep both SVG geometries aligned when updating the mark. Brand colors are fixed asset colors, while
+component presentation uses semantic tokens. Browser favicon caches may require a hard reload.
+
 ## Known backend and release concerns
 
 - First-owner initialization is not activation. Nest deliberately rejects pending users/staff or
