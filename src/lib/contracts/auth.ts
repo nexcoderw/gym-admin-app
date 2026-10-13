@@ -6,7 +6,7 @@ const utcDate = z.string().datetime();
 export const loginRequestSchema = z
 	.object({
 		email: z.string().trim().toLowerCase().email().max(254),
-		// Matches the currently implemented Nest DTO, not the separate bootstrap policy.
+		// Browser length is a UX check; Nest validates Unicode length authoritatively.
 		password: z.string().min(12).max(1024),
 	})
 	.strict();
