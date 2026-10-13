@@ -112,7 +112,9 @@ describe('verified fixed upstream operations', () => {
 		fetchMock.mockResolvedValueOnce(Response.json({ ...session, sessionToken: token }));
 		expect(await getSession(context)).not.toHaveProperty('sessionToken');
 		expect(String(fetchMock.mock.calls[0]?.[0])).toContain('/api/v1/platform/auth/session');
-		fetchMock.mockResolvedValueOnce(new Response(null, { status: 204 }));
+		fetchMock.mockResolvedValueOnce(
+			new Response(null, { status: 204, headers: { ETag: '"unrelated-auth-metadata"' } }),
+		);
 		await expect(logout(context)).resolves.toEqual({ data: undefined, cookies: [] });
 		expect(String(fetchMock.mock.calls[1]?.[0])).toContain('/api/v1/platform/auth/logout');
 	});
