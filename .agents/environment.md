@@ -28,11 +28,14 @@ a database, origin or cookie mode is safe.
 Illustrative local-only example; the local backend must really use the corresponding origin:
 
 ```dotenv
-GYM_API_BASE_URL=http://localhost:4000
-ADMIN_ORIGIN=http://localhost:3000
+GYM_API_BASE_URL=http://127.0.0.1:3000
+ADMIN_ORIGIN=http://localhost:4000
 ```
 
 The frontend is not a database client and does not need a Prisma database URL.
+The local port map is API 3000, admin 4000 and manager 4001. Next dev/start scripts explicitly set
+their port; do not rely on a dotenv PORT value to configure the Next CLI. Nest must allow the exact
+admin origin for platform authentication; manager CORS access does not grant admin authorization.
 
 ## Do not
 
