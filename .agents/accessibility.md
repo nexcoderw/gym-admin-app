@@ -38,7 +38,7 @@ the project's 44px touch-target goal is a usability standard, not a claim about 
 			{error}
 		</p>
 	) : null}
-</>;
+</>
 ```
 
 Ensure these elements share one form and IDs are unique.
