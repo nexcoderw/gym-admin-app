@@ -1,17 +1,55 @@
 # Authorization
 
+## Purpose
+
+Nest's current effective permissions authorize operations. UI visibility is only presentation.
+Authentication establishes who is signed in; authorization establishes what that identity may do.
+
 ## Mandatory requirements
 
-Resolve sessions and effective permissions through Nest for every protected operation. Check dashboard permission in both BFF handlers and server page data boundaries; Nest also checks it. Navigation filtering improves UX only. Redirect anonymous page requests only to the fixed login route; represent permission denial without pretending a session is absent.
+1. Resolve the current session and effective permissions through Nest at every protected data or
+   mutation boundary. Reuse the established request-scoped session helper, not a browser assertion.
+2. Protect the server page/data operation and its BFF route independently. A layout check alone
+   cannot secure an independently invoked route handler or nested data operation.
+3. Require the exact permission for the operation. Dashboard access requires
+   `platform.dashboard.read`; no special role string automatically bypasses the check.
+4. Filter navigation with validated permissions to avoid dead-end links, but enforce authorization
+   again at the server and Nest. Hiding a button never makes its API safe.
+5. Distinguish unauthenticated requests from insufficient permission. Redirect anonymous pages to a
+   fixed login route; return a safe forbidden state for authenticated users without access.
+6. Do not trust tenant IDs, permission headers, query parameters or client state as authority.
+   Scope future organization/branch operations using backend-established policy, not frontend guesses.
 
-## Prohibited patterns
+## Do
 
-No authorization from role strings, browser state, hidden links, tenant IDs, or a platform.owner bypass.
+After resolving a live server session:
 
-## Good example
+```ts
+const canReadDashboard = session.permissions.includes('platform.dashboard.read');
 
-session.permissions.includes('platform.dashboard.read') gates the overview after live session validation.
+if (!canReadDashboard) {
+	throw new BffError(403, 'PERMISSION_DENIED', 'You do not have access to this page.');
+}
+```
 
-## Review criteria
+Use the shared authorization helpers where available rather than duplicating policy everywhere.
 
-Test anonymous, expired, revoked, suspended, permission removal and forged-header requests; never mock guards always-allow.
+## Do not
+
+```ts
+// WRONG: role names and browser storage do not establish effective permissions.
+const allowed = localStorage.getItem('role') === 'platform.owner';
+
+// WRONG: treating a browser display flag as an authorization decision.
+const authorizedForDashboardRequest = allowed;
+```
+
+Never add `platform.owner` bypasses or always-allow guards to make tests pass.
+
+## Prevented failures and review checklist
+
+- Independent server checks prevent direct-URL and direct-handler bypasses.
+- Live effective permissions prevent revoked access persisting in cached browser state.
+- Cover anonymous, expired, revoked, suspended, removed-permission and forged-header requests.
+- Verify denied requests cannot fetch privileged data before the permission check.
+- See [navigation.md](navigation.md), [nextjs.md](nextjs.md) and [testing.md](testing.md).
