@@ -2,6 +2,7 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { StatePanel } from '@/components/shared/state-panel';
@@ -22,8 +23,9 @@ afterEach(cleanup);
 
 describe('workspace recovery and empty states', () => {
 	it('keeps the public logo and browser icon geometry identical', async () => {
-		const mark = await readFile(new URL('../public/nexcode-mark.svg', import.meta.url), 'utf8');
-		const icon = await readFile(new URL('../src/app/icon.svg', import.meta.url), 'utf8');
+		// Node paths avoid Vite/jsdom interpreting asset URLs as browser resources.
+		const mark = await readFile(resolve('public/nexcode-mark.svg'), 'utf8');
+		const icon = await readFile(resolve('src/app/icon.svg'), 'utf8');
 		expect(icon).toBe(mark);
 		expect(icon).toContain('viewBox="0 0 64 64"');
 	});
@@ -75,9 +77,12 @@ describe('workspace recovery and empty states', () => {
 	});
 
 	it('keeps the shared loading indicator and label while retry is pending', async () => {
-		const gate = Promise.withResolvers<void>();
+		let releaseRetry: (() => void) | undefined;
+		const retryFinished = new Promise<void>((resolveRetry) => {
+			releaseRetry = resolveRetry;
+		});
 		const retry = vi.fn(async () => {
-			await gate.promise;
+			await retryFinished;
 		});
 		render(<RecoveryState kind="503" onRetry={retry} />);
 		try {
@@ -90,8 +95,8 @@ describe('workspace recovery and empty states', () => {
 			expect(retry).toHaveBeenCalledOnce();
 		} finally {
 			await act(async () => {
-				gate.resolve();
-				await gate.promise;
+				releaseRetry?.();
+				await retryFinished;
 			});
 		}
 		expect(screen.getByRole('button', { name: 'Try again' }).hasAttribute('disabled')).toBe(false);
