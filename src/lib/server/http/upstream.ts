@@ -6,6 +6,9 @@ import { serverEnvironment } from '../environment';
 import { BffError, upstreamFailure } from './errors';
 import { boundedJson } from './json';
 
+// Exceeds the API session's bounded 5s acquisition + 10s execution budget, with transport headroom.
+const UPSTREAM_TIMEOUT_MS = 20_000;
+
 export interface ForwardContext {
 	readonly cookie: string;
 	readonly csrf?: string;
@@ -26,7 +29,7 @@ export async function upstream<T>(
 			method,
 			cache: 'no-store',
 			redirect: 'error',
-			signal: AbortSignal.timeout(10_000),
+			signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
 			headers: {
 				Accept: 'application/json',
 				Origin: env.adminOrigin,
