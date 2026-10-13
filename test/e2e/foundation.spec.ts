@@ -63,6 +63,8 @@ test('password and mfa actions share loading treatment and preserve their labels
 		await continueButton.click();
 		await expect(continueButton).toBeDisabled();
 		await expect(continueButton).toHaveAttribute('aria-busy', 'true');
+		await expect(page.getByRole('button', { name: 'Show password' })).toBeDisabled();
+		await expect(page.getByLabel('Password', { exact: true })).toHaveAttribute('type', 'password');
 		const spinner = page.locator('[data-loading-indicator]');
 		await expect(spinner).toHaveCount(1);
 		const loadingClass = await spinner.getAttribute('class');
@@ -87,24 +89,43 @@ test('password and mfa actions share loading treatment and preserve their labels
 	}
 });
 
-test('login is labelled, keyboard reachable, responsive, and reports safe authentication errors', async ({
+test('login reveals passwords safely and reports authentication errors without retaining secrets', async ({
 	page,
 }) => {
-	await page.route('**/api/auth/login', (route) =>
-		route.fulfill({
+	let loginRequests = 0;
+	await page.route('**/api/auth/login', (route) => {
+		loginRequests += 1;
+		return route.fulfill({
 			status: 401,
 			contentType: 'application/json',
 			body: JSON.stringify({ error: { code: 'AUTHENTICATION_REQUIRED' } }),
-		}),
-	);
+		});
+	});
 	await page.goto('/login');
 	await page.keyboard.press('Tab');
 	await expect(page.getByRole('link', { name: 'Skip to content' })).toBeFocused();
 	await page.getByLabel('Email address').fill('operator@example.invalid');
 	await page.getByLabel('Password', { exact: true }).fill('fictional long password');
+	const password = page.getByLabel('Password', { exact: true });
+	const reveal = page.getByRole('button', { name: 'Show password' });
+	await expect(password).toHaveAttribute('type', 'password');
+	await expect(reveal).toHaveAttribute('aria-controls', 'password');
+	await reveal.click();
+	await expect(password).toHaveAttribute('type', 'text');
+	await expect(password).toHaveValue('fictional long password');
+	const hide = page.getByRole('button', { name: 'Hide password' });
+	await expect(hide).toHaveAttribute('aria-pressed', 'true');
+	await hide.click();
+	await expect(password).toHaveAttribute('type', 'password');
+	await expect(password).toHaveValue('fictional long password');
+	expect(loginRequests).toBe(0);
+	await page.getByRole('button', { name: 'Show password' }).click();
 	await page.getByRole('button', { name: 'Continue to verification' }).click();
 	await expect(page.getByRole('alert')).toContainText('Authentication was not accepted');
-	await expect(page.getByLabel('Password', { exact: true })).toHaveValue('');
+	await expect(password).toHaveValue('');
+	await expect(password).toHaveAttribute('type', 'password');
+	await expect(page.getByRole('button', { name: 'Show password' })).toBeEnabled();
+	expect(loginRequests).toBe(1);
 	expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
 		true,
 	);
