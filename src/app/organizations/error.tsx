@@ -7,7 +7,6 @@ export default function OrganizationsError({ retry, reset }: RecoveryBoundaryPro
 	return (
 		<RecoveryState
 			kind="503"
-			layout="section"
 			title="Organizations unavailable"
 			description="Current gym records could not be loaded. No empty registry or successful change has been inferred."
 			onRetry={retry ?? reset}
