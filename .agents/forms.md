@@ -20,6 +20,9 @@ Apply this rule to login, MFA and any future admin mutation; also read authentic
    six-digit constraint to a recovery code or trim/normalize passwords without backend agreement.
 6. Respect payload bounds and expiry. An expired MFA challenge requires restarting login, not retrying
    indefinitely with the same challenge. Do not invent password reset or registration endpoints.
+7. Supply a leading icon to text Input fields while retaining visible labels, hints and autocomplete.
+   Use a full-width primary submit button with an icon. Let shared Button render its pending state;
+   do not swap labels between "Continue", "Checking" and "Verifying" at the caller.
 
 ## Do
 
@@ -27,16 +30,24 @@ Illustrative JSX using the shared Input and Button:
 
 ```tsx
 <form onSubmit={handleSubmit}>
-	<Input id="email" name="email" label="Email" autoComplete="username" required />
+	<Input
+		id="email"
+		name="email"
+		label="Email"
+		icon={Mail01Icon}
+		autoComplete="username"
+		required
+	/>
 	<Input
 		id="password"
 		name="password"
 		label="Password"
+		icon={LockPasswordIcon}
 		type="password"
 		autoComplete="current-password"
 		required
 	/>
-	<Button type="submit" pending={pending}>
+	<Button type="submit" icon={ArrowRight01Icon} width="full" pending={pending}>
 		Continue
 	</Button>
 </form>
