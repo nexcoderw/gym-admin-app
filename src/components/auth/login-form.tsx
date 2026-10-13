@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowRight01Icon, LockPasswordIcon, Mail01Icon } from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
@@ -65,13 +66,15 @@ export function LoginForm() {
 			aria-busy={pending}
 		>
 			<div className={styles.heading}>
-				<h2>Sign in to your platform</h2>
-				<p>Use your NEXCODE administrator account.</p>
+				<h1>Welcome back</h1>
+				<p>Sign in to your NEXCODE administrator account.</p>
 			</div>
 			<Input
 				id="email"
 				name="email"
 				label="Email address"
+				icon={Mail01Icon}
+				placeholder="name@example.com"
 				type="email"
 				autoComplete="username"
 				maxLength={254}
@@ -82,6 +85,8 @@ export function LoginForm() {
 				id="password"
 				name="password"
 				label="Password"
+				icon={LockPasswordIcon}
+				placeholder="Enter your password"
 				type="password"
 				autoComplete="current-password"
 				minLength={12}
@@ -94,11 +99,11 @@ export function LoginForm() {
 					{error}
 				</p>
 			) : null}
-			<Button type="submit" pending={pending}>
-				{pending ? 'Checking details…' : 'Continue to verification'}
+			<Button type="submit" icon={ArrowRight01Icon} width="full" pending={pending}>
+				Continue to verification
 			</Button>
 			<p className={styles.note}>
-				An authenticator or recovery code is required after your password.
+				Your authenticator or a recovery code is required in the next step.
 			</p>
 		</form>
 	);
