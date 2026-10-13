@@ -15,14 +15,30 @@ import DashboardError from '@/app/dashboard/error';
 afterEach(cleanup);
 describe('accessible UI foundation', () => {
 	it('associates input label, hint and error with a native input', () => {
-		render(<Input id="email" label="Email address" hint="Use your account email" error="Email is required" />);
+		render(
+			<Input
+				id="email"
+				label="Email address"
+				hint="Use your account email"
+				error="Email is required"
+			/>,
+		);
 		const input = screen.getByLabelText('Email address');
 		expect(input.getAttribute('aria-describedby')).toBe('email-hint email-error');
 		expect(input.getAttribute('aria-invalid')).toBe('true');
 	});
 	it('prevents duplicate interaction while pending', () => {
 		let clicks = 0;
-		render(<Button pending onClick={() => { clicks += 1; }}>Continue</Button>);
+		render(
+			<Button
+				pending
+				onClick={() => {
+					clicks += 1;
+				}}
+			>
+				Continue
+			</Button>,
+		);
 		const button = screen.getByRole('button', { name: 'Continue' });
 		fireEvent.click(button);
 		expect(button.hasAttribute('disabled')).toBe(true);
@@ -30,17 +46,25 @@ describe('accessible UI foundation', () => {
 		expect(clicks).toBe(0);
 	});
 	it('renders shared cards and actual summary fields without fabricated domains', () => {
-		render(<Card><DashboardOverview summary={summary} /></Card>);
+		render(
+			<Card>
+				<DashboardOverview summary={summary} />
+			</Card>,
+		);
 		expect(screen.getByText('Global accounts')).toBeDefined();
 		expect(screen.getByText('Staff assignment status')).toBeDefined();
 		expect(screen.queryByText('Revenue')).toBeNull();
 	});
 	it('keeps route constants frontend-only and filters navigation by permission, not role', () => {
 		expect(routes.dashboard).toBe('/dashboard');
-		expect(Object.values(browserApi).every((path) => path.startsWith('/api/') && !path.includes('/v1/'))).toBe(true);
+		expect(
+			Object.values(browserApi).every((path) => path.startsWith('/api/') && !path.includes('/v1/')),
+		).toBe(true);
 		expect(visibleNavigation([])).toHaveLength(0);
 		expect(visibleNavigation(['platform.owner'])).toHaveLength(0);
-		expect(visibleNavigation(['platform.dashboard.read']).map((item) => item.key)).toEqual(['overview']);
+		expect(visibleNavigation(['platform.dashboard.read']).map((item) => item.key)).toEqual([
+			'overview',
+		]);
 	});
 	it('announces loading and offers a retry instead of fabricated error statistics', () => {
 		const loading = render(<Loading />);
