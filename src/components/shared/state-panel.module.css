@@ -9,7 +9,7 @@
 }
 .panel[data-layout='page'] {
 	min-block-size: 100svh;
-	padding-block: calc(var(--space-16) * 2);
+	padding-block: var(--space-12);
 }
 .panel[data-layout='section'] {
 	min-block-size: min(36rem, 70svh);
@@ -18,9 +18,9 @@
 	padding-block: var(--space-8);
 }
 .brand {
-	position: absolute;
-	inset-block-start: var(--space-8);
-	inset-inline: var(--space-4);
+	display: flex;
+	justify-content: center;
+	margin-block-end: var(--space-8);
 }
 .illustration {
 	position: relative;
