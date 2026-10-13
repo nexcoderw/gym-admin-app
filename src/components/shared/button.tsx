@@ -1,9 +1,10 @@
-import type { ButtonHTMLAttributes, ReactNode } from 'react';
+import type { ButtonHTMLAttributes, ReactNode, Ref } from 'react';
 import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 
 import styles from './button.module.css';
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+	readonly ref?: Ref<HTMLButtonElement>;
 	readonly pending?: boolean;
 	readonly icon: IconSvgElement;
 	readonly variant?: 'primary' | 'secondary';
