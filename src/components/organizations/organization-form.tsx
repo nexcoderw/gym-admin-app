@@ -35,8 +35,11 @@ export function OrganizationForm(props: Props) {
 		const input = editing ? { name: fields.get('name') } : { name: fields.get('name'), slug: fields.get('slug') };
 		const parsed = editing ? updateOrganizationSchema.safeParse(input) : createOrganizationSchema.safeParse(input);
 		if (!parsed.success) {
-			const errors = parsed.error.flatten().fieldErrors;
-			setFieldErrors({ name: errors.name?.[0], slug: 'slug' in errors ? errors.slug?.[0] : undefined });
+			const issues = parsed.error.issues;
+			setFieldErrors({
+				name: issues.find((issue) => issue.path[0] === 'name')?.message,
+				slug: issues.find((issue) => issue.path[0] === 'slug')?.message,
+			});
 			setError('Check the highlighted gym details.');
 			return;
 		}
