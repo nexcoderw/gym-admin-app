@@ -25,7 +25,13 @@ export function LoginForm() {
 		setPending(true);
 		setError('');
 		try {
-			setChallenge(await post(browserApi.login, { email: data.get('email'), password: data.get('password') }, challengeSchema));
+			setChallenge(
+				await post(
+					browserApi.login,
+					{ email: data.get('email'), password: data.get('password') },
+					challengeSchema,
+				),
+			);
 		} catch (failure) {
 			setError(failure instanceof Error ? failure.message : 'Sign-in could not be completed.');
 		} finally {
@@ -35,13 +41,65 @@ export function LoginForm() {
 		}
 	}
 
-	if (challenge) return <MfaForm challenge={challenge} onRestart={() => { setChallenge(null); setError(''); }} onAuthenticated={() => { setChallenge(null); router.replace(routes.dashboard); router.refresh(); }} />;
-	return <form method="post" action={browserApi.login} className={styles.form} onSubmit={submit} aria-busy={pending}>
-		<div className={styles.heading}><h2>Sign in to your platform</h2><p>Use your NEXCODE administrator account.</p></div>
-		<Input id="email" name="email" label="Email address" type="email" autoComplete="username" maxLength={254} required disabled={pending} />
-		<Input id="password" name="password" label="Password" type="password" autoComplete="current-password" minLength={12} maxLength={1024} required disabled={pending} />
-		{error ? <p role="alert" className="error-message">{error}</p> : null}
-		<Button type="submit" pending={pending}>{pending ? 'Checking details…' : 'Continue to verification'}</Button>
-		<p className={styles.note}>An authenticator or recovery code is required after your password.</p>
-	</form>;
+	if (challenge)
+		return (
+			<MfaForm
+				challenge={challenge}
+				onRestart={() => {
+					setChallenge(null);
+					setError('');
+				}}
+				onAuthenticated={() => {
+					setChallenge(null);
+					router.replace(routes.dashboard);
+					router.refresh();
+				}}
+			/>
+		);
+	return (
+		<form
+			method="post"
+			action={browserApi.login}
+			className={styles.form}
+			onSubmit={submit}
+			aria-busy={pending}
+		>
+			<div className={styles.heading}>
+				<h2>Sign in to your platform</h2>
+				<p>Use your NEXCODE administrator account.</p>
+			</div>
+			<Input
+				id="email"
+				name="email"
+				label="Email address"
+				type="email"
+				autoComplete="username"
+				maxLength={254}
+				required
+				disabled={pending}
+			/>
+			<Input
+				id="password"
+				name="password"
+				label="Password"
+				type="password"
+				autoComplete="current-password"
+				minLength={12}
+				maxLength={1024}
+				required
+				disabled={pending}
+			/>
+			{error ? (
+				<p role="alert" className="error-message">
+					{error}
+				</p>
+			) : null}
+			<Button type="submit" pending={pending}>
+				{pending ? 'Checking details…' : 'Continue to verification'}
+			</Button>
+			<p className={styles.note}>
+				An authenticator or recovery code is required after your password.
+			</p>
+		</form>
+	);
 }
