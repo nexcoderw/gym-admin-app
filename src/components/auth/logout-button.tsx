@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { z } from 'zod';
+import { Logout01Icon } from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { browserApi, routes } from '@/constants/routes';
@@ -31,7 +32,13 @@ export function LogoutButton() {
 	}
 	return (
 		<div className={styles.container}>
-			<Button variant="secondary" pending={pending} onClick={signOut}>
+			<Button
+				variant="secondary"
+				icon={Logout01Icon}
+				width="small"
+				pending={pending}
+				onClick={signOut}
+			>
 				Sign out
 			</Button>
 			{error ? (
