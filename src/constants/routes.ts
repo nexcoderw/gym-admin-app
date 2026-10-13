@@ -18,6 +18,7 @@ export const routes = {
 export const browserApi = {
 	login: '/api/auth/login',
 	verifyMfa: '/api/auth/mfa/verify',
+	sendEmailOtp: '/api/auth/mfa/email',
 	session: '/api/auth/session',
 	logout: '/api/auth/logout',
 	summary: '/api/dashboard/summary',
