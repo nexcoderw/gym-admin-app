@@ -16,6 +16,16 @@
 	position: relative;
 	min-width: 0;
 }
+.control[data-has-action='true'] .input {
+	padding-inline-end: var(--space-12);
+}
+.action {
+	position: absolute;
+	inset-inline-end: var(--space-1);
+	inset-block-start: 50%;
+	transform: translateY(-50%);
+	display: inline-flex;
+}
 .icon {
 	position: absolute;
 	inset-inline-start: var(--space-4);
