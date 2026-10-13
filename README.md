@@ -12,7 +12,7 @@ commits or installed Next docs were available. Existing framework versions and t
 agent-instruction block were preserved. Official version-matched documentation was consulted.
 After installation, read node_modules/next/dist/docs before subsequent framework changes.
 
-Implemented: responsive dark login/MFA and dashboard shells; shared Button/Input/Card/navigation;
+Implemented: responsive light login/MFA and dashboard shells; shared Button/Input/Card/navigation;
 real aggregate summary presentation; fixed typed BFF endpoints; strict validation; host-only cookie
 relay; safe errors; loading, error and not-found states; authored tests and engineering rules.
 No fake metrics, organization/staff CRUD, billing, payments, subscriptions or additional domains.
@@ -39,12 +39,23 @@ reusable component owns a colocated CSS Module. Pages compose features, not back
 
 ## Design system
 
-The supported initial theme is dark: ink-blue backgrounds, layered navy surfaces, pale indigo
-actions, cool neutral text and restrained semantic colors. Global CSS variables own color, spacing,
-typography, radii, shadows and motion. System typography avoids a remote font dependency. Desktop
-uses a quiet sidebar; compact screens retain the same navigation in a stacked header. Motion
-respects reduced-motion preferences. Future light mode requires a complete reviewed token override;
-there is no nonfunctional theme toggle. Counts are never replaced with decorative graphs.
+The supported theme is light. Palette and shape tokens are adapted from the
+[care-basket reference stylesheet](https://github.com/kajugadaniels/care-basket/blob/c08bee6b6c8905e35c08c1494da8a413e813b457/src/app/globals.css):
+white surfaces, #111111 text, #003087 primary actions, #00246a hover, #f6f8fb soft surfaces and
+#6b7686 control borders. The bright #009cde accent is decorative only. Buttons are pill-shaped;
+text inputs/selects use 8px corners and a consistent bordered baseline. Native select options
+retain platform behavior; the reference globals alone does not specify every component detail.
+
+Only Albert Sans (headings) and DM Sans (body, controls and data) are chosen font families. next/font
+self-hosts both; the human build/dev environment needs access to Google Fonts when downloading
+them initially. Browsers receive same-origin font assets. The compact scale uses 14px body/data,
+13px secondary text, 12px metadata and 20–24px page headings, with 16px form inputs and 48px controls.
+Generic font fallbacks support loading/failure, not an additional designed typeface.
+
+Desktop uses a quiet sidebar; compact screens keep navigation and logout available in a header.
+Below 40rem, secondary metric descriptions and redundant metadata are hidden, but all actual counts,
+labels, errors and actions remain available. Grids reflow from one to two to four columns as space
+allows. Motion respects reduced-motion preferences; no automatic dark theme or fake metrics exist.
 
 ## Verified endpoint registry
 
@@ -143,8 +154,8 @@ chmod 600 .env.local
 Do not overwrite an existing dotenv file. Local values:
 
 ```dotenv
-GYM_API_BASE_URL=http://127.0.0.1:3001
-ADMIN_ORIGIN=http://localhost:3000
+GYM_API_BASE_URL=http://127.0.0.1:3000
+ADMIN_ORIGIN=http://localhost:4000
 ```
 
 Use the real approved Nest origin and the exact browser origin. No NEXT_PUBLIC upstream URL,
@@ -152,6 +163,12 @@ database URL, API session secret, MFA key or Prisma dependency belongs here. Pro
 HTTPS origins through managed configuration. Real dotenv files are ignored; fake examples are tracked.
 Never expose a development server to production users or use it with real administrator secrets;
 development framework diagnostics are not the production error-disclosure boundary.
+
+Local development uses API port 3000, admin port 4000 and manager port 4001. Admin and manager
+dev/start scripts pin their ports; a Next dotenv PORT is not a substitute. Nest's local settings are
+`PORT=3000`, `PLATFORM_ADMIN_ORIGIN=http://localhost:4000` and
+`CORS_ORIGINS=http://localhost:4000,http://localhost:4001`. Production keeps explicit HTTPS origins.
+If your shell exports old values, unset those port/origin variables before restarting the services.
 
 ## Formatting and editor setup
 
