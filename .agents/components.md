@@ -31,7 +31,7 @@ presentation and native behavior; they do not own authentication policy or backe
 		<h2>Platform staff</h2>
 		<p>{activeStaffCount}</p>
 	</Card>
-</>;
+</>
 ```
 
 The feature owns the meaning of the count and submission; the primitive owns visual treatment.
