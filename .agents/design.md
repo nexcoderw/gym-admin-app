@@ -2,25 +2,30 @@
 
 ## Purpose
 
-Keep the admin interface calm, readable and operationally truthful. Use the existing ink-blue dark
-system rather than inventing a new visual language for each feature.
+Keep the admin interface calm, readable and operationally truthful. Use the light palette and shape
+tokens adapted from care-basket/src/app/globals.css, not a different visual language per feature.
 
 ## Mandatory requirements
 
 1. Use semantic tokens from `src/app/globals.css` for surfaces, text, borders, states, spacing,
    radii and motion. Add a missing reusable token deliberately; do not scatter new literal colors.
-2. Use the existing readable system sans stack. Establish hierarchy through size, weight and space,
-   not multiple decorative typefaces. Use tabular numerals for comparable operational counts.
-3. Follow the 4px-based spacing scale through tokens. Use control radii for inputs/buttons and panel
-   radii for containers; do not give every nested element the same oversized radius.
+2. Use only Albert Sans for headings/brand headings and DM Sans for body, controls and data.
+   Load both through next/font in the root layout. Generic fallbacks are for loading/failure only,
+   not a third design font. Use tabular numerals for comparable operational counts.
+3. Follow the 4px-based spacing scale through tokens. Use 8px control corners, 20px panel corners
+   and pill buttons. Do not give every nested element the same oversized radius.
 4. Name metrics according to the verified backend definition. Active staff means account status,
    not online staff, concurrent users or recent activity. Display only real validated values.
 5. Give each screen one primary purpose and a clear main heading. Prefer useful labels, grouped
    information and restrained borders over decorative cards or meaningless visualizations.
-6. Dark is the supported initial theme. Light mode requires a complete reviewed semantic token set
-   and contrast review; never implement it by inverting colors.
+6. Light is the supported theme: white surfaces, #111111 text and #003087 primary actions.
+   Hover uses #00246a; #009cde is decorative only, never body text or a button fill. Do not restore
+   dark mode or add system-theme switching without a separately reviewed complete token set.
 7. Preserve visible focus and non-color status cues. Loading, error and empty states belong to the
    same design system as successful content.
+8. Use the compact scale: 14px body/data, 13px secondary text, 12px metadata, 20–24px page headings
+   and 24–28px metrics. Keep form inputs at 16px and controls at least 44px high; small type must not
+   create small tap targets. Respect browser zoom and use rem rather than reducing the root size.
 
 ## Do
 
