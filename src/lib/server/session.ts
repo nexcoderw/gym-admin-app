@@ -23,3 +23,15 @@ export const requirePlatformSession = cache(async () => {
 		throw error;
 	}
 });
+
+/** Authentication pages render only after Nest confirms there is no usable platform session. */
+export const requireAnonymousSession = cache(async (): Promise<void> => {
+	try {
+		await getSession(await serverContext());
+	} catch (error) {
+		if (error instanceof BffError && error.status === 401) return;
+		throw error;
+	}
+	// Next redirects throw; keep this outside the authentication error handler.
+	redirect(routes.dashboard);
+});
