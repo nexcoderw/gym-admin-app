@@ -1,3 +1,20 @@
-.state { min-height: 100svh; max-width: 640px; margin-inline: auto; padding: var(--space-12) var(--space-6); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: var(--space-6); }
-.state p { color: var(--text-secondary); max-width: 50ch; }
-.state a { min-height: 44px; display: inline-flex; align-items: center; }
+.state {
+	min-height: 100svh;
+	max-width: 640px;
+	margin-inline: auto;
+	padding: var(--space-12) var(--space-6);
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: flex-start;
+	gap: var(--space-6);
+}
+.state p {
+	color: var(--text-secondary);
+	max-width: 50ch;
+}
+.state a {
+	min-height: 44px;
+	display: inline-flex;
+	align-items: center;
+}
