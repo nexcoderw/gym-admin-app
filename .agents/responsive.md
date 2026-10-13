@@ -1,17 +1,58 @@
 # Responsive layout
 
+## Purpose
+
+Keep all admin actions and information usable across small screens, desktop, zoom and long content.
+
 ## Mandatory requirements
 
-Design mobile-first with fluid widths, minimum-zero grid tracks and content-driven breakpoints. Stack authentication columns and metrics on small screens; transform the sidebar into a compact header without hiding core navigation. Support portrait, landscape, touch and keyboard.
+1. Start with a compact single-column layout. Add columns when content has enough space, not because
+   a familiar device width exists. Prefer fluid widths and bounded maximum content widths.
+2. Use shrinkable flex/grid children: `min-width: 0` and `minmax(0, 1fr)` where appropriate.
+   Permit text wrapping; use overflow containment for legitimately wide content, not the whole page.
+3. Stack authentication columns and metric groups at compact widths. Adapt the sidebar into a
+   compact header without hiding essential destinations or relying on hover.
+4. Preserve touch targets, keyboard focus and reading order. A visually rearranged layout must not
+   create a confusing DOM or tab order.
+5. Handle long names, email addresses, translated-length labels and multi-line errors. Avoid fixed
+   heights that clip text. Reserve reasonable loading space to limit disruptive layout shifts.
+6. Review portrait/landscape and zoom as well as width. Browser emulation is useful but not proof of
+   actual mobile device behavior. Humans run browser verification.
 
-## Prohibited patterns
+## Do
 
-No fixed desktop canvases, horizontal page overflow, tiny targets or essential hover interactions.
+```css
+.metrics {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-4);
+}
 
-## Good example
+@media (min-width: 48rem) {
+	.metrics {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
+	}
+}
+```
 
-At compact widths the shell becomes one column and navigation remains visible.
+The breakpoint is illustrative: retain it only if the actual content fits comfortably.
 
-## Review criteria
+## Do not
 
-Review 320/768/1440px, long labels, zoom, orientation and actual mobile devices; emulation is not full verification.
+```css
+/* WRONG: a fixed desktop canvas overflows compact viewports. */
+.dashboard {
+	width: 1440px;
+	height: 900px;
+	overflow: hidden;
+}
+```
+
+Do not solve overflow by hiding the affected information or shrinking controls below usable sizes.
+
+## Prevented failures and review checklist
+
+- Fluid, shrinkable layouts prevent horizontal page scrolling and clipped operational data.
+- Preserved navigation prevents mobile users losing functionality.
+- Review 320/768/1440px, zoom, orientation, long content, errors and pending states.
+- See [styling.md](styling.md), [accessibility.md](accessibility.md) and [design.md](design.md).
