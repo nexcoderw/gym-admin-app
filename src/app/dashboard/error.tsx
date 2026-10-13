@@ -1,23 +1,16 @@
 'use client';
 
-import { RefreshIcon } from '@hugeicons/core-free-icons';
+import { RecoveryState } from '@/components/shared/recovery-state';
+import type { RecoveryBoundaryProps } from '@/components/shared/state-content';
 
-import { Button } from '@/components/shared/button';
-import { Card } from '@/components/shared/card';
-import { PageHeader } from '@/components/shared/page-header';
-
-export default function DashboardError({ reset }: { reset: () => void }) {
+export default function DashboardError({ retry, reset }: RecoveryBoundaryProps) {
 	return (
-		<>
-			<PageHeader
-				title="Overview unavailable"
-				description="The platform summary could not be loaded. No statistics have been substituted."
-			/>
-			<Card>
-				<Button icon={RefreshIcon} onClick={reset}>
-					Try again
-				</Button>
-			</Card>
-		</>
+		<RecoveryState
+			kind="503"
+			layout="section"
+			title="Overview unavailable"
+			description="The platform summary could not be loaded. Try again to request current records."
+			onRetry={retry ?? reset}
+		/>
 	);
 }
