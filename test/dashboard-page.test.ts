@@ -1,12 +1,17 @@
 import { renderToStaticMarkup } from 'react-dom/server';
+import { createElement, type ReactNode } from 'react';
 import { redirect } from 'next/navigation';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import DashboardPage from '@/app/dashboard/page';
-import { serverContext } from '@/lib/server/session';
+import { requirePlatformSession, serverContext } from '@/lib/server/session';
 import { session, summary, token, csrf } from './fixtures';
 
-vi.mock('@/lib/server/session', () => ({ serverContext: vi.fn() }));
+vi.mock('@/lib/server/session', () => ({ serverContext: vi.fn(), requirePlatformSession: vi.fn() }));
+vi.mock('@/components/shared/app-shell', () => ({
+	AppShell: ({ children }: { children: ReactNode }) =>
+		createElement('div', { 'data-workspace-shell': true }, children),
+}));
 vi.mock('next/navigation', () => ({
 	redirect: vi.fn((destination: string): never => {
 		throw new Error(`Redirect to ${destination}`);
@@ -23,6 +28,7 @@ beforeEach(() => {
 	vi.stubGlobal('fetch', fetchMock);
 	vi.mocked(redirect).mockClear();
 	vi.mocked(serverContext).mockReset();
+	vi.mocked(requirePlatformSession).mockReset().mockResolvedValue(session);
 	vi.mocked(serverContext).mockResolvedValue({
 		cookie: `nexcode-platform-session=${token}; nexcode-platform-csrf=${csrf}`,
 	});
@@ -44,6 +50,7 @@ describe('dashboard page data-loading outcomes', () => {
 		expect(markup).toContain('Platform overview');
 		expect(markup).toContain('Global accounts');
 		expect(markup).not.toContain('Dashboard access required');
+		expect(markup).toContain('data-workspace-shell');
 		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
 
@@ -54,6 +61,8 @@ describe('dashboard page data-loading outcomes', () => {
 
 		expect(markup).toContain('Dashboard access required');
 		expect(markup).not.toContain('Global accounts');
+		expect(markup).not.toContain('data-workspace-shell');
+		expect(markup).toContain('id="main"');
 		expect(fetchMock).toHaveBeenCalledTimes(1);
 		expect(redirect).not.toHaveBeenCalled();
 	});
