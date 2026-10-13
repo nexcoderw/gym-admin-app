@@ -1,7 +1,14 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ArrowRight01Icon, Mail01Icon, RefreshIcon } from '@hugeicons/core-free-icons';
+import {
+	ArrowRight01Icon,
+	LockPasswordIcon,
+	Mail01Icon,
+	RefreshIcon,
+	ViewIcon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
@@ -29,6 +36,38 @@ describe('accessible UI foundation', () => {
 		expect(input.getAttribute('aria-describedby')).toBe('email-hint email-error');
 		expect(input.getAttribute('aria-invalid')).toBe('true');
 		expect(input.parentElement?.querySelector('[aria-hidden="true"] svg')).not.toBeNull();
+	});
+	it('keeps a trailing input action accessible without submitting its form', () => {
+		const reveal = vi.fn<() => void>();
+		const submit = vi.fn<() => void>();
+		render(
+			<form
+				onSubmit={(event) => {
+					event.preventDefault();
+					submit();
+				}}
+			>
+				<Input
+					id="password"
+					name="password"
+					label="Password"
+					type="password"
+					icon={LockPasswordIcon}
+					defaultValue="fictional password"
+					trailingAction={
+						<button type="button" aria-label="Show password" onClick={reveal}>
+							<HugeiconsIcon icon={ViewIcon} size={18} aria-hidden="true" />
+						</button>
+					}
+				/>
+			</form>,
+		);
+		const input = screen.getByLabelText('Password', { exact: true });
+		fireEvent.click(screen.getByRole('button', { name: 'Show password' }));
+		expect(reveal).toHaveBeenCalledOnce();
+		expect(submit).not.toHaveBeenCalled();
+		expect(input.parentElement?.getAttribute('data-has-action')).toBe('true');
+		expect(input.getAttribute('type')).toBe('password');
 	});
 	it('prevents duplicate interaction while pending', () => {
 		let clicks = 0;
