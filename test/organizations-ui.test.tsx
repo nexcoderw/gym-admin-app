@@ -28,6 +28,35 @@ function fillRegistration(slug = 'soho') {
 }
 
 describe('organization management interactions', () => {
+	it('associates create validation errors with both fields without sending a request', () => {
+		const view = render(<OrganizationForm mode="create" />);
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: '   ' } });
+		fireEvent.change(screen.getByLabelText('Slug'), { target: { value: 'admin' } });
+		const form = view.container.querySelector('form');
+		if (!form) throw new Error('Expected native organization form.');
+		fireEvent.submit(form);
+		for (const label of ['Gym name', 'Slug']) {
+			const input = screen.getByLabelText(label);
+			expect(input.getAttribute('aria-invalid')).toBe('true');
+			const descriptionIds = input.getAttribute('aria-describedby')?.split(' ') ?? [];
+			const fieldError = descriptionIds.find((id) => id.endsWith('-error'));
+			expect(fieldError).toBeDefined();
+			expect(fieldError ? document.getElementById(fieldError)?.textContent : null).toBeTruthy();
+		}
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	it('shows an edit name validation error without requiring a slug or sending a request', () => {
+		const view = render(
+			<OrganizationForm mode="edit" organization={organization} etag={organizationEtag} />,
+		);
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: '   ' } });
+		const form = view.container.querySelector('form');
+		if (!form) throw new Error('Expected native organization form.');
+		fireEvent.submit(form);
+		expect(screen.getByLabelText('Gym name').getAttribute('aria-invalid')).toBe('true');
+		expect(screen.queryByLabelText('Slug')).toBeNull();
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
 	it('renders an honest empty state and hides registration without permission', () => {
 		render(<OrganizationList data={{ items: [], nextCursor: null }} query={{ limit: 20 }} canCreate={false} />);
 		expect(screen.getByText('No gyms registered yet')).toBeDefined();
