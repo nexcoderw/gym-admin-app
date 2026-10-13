@@ -23,10 +23,67 @@ test('light login uses the two font roles and remains usable at compact widths',
 		await expect(email).toBeVisible();
 		await expect(submit).toBeVisible();
 		const bounds = await submit.boundingBox();
+		const inputBounds = await email.boundingBox();
 		expect(bounds?.height).toBeGreaterThanOrEqual(44);
+		if (!bounds || !inputBounds) throw new Error('Expected visible sign-in controls.');
+		expect(Math.abs(bounds.width - inputBounds.width)).toBeLessThanOrEqual(1);
 		expect(
 			await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
 		).toBe(true);
+	}
+});
+
+test('password and mfa actions share loading treatment and preserve their labels', async ({ page }) => {
+	const loginGate = Promise.withResolvers<void>();
+	const mfaGate = Promise.withResolvers<void>();
+	const challengeToken = 'a'.repeat(43);
+	const csrfToken = 'b'.repeat(43);
+	await page.route('**/api/auth/login', async (route) => {
+		await loginGate.promise;
+		await route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				challengeToken,
+				csrfToken,
+				expiresAt: new Date(Date.now() + 300_000).toISOString(),
+				methods: ['totp', 'recovery_code'],
+			}),
+		});
+	});
+	await page.route('**/api/auth/mfa/verify', async (route) => {
+		await mfaGate.promise;
+		await route.fulfill({ status: 403, contentType: 'application/json', body: '{}' });
+	});
+	try {
+		await page.goto('/login');
+		await page.getByLabel('Email address').fill('operator@example.invalid');
+		await page.getByLabel('Password', { exact: true }).fill('fictional long password');
+		const continueButton = page.getByRole('button', { name: 'Continue to verification' });
+		await continueButton.click();
+		await expect(continueButton).toBeDisabled();
+		await expect(continueButton).toHaveAttribute('aria-busy', 'true');
+		const spinner = page.locator('[data-loading-indicator]');
+		await expect(spinner).toHaveCount(1);
+		const loadingClass = await spinner.getAttribute('class');
+		loginGate.resolve();
+
+		await expect(page.getByRole('heading', { name: 'Verify it’s you' })).toBeFocused();
+		await page.getByLabel('Six-digit code').fill('000123');
+		const verifyButton = page.getByRole('button', { name: 'Open platform' });
+		await verifyButton.click();
+		await expect(verifyButton).toBeDisabled();
+		await expect(verifyButton).toHaveAttribute('aria-busy', 'true');
+		await expect(spinner).toHaveCount(1);
+		expect(await spinner.getAttribute('class')).toBe(loadingClass);
+		await expect(page.getByRole('button', { name: 'Start sign-in again' })).toBeDisabled();
+		mfaGate.resolve();
+		await expect(verifyButton).toBeEnabled();
+		await expect(spinner).toHaveCount(0);
+		await expect(page.getByRole('alert')).toContainText('This request was not accepted');
+	} finally {
+		loginGate.resolve();
+		mfaGate.resolve();
 	}
 });
 
