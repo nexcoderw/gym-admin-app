@@ -1,6 +1,28 @@
-.form { display: grid; gap: var(--space-5); }
-.help { margin-block-start: var(--space-2); color: var(--text-secondary); }
-.methods { padding: var(--space-3); border: 1px solid var(--border); border-radius: var(--radius-control); }
-.methods legend { padding-inline: var(--space-2); color: var(--text-secondary); font-size: var(--text-small); }
-.methods label { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; margin-inline-end: var(--space-4); }
-.methods input { accent-color: var(--primary); }
+.form {
+	display: grid;
+	gap: var(--space-5);
+}
+.help {
+	margin-block-start: var(--space-2);
+	color: var(--text-secondary);
+}
+.methods {
+	padding: var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-control);
+}
+.methods legend {
+	padding-inline: var(--space-2);
+	color: var(--text-secondary);
+	font-size: var(--text-small);
+}
+.methods label {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-height: 44px;
+	margin-inline-end: var(--space-4);
+}
+.methods input {
+	accent-color: var(--primary);
+}
