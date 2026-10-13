@@ -3,7 +3,7 @@ import { redirect } from 'next/navigation';
 
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { PageHeader } from '@/components/shared/page-header';
-import { Card } from '@/components/shared/card';
+import { RecoveryState } from '@/components/shared/recovery-state';
 import { routes } from '@/constants/routes';
 import type { DashboardSummary } from '@/lib/contracts/dashboard';
 import { getSummary } from '@/lib/server/endpoints/dashboard/get-summary';
@@ -27,18 +27,12 @@ export default async function DashboardPage() {
 
 	if (summary === null) {
 		return (
-			<>
-				<PageHeader
-					title="Dashboard access required"
-					description="Your session is valid, but it does not include the dashboard permission."
-				/>
-				<Card>
-					<p>
-						Ask an authorized platform operator to review your access. A role name alone does not
-						grant dashboard access.
-					</p>
-				</Card>
-			</>
+			<RecoveryState
+				kind="403"
+				layout="section"
+				title="Dashboard access required"
+				description="Your session is valid, but it does not include the dashboard permission. Ask your platform operator to review your access."
+			/>
 		);
 	}
 
