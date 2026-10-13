@@ -16,7 +16,7 @@ export function Navbar({ permissions }: { permissions: readonly string[] }) {
 					key={item.key}
 					href={item.href}
 					prefetch={false}
-					aria-current={pathname === item.href ? 'page' : undefined}
+					aria-current={pathname === item.href || pathname.startsWith(`${item.href}/`) ? 'page' : undefined}
 					className={styles.link}
 				>
 					<HugeiconsIcon icon={item.icon} size={20} color="currentColor" aria-hidden="true" />
