@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 
 import { RecoveryState } from '@/components/shared/recovery-state';
+import { requireAnonymousSession } from '@/lib/server/session';
 
 export const metadata: Metadata = { title: 'Sign-in required' };
 
-export default function UnauthorizedPage() {
+export default async function UnauthorizedPage() {
+	await requireAnonymousSession();
 	return <RecoveryState kind="401" />;
 }
