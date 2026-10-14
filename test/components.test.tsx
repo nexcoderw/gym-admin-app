@@ -151,7 +151,7 @@ describe('accessible UI foundation', () => {
 	});
 	it('announces loading and offers a retry instead of fabricated error statistics', () => {
 		const loading = render(<Loading />);
-		expect(screen.getByRole('status').textContent).toContain('Loading current platform records');
+		expect(screen.getByRole('status').textContent).toBe('Loading your overview');
 		loading.unmount();
 		const reset = vi.fn<() => void>();
 		render(<DashboardError reset={reset} />);
