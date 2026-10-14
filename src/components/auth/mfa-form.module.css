@@ -2,6 +2,16 @@
 	display: grid;
 	gap: var(--space-5);
 }
+.heading {
+	text-align: center;
+}
+.eyebrow {
+	margin-block-end: var(--space-3);
+	color: var(--primary);
+	font-size: var(--text-caption);
+	font-weight: 700;
+	letter-spacing: 0.08em;
+}
 .help {
 	margin-block-start: var(--space-2);
 	color: var(--text-secondary);
@@ -10,22 +20,77 @@
 .methods {
 	min-width: 0;
 	margin: 0;
-	padding: var(--space-3);
-	border: 1px solid var(--border);
-	border-radius: var(--radius-control);
+	padding: 0;
+	border: 0;
 }
 .methods legend {
-	padding-inline: var(--space-2);
+	padding: 0;
+	margin-block-end: var(--space-2);
 	color: var(--text-secondary);
 	font-size: var(--text-small);
 }
-.methods label {
-	display: inline-flex;
-	align-items: center;
+.methodOptions {
+	display: grid;
+	grid-auto-flow: column;
+	grid-auto-columns: minmax(0, 1fr);
 	gap: var(--space-2);
-	min-height: 44px;
-	margin-inline-end: var(--space-4);
+}
+.methods label {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	min-width: 0;
+	min-height: var(--control-height);
+	padding: var(--space-3) var(--space-2);
+	border: 1px solid var(--border-control);
+	border-radius: var(--radius-control);
+	font-size: var(--text-small);
+	text-align: center;
+	cursor: pointer;
+}
+.methods label[data-selected='true'] {
+	border-color: var(--primary);
+	background: var(--surface-hover);
+	color: var(--primary);
+	font-weight: 700;
+}
+.methods label:has(:focus-visible) {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+.methods:disabled label {
+	opacity: 0.65;
+	cursor: not-allowed;
 }
 .methods input {
+	flex-shrink: 0;
+	margin: 0;
 	accent-color: var(--primary);
+}
+.methods span {
+	min-width: 0;
+	overflow-wrap: anywhere;
+}
+.actions {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: var(--space-3);
+	padding-block-start: var(--space-2);
+}
+.actions button {
+	padding-inline: var(--space-3);
+}
+@media (max-width: 32rem) {
+	.methods label {
+		flex-direction: column;
+		font-size: var(--text-caption);
+	}
+	.actions {
+		gap: var(--space-2);
+	}
+	.actions button {
+		padding-inline: var(--space-2);
+		font-size: var(--text-small);
+	}
 }
