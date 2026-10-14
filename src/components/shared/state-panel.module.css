@@ -103,10 +103,35 @@
 	color: var(--text-muted);
 	font-size: var(--text-small);
 }
-.status {
-	margin-block-start: var(--space-6);
-	color: var(--primary);
-	font-size: var(--text-small);
+.loading {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-3);
+	max-inline-size: 100%;
+}
+.spinner {
+	flex: 0 0 auto;
+	inline-size: 1.125rem;
+	block-size: 1.125rem;
+	border: 2px solid var(--border);
+	border-block-start-color: var(--primary);
+	border-radius: 50%;
+	animation: spin 0.8s linear infinite;
+}
+.loadingTitle {
+	min-inline-size: 0;
+	max-inline-size: 28ch;
+	color: var(--text-secondary);
+	font-size: var(--text-body);
+	font-weight: 500;
+	line-height: 1.5;
+	text-align: start;
+}
+@keyframes spin {
+	to {
+		transform: rotate(360deg);
+	}
 }
 .panel[data-layout='compact'] .illustration {
 	inline-size: 11rem;
@@ -137,11 +162,16 @@
 	}
 }
 @media (prefers-reduced-motion: reduce) {
-	.illustration {
+	.illustration,
+	.spinner {
 		animation: none;
 	}
 }
 @media (forced-colors: active) {
+	.spinner {
+		border-color: GrayText;
+		border-block-start-color: Highlight;
+	}
 	.frame,
 	.rule,
 	.glyph {
