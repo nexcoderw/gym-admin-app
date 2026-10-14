@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import LoginPage from '@/app/login/page';
+import LoginPage from '@/app/(auth)/login/page';
+import VerificationPage from '@/app/(auth)/verification/page';
 import UnauthorizedPage from '@/app/401/page';
 import { getSession } from '@/lib/server/endpoints/auth/get-session';
 import { BffError } from '@/lib/server/http/errors';
@@ -31,7 +32,7 @@ afterEach(() => {
 });
 
 describe('server-established authentication page access', () => {
-	it.each([LoginPage, UnauthorizedPage])(
+	it.each([LoginPage, VerificationPage, UnauthorizedPage])(
 		'redirects valid sessions before rendering auth UI',
 		async (page) => {
 			vi.mocked(getSession).mockResolvedValue(session);
@@ -40,7 +41,7 @@ describe('server-established authentication page access', () => {
 		},
 	);
 
-	it.each([LoginPage, UnauthorizedPage])(
+	it.each([LoginPage, VerificationPage, UnauthorizedPage])(
 		'allows sign-in only for confirmed unauthenticated sessions',
 		async (page) => {
 			vi.mocked(getSession).mockRejectedValue(
