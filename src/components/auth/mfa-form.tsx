@@ -25,7 +25,11 @@ export function MfaForm({
 		heading.current?.focus();
 	}, []);
 	const [method, setMethod] = useState<'email_otp' | 'totp' | 'recovery_code'>(
-		challenge.methods.includes('email_otp') ? 'email_otp' : challenge.methods.includes('totp') ? 'totp' : 'recovery_code',
+		challenge.methods.includes('totp')
+			? 'totp'
+			: challenge.methods.includes('recovery_code')
+				? 'recovery_code'
+				: 'email_otp',
 	);
 	const [pending, setPending] = useState(false);
 	const [sending, setSending] = useState(false);
@@ -35,7 +39,9 @@ export function MfaForm({
 	const mounted = useRef(true);
 	useEffect(() => {
 		mounted.current = true;
-		return () => { mounted.current = false; };
+		return () => {
+			mounted.current = false;
+		};
 	}, []);
 	useEffect(() => {
 		if (retryAt === 0) return;
@@ -53,14 +59,21 @@ export function MfaForm({
 		setError('');
 		setEmailSent(false);
 		try {
-			if (Date.parse(challenge.expiresAt) <= Date.now()) throw new Error('Verification expired. Start sign-in again.');
+			if (Date.parse(challenge.expiresAt) <= Date.now())
+				throw new Error('Verification expired. Start sign-in again.');
 			setRetryAt(Date.now() + 60_000);
-			const sent = await post(browserApi.sendEmailOtp, { challengeToken: challenge.challengeToken }, emailOtpSentSchema, challenge.csrfToken);
+			const sent = await post(
+				browserApi.sendEmailOtp,
+				{ challengeToken: challenge.challengeToken },
+				emailOtpSentSchema,
+				challenge.csrfToken,
+			);
 			if (!mounted.current) return;
 			setEmailSent(true);
 			setRetryAt(Date.now() + sent.retryAfterSeconds * 1000);
 		} catch (failure) {
-			if (mounted.current) setError(failure instanceof Error ? failure.message : 'Email could not be sent. Try again.');
+			if (mounted.current)
+				setError(failure instanceof Error ? failure.message : 'Email could not be sent. Try again.');
 		} finally {
 			inFlight.current = false;
 			if (mounted.current) setSending(false);
@@ -83,7 +96,11 @@ export function MfaForm({
 					{
 						challengeToken: challenge.challengeToken,
 						method,
-						...(method === 'email_otp' ? { emailOtpCode: code } : method === 'totp' ? { totpCode: code } : { recoveryCode: code }),
+						...(method === 'email_otp'
+							? { emailOtpCode: code }
+							: method === 'totp'
+								? { totpCode: code }
+								: { recoveryCode: code }),
 					},
 					verifiedSchema,
 					challenge.csrfToken,
@@ -94,9 +111,11 @@ export function MfaForm({
 			await readLiveSession();
 			if (mounted.current) onAuthenticated();
 		} catch (failure) {
-			if (mounted.current) setError(failure instanceof Error ? failure.message : 'Verification failed. Try again.');
+			if (mounted.current)
+				setError(failure instanceof Error ? failure.message : 'Verification failed. Try again.');
 		} finally {
-			form.reset();
+			const input = form.elements.namedItem('code');
+			if (input instanceof HTMLInputElement) input.value = '';
 			inFlight.current = false;
 			if (mounted.current) setPending(false);
 		}
@@ -109,34 +128,57 @@ export function MfaForm({
 			className={styles.form}
 			aria-busy={busy}
 		>
-			<div>
+			<div className={styles.heading}>
+				<p className={styles.eyebrow}>SIGN-IN VERIFICATION</p>
 				<h1 ref={heading} tabIndex={-1}>
 					Verify it’s you
 				</h1>
-				<p className={styles.help}>Complete this one-time check to open your platform.</p>
+				<p className={styles.help}>Choose a method and enter your code to securely continue.</p>
 			</div>
 			<fieldset disabled={busy || sessionEstablished} className={styles.methods}>
 				<legend>Verification method</legend>
-				{(['email_otp', 'totp', 'recovery_code'] as const).filter((value) => challenge.methods.includes(value)).map((value) => (
-					<label key={value}>
-						<input
-							type="radio"
-							name="method"
-							value={value}
-							checked={method === value}
-							onChange={() => setMethod(value)}
-						/>
-						{value === 'email_otp' ? 'Email code' : value === 'totp' ? 'Authenticator' : 'Recovery code'}
-					</label>
-				))}
+				<div className={styles.methodOptions}>
+					{(['totp', 'recovery_code', 'email_otp'] as const)
+						.filter((value) => challenge.methods.includes(value))
+						.map((value) => (
+							<label key={value} data-selected={method === value}>
+								<input
+									type="radio"
+									name="method"
+									value={value}
+									checked={method === value}
+									onChange={() => {
+										setMethod(value);
+										setError('');
+									}}
+								/>
+								<span>
+									{value === 'totp'
+										? 'Authenticator'
+										: value === 'recovery_code'
+											? 'Recovery code'
+											: 'Email code'}
+								</span>
+							</label>
+						))}
+				</div>
 			</fieldset>
 			{method === 'email_otp' ? (
 				<div>
-					<Button icon={Mail01Icon} width="full" variant="secondary" onClick={sendEmail} pending={sending} disabled={pending || sessionEstablished || retryAt !== 0}>
+					<Button
+						icon={Mail01Icon}
+						width="full"
+						variant="secondary"
+						onClick={sendEmail}
+						pending={sending}
+						disabled={pending || sessionEstablished || retryAt !== 0}
+					>
 						Send email code
 					</Button>
 					<p className={styles.help} role="status">
-						{emailSent ? 'Code sent to your verified account email. Enter the newest six-digit code.' : 'Request a code at your verified account email.'}
+						{emailSent
+							? 'Code sent to your verified account email. Enter the newest six-digit code.'
+							: 'Request a code at your verified account email.'}
 						{retryAt !== 0 ? ' Wait at least 60 seconds before requesting another code.' : ''}
 					</p>
 				</div>
@@ -145,7 +187,13 @@ export function MfaForm({
 				key={method}
 				id="verification-code"
 				name="code"
-				label={method === 'email_otp' ? 'Email verification code' : numericCode ? 'Six-digit code' : 'Recovery code'}
+				label={
+					method === 'email_otp'
+						? 'Email verification code'
+						: numericCode
+							? 'Six-digit code'
+							: 'Recovery code'
+				}
 				icon={method === 'email_otp' ? Mail01Icon : numericCode ? ShieldKeyIcon : Key01Icon}
 				placeholder={numericCode ? '000000' : 'Enter a recovery code'}
 				autoComplete={numericCode ? 'one-time-code' : 'off'}
@@ -161,18 +209,26 @@ export function MfaForm({
 					{error}
 				</p>
 			) : null}
-			<Button type="submit" icon={ShieldKeyIcon} width="full" pending={pending} disabled={sending || (method === 'email_otp' && !emailSent && !sessionEstablished)}>
-				Open platform
-			</Button>
-			<Button
-				variant="secondary"
-				icon={ArrowLeft01Icon}
-				width="full"
-				onClick={onRestart}
-				disabled={busy}
-			>
-				Start sign-in again
-			</Button>
+			<div className={styles.actions}>
+				<Button
+					type="submit"
+					icon={ShieldKeyIcon}
+					width="full"
+					pending={pending}
+					disabled={sending || (method === 'email_otp' && !emailSent && !sessionEstablished)}
+				>
+					Open platform
+				</Button>
+				<Button
+					variant="secondary"
+					icon={ArrowLeft01Icon}
+					width="full"
+					onClick={onRestart}
+					disabled={busy}
+				>
+					Start sign-in again
+				</Button>
+			</div>
 		</form>
 	);
 }
