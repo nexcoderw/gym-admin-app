@@ -14,6 +14,7 @@ import { Card } from '@/components/shared/card';
 import { Input } from '@/components/shared/input';
 import { browserApi, routes } from '@/constants/routes';
 import { browserCsrf, browserRequest, OrganizationRequestError } from '@/lib/client/mutations';
+import { suggestOrganizationSlug } from '@/lib/client/organization-slug';
 import {
 	createOrganizationSchema,
 	updateOrganizationSchema,
@@ -41,6 +42,9 @@ export function OrganizationForm(props: Props) {
 	const [error, setError] = useState('');
 	const [fieldErrors, setFieldErrors] = useState<{ name?: string; slug?: string }>({});
 	const [blocked, setBlocked] = useState(false);
+	const [name, setName] = useState(props.mode === 'edit' ? props.organization.name : '');
+	const [slugOverride, setSlugOverride] = useState<string | null>(null);
+	const slug = slugOverride ?? suggestOrganizationSlug(name);
 	const editing = props.mode === 'edit';
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
@@ -120,7 +124,8 @@ export function OrganizationForm(props: Props) {
 					name="name"
 					label="Gym name"
 					icon={Building03Icon}
-					defaultValue={props.mode === 'edit' ? props.organization.name : ''}
+					value={name}
+					onChange={(event) => setName(event.target.value)}
 					required
 					disabled={pending || blocked}
 					error={fieldErrors.name}
@@ -132,6 +137,8 @@ export function OrganizationForm(props: Props) {
 						name="slug"
 						label="Slug"
 						icon={Link01Icon}
+						value={slug}
+						onChange={(event) => setSlugOverride(event.target.value)}
 						required
 						disabled={pending || blocked}
 						minLength={3}
@@ -140,13 +147,23 @@ export function OrganizationForm(props: Props) {
 						autoCorrect="off"
 						spellCheck={false}
 						error={fieldErrors.slug}
-						hint="3–63 lowercase letters, numbers and single hyphens. Starts with a letter; reserved names are unavailable."
+						hint="Generated from the gym name; you can edit it before registration. Use 3–63 lowercase letters, numbers and single hyphens, starting with a letter."
 					/>
 				) : (
 					<p>
 						Slug: <strong>{props.organization.slug}</strong>
 					</p>
 				)}
+				{!editing && slugOverride !== null ? (
+					<Button
+						icon={RefreshIcon}
+						variant="secondary"
+						onClick={() => setSlugOverride(null)}
+						disabled={pending || blocked}
+					>
+						Use gym name
+					</Button>
+				) : null}
 				{error ? (
 					<p role="alert" className="error-message">
 						{error}
