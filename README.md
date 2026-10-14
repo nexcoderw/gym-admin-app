@@ -9,32 +9,32 @@ permissions. gym-db owns every schema and migration. No sibling project was chan
 Implemented pages: `/organizations`, `/organizations/new`, `/organizations/[id]` and
 `/organizations/[id]/edit`. List/detail pages read current authorized records through server-only
 adapters, not self-HTTP. Registration creates PENDING records only, editing changes name only, and
-activation/suspension require an explicit confirmation. No delete, archive, slug editing, tenant
+activation/suspension require an explicit confirmation. No delete, archive, existing-slug editing, tenant
 login, owner/subscription data, permission provisioning or audit-history UI is included.
 
-### Backend prerequisites are still blocking live mutations
+### Backend prerequisites for live mutations
 
-The inspected gym-api module still binds `UnavailableOrganizationAudit`; mutations are therefore
-blocked with `ORGANIZATION_AUDIT_UNAVAILABLE`. Step 12's DB checks, audit migration/triggers/grants,
-durable provider and controlled permission provisioning must be reviewed and verified separately.
-The five organization permissions have not been confirmed provisioned to an administrator. The
-existing owner role is not expanded by this frontend. No frontend flag, fake data or role-name
-shortcut enables unaudited writes. Reads also require independently provisioned read permission.
-Mocked successful responses in authored tests are not live audit/database evidence.
+The inspected gym-api module binds `DurableOrganizationAudit`; organization changes and audit
+inserts share a transaction. Database migrations and runtime-role grants must still be provisioned
+and verified independently. SQLSTATE `42501` means insufficient database privileges, not a missing
+superadmin permission. Check the actual API connection role and database before following the
+targeted runtime grants in `api/db/README.md`; never replace the runtime role with a database owner
+or disable auditing. No frontend flag or role-name shortcut enables unaudited writes. Mocked
+successful responses in authored tests are not live audit/database evidence.
 
 ### Registered endpoint contracts
 
 All backend paths below have prefix `/api/v1/platform`; they exist only in guarded server adapters.
 Browser components use the centralized frontend paths and same-origin cookies.
 
-| Frontend BFF method/path | Backend method/path | Required permission suffix |
-| --- | --- | --- |
-| GET `/api/organizations` | GET `/organizations` | `read` |
-| GET `/api/organizations/[id]` | GET `/organizations/:id` | `read` |
-| POST `/api/organizations` | POST `/organizations` (201) | `create` |
-| PATCH `/api/organizations/[id]` | PATCH `/organizations/:id` | `update` |
-| POST `/api/organizations/[id]/activation` | POST `/organizations/:id/activation` | `activate` |
-| POST `/api/organizations/[id]/suspension` | POST `/organizations/:id/suspension` | `suspend` |
+| Frontend BFF method/path                  | Backend method/path                  | Required permission suffix |
+| ----------------------------------------- | ------------------------------------ | -------------------------- |
+| GET `/api/organizations`                  | GET `/organizations`                 | `read`                     |
+| GET `/api/organizations/[id]`             | GET `/organizations/:id`             | `read`                     |
+| POST `/api/organizations`                 | POST `/organizations` (201)          | `create`                   |
+| PATCH `/api/organizations/[id]`           | PATCH `/organizations/:id`           | `update`                   |
+| POST `/api/organizations/[id]/activation` | POST `/organizations/:id/activation` | `activate`                 |
+| POST `/api/organizations/[id]/suspension` | POST `/organizations/:id/suspension` | `suspend`                  |
 
 The full permission names are `platform.organizations.<suffix>`. Each adapter checks a live Nest
 session and its exact permission before calling the organization operation. Pages enforce their
@@ -49,6 +49,13 @@ update sends only name. Unknown fields, malformed UUIDs, duplicate/unknown query
 If-Match values fail before the organization request. POST/PATCH validate exact Origin and CSRF
 before reading/forwarding input, using the existing timing-safe cookie proof. Arbitrary browser
 Authorization, permission, actor, URL and query headers are not forwarded.
+
+On registration, the slug is suggested immediately as the gym name changes: `Soho Gym` becomes
+`soho-gym`. Suggestions normalize accents, separators and case, avoid reserved names, start with a
+letter and stay within 63 characters. Names without an ASCII representation require manual slug
+entry. A manually edited slug is preserved when the name changes; **Use gym name** restores automatic
+generation. Suggestions do not check or guarantee uniqueness: the server still validates the final
+slug, and conflicts require an explicit correction. Existing organization slugs remain immutable.
 
 List state is shareable through limit (default 20, max 50), status and optional UUID cursor.
 Ordering remains Nest's createdAt descending / UUID ascending; next results use the returned
@@ -222,7 +229,7 @@ server-only endpoint module. No catch-all proxy or client-visible upstream origi
 | Browser/BFF path       | Module under src/lib/server/endpoints | Confirmed Nest contract                                             | Method and security                                                       |
 | ---------------------- | ------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------------------------------- |
 | /api/auth/login        | auth/login.ts                         | PlatformAuthController.login; PlatformLoginDto                      | POST, exact Origin; email/password -> challenge, CSRF, expiry             |
-| /api/auth/mfa/email | auth/send-email-otp.ts | PlatformAuthController.sendEmailOtp; PlatformEmailOtpRequestDto | POST, Origin + CSRF; challenge -> safe send confirmation, no cookies |
+| /api/auth/mfa/email    | auth/send-email-otp.ts                | PlatformAuthController.sendEmailOtp; PlatformEmailOtpRequestDto     | POST, Origin + CSRF; challenge -> safe send confirmation, no cookies      |
 | /api/auth/mfa/verify   | auth/verify-mfa.ts                    | PlatformAuthController.verifyMfa; PlatformMfaVerifyDto              | POST, Origin + CSRF; challenge/TOTP or recovery code -> safe confirmation |
 | /api/auth/session      | auth/get-session.ts                   | PlatformAuthController.getSession; PlatformSessionResponseDto       | GET, live session -> own safe identity and effective permissions          |
 | /api/auth/logout       | auth/logout.ts                        | PlatformAuthController.logout                                       | POST, Origin + CSRF -> idempotent 204 and cookie clearing                 |
