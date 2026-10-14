@@ -1,5 +1,46 @@
 import { expect, test } from '@playwright/test';
 
+test('verification has its own route with horizontal choices and actions', async ({ page }) => {
+	await page.route('**/api/auth/login', (route) =>
+		route.fulfill({
+			status: 200,
+			contentType: 'application/json',
+			body: JSON.stringify({
+				challengeToken: 'a'.repeat(43),
+				csrfToken: 'b'.repeat(43),
+				expiresAt: new Date(Date.now() + 300_000).toISOString(),
+				methods: ['email_otp', 'totp', 'recovery_code'],
+			}),
+		}),
+	);
+	await page.goto('/login');
+	await page.getByLabel('Email address').fill('operator@example.invalid');
+	await page.getByLabel('Password', { exact: true }).fill('fictional long password');
+	await page.getByRole('button', { name: 'Continue to verification' }).click();
+	await expect(page).toHaveURL(/\/verification$/u);
+	await expect(page.getByRole('radio').first()).toHaveAccessibleName('Authenticator');
+	await expect(page.getByRole('radio', { name: 'Authenticator' })).toBeChecked();
+	for (const width of [320, 375, 768, 1440]) {
+		await page.setViewportSize({ width, height: 900 });
+		const choices = await page.getByRole('group', { name: 'Verification method' }).locator('label').all();
+		const choiceBoxes = await Promise.all(choices.map((choice) => choice.boundingBox()));
+		const open = await page.getByRole('button', { name: 'Open platform' }).boundingBox();
+		const restart = await page.getByRole('button', { name: 'Start sign-in again' }).boundingBox();
+		if (!open || !restart) throw new Error('Expected visible verification actions.');
+		expect(Math.abs(open.y - restart.y)).toBeLessThanOrEqual(1);
+		for (const box of choiceBoxes) {
+			if (!box || !choiceBoxes[0]) throw new Error('Expected visible verification methods.');
+			expect(Math.abs(box.y - choiceBoxes[0].y)).toBeLessThanOrEqual(1);
+			expect(box.height).toBeGreaterThanOrEqual(44);
+		}
+		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+	}
+	await page.reload();
+	await expect(page).toHaveURL(/\/login$/u);
+	await page.goto('/verification');
+	await expect(page).toHaveURL(/\/login$/u);
+});
+
 test('does not navigate from MFA while live session confirmation is unavailable', async ({
 	page,
 }) => {
@@ -38,11 +79,11 @@ test('does not navigate from MFA while live session confirmation is unavailable'
 	await page.getByLabel('Six-digit code').fill('000123');
 	await page.getByRole('button', { name: 'Open platform' }).click();
 	await expect(page.getByRole('alert')).toContainText('Your session could not be confirmed');
-	await expect(page).toHaveURL(/\/login$/u);
+	await expect(page).toHaveURL(/\/verification$/u);
 	await expect(page.getByLabel('Six-digit code')).toBeDisabled();
 	await page.getByRole('button', { name: 'Open platform' }).click();
 	await expect(page.getByRole('button', { name: 'Open platform' })).toBeEnabled();
-	await expect(page).toHaveURL(/\/login$/u);
+	await expect(page).toHaveURL(/\/verification$/u);
 	expect(verificationRequests).toBe(1);
 });
 
