@@ -302,7 +302,7 @@ protected operation, including when JavaScript is disabled or the network is una
 ## Recovery, empty states, and branding
 
 The shared state panel provides centered, responsive SVG illustrations for missing pages, sign-in,
-permission denial, rate limiting, failures, loading, and confirmed empty staff results. Decorative
+permission denial, rate limiting, failures, and confirmed empty staff results. Decorative
 illustration wrappers have one short entrance animation; reduced-motion users receive a static
 illustration. Retry actions use the existing shared Button loading treatment. Navigation uses real
 links with the same visual style, not buttons nested inside links. No unavailable data is rendered
@@ -315,7 +315,10 @@ still redirect to `/login`. Full-page recovery states use a standalone, centered
 sidebar or topbar, including organization permission denials and route error boundaries. Protected
 layouts retain their live session checks and lifecycle handling; only successful pages render the
 workspace shell. Organization recovery actions share one centered, responsive action group rather
-than placing a restart button below the state. Loading fallbacks also provide their own main landmark.
+than placing a restart button below the state. Loading fallbacks provide their own main landmark
+with just a centered 18px spinner and one compact status heading. They omit the logo, illustration,
+explanatory paragraphs and actions. The status is announced politely; the CSS-only spinner stops
+for reduced-motion users. Button loading remains unchanged and consistent across actions.
 In-form validation and mutation errors remain inline so users do not lose their input. Root and
 dashboard error boundaries prefer Next 16.4 `retry()` with legacy `reset()` compatibility. Fatal root
 layout errors have an independent document with the same light styles and two font families.
