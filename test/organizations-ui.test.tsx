@@ -41,6 +41,47 @@ function fillRegistration(slug = 'soho') {
 }
 
 describe('organization management interactions', () => {
+	it('generates a slug as the name changes without making requests', () => {
+		render(<OrganizationForm mode="create" />);
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Soho Gym' } });
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', 'soho-gym');
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Élite Fitness' } });
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', 'elite-fitness');
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: '' } });
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', '');
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('preserves a manual slug until the user chooses to derive it from the name again', () => {
+		render(<OrganizationForm mode="create" />);
+		fillRegistration('soho-kigali');
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Soho Fitness' } });
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', 'soho-kigali');
+		fireEvent.click(screen.getByRole('button', { name: 'Use gym name' }));
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', 'soho-fitness');
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Soho Fitness Club' } });
+		expect(screen.getByLabelText('Slug')).toHaveProperty('value', 'soho-fitness-club');
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+
+	it('submits the generated slug without requiring manual slug entry', async () => {
+		fetchMock.mockResolvedValueOnce(
+			Response.json({ ...organization, slug: 'soho-gym' }, { status: 201 }),
+		);
+		const view = render(<OrganizationForm mode="create" />);
+		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Soho Gym' } });
+		const form = view.container.querySelector('form');
+		if (!form) throw new Error('Expected native organization form.');
+		fireEvent.submit(form);
+		await waitFor(() =>
+			expect(router.replace).toHaveBeenCalledWith(`/organizations/${organization.id}`),
+		);
+		expect(fetchMock.mock.calls[0]?.[1]).toMatchObject({
+			method: 'POST',
+			body: JSON.stringify({ name: 'Soho Gym', slug: 'soho-gym' }),
+		});
+	});
+
 	it('associates create validation errors with both fields without sending a request', () => {
 		const view = render(<OrganizationForm mode="create" />);
 		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: '   ' } });
