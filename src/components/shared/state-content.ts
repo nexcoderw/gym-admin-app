@@ -47,10 +47,7 @@ export const stateContent = {
 		hint: 'This is an empty result, not a connection error.',
 	},
 	loading: {
-		code: '',
 		title: 'Loading your overview',
-		description: 'Checking your authorized platform records. This may take a moment.',
-		hint: 'Only information your account can access will appear.',
 	},
 } as const;
 
