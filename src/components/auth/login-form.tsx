@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import { HugeiconsIcon } from '@hugeicons/react';
 import {
@@ -14,58 +14,57 @@ import {
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
 import { browserApi, routes } from '@/constants/routes';
-import { challengeSchema, type MfaChallenge } from '@/lib/contracts/auth';
+import { challengeSchema } from '@/lib/contracts/auth';
 import { post } from '@/lib/client/mutations';
-import { MfaForm } from './mfa-form';
+import { useAuthChallenge } from './auth-challenge-provider';
 import styles from './login-form.module.css';
 
 export function LoginForm() {
 	const router = useRouter();
-	const [challenge, setChallenge] = useState<MfaChallenge | null>(null);
+	const { beginVerification, clearChallenge } = useAuthChallenge();
+	const mounted = useRef(false);
+	const inFlight = useRef(false);
+	useEffect(() => {
+		mounted.current = true;
+		clearChallenge();
+		return () => {
+			mounted.current = false;
+		};
+	}, [clearChallenge]);
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState('');
 	const [passwordVisible, setPasswordVisible] = useState(false);
 
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		if (pending) return;
+		if (inFlight.current) return;
+		inFlight.current = true;
 		const form = event.currentTarget;
 		const data = new FormData(form);
 		setPasswordVisible(false);
 		setPending(true);
 		setError('');
 		try {
-			setChallenge(
-				await post(
-					browserApi.login,
-					{ email: data.get('email'), password: data.get('password') },
-					challengeSchema,
-				),
+			const challenge = await post(
+				browserApi.login,
+				{ email: data.get('email'), password: data.get('password') },
+				challengeSchema,
 			);
+			if (!mounted.current) return;
+			beginVerification(challenge);
+			router.push(routes.verification);
 		} catch (failure) {
-			setError(failure instanceof Error ? failure.message : 'Sign-in could not be completed.');
+			if (mounted.current) {
+				setError(failure instanceof Error ? failure.message : 'Sign-in could not be completed.');
+				inFlight.current = false;
+				setPending(false);
+			}
 		} finally {
 			const password = form.elements.namedItem('password');
 			if (password instanceof HTMLInputElement) password.value = '';
-			setPending(false);
 		}
 	}
 
-	if (challenge)
-		return (
-			<MfaForm
-				challenge={challenge}
-				onRestart={() => {
-					setChallenge(null);
-					setError('');
-				}}
-				onAuthenticated={() => {
-					setChallenge(null);
-					router.replace(routes.dashboard);
-					router.refresh();
-				}}
-			/>
-		);
 	return (
 		<form
 			method="post"
@@ -130,7 +129,7 @@ export function LoginForm() {
 				Continue to verification
 			</Button>
 			<p className={styles.note}>
-				Your authenticator or a recovery code is required in the next step.
+				Next, verify your identity using one of your available sign-in methods.
 			</p>
 		</form>
 	);
