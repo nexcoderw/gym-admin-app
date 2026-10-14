@@ -234,8 +234,16 @@ The dashboard was confirmed in backend source, not assumed from a roadmap. Endpo
 fixed paths/methods and schema mapping. Shared non-secret DTO schemas live in lib/contracts; response
 object schemas strip unknown fields rather than relaying internal payload extensions.
 
-When Nest advertises `email_otp`, the verification screen puts Email code above Authenticator and
-Recovery code. Selecting a method never sends an email: use the explicit Send email code button.
+Successful password submission navigates from `/login` to `/verification`. Both pages independently
+check the live server session and redirect already authenticated users to `/dashboard`. A scoped
+auth layout keeps the short-lived challenge in React memory only; restarting, expiry or successful
+verification clears it. Reloading or opening `/verification` directly without that challenge returns
+to `/login`. No challenge is persisted in URLs, browser storage or cookies.
+
+Verification presents Authenticator first and selected by default when offered, followed by Recovery
+code and Email code on one row. Only methods advertised by Nest appear. The Open platform and
+Start sign-in again actions share one row, including compact screens. Selecting a method never sends
+an email: use the explicit Send email code button.
 Shared loading indicators, duplicate-send protection and a cooldown apply. The form submits
 `emailOtpCode`, then confirms a live backend session before navigation. Email delivery is not
 authentication. Resend configuration lives only in Nest, and enabling this weaker fallback requires
@@ -280,7 +288,7 @@ redirect only to /login. Permission denial produces an explicit access-required 
 platform.owner role name grants no bypass. Nest independently enforces its own live guards.
 Private API and dashboard responses are no-store; no fabricated zero statistics appear on failure.
 
-`/login` and `/401` check the live Nest session on the server before rendering. A valid session
+`/login`, `/verification` and `/401` check the live Nest session on the server before rendering. A valid session
 redirects to `/dashboard`; only a confirmed 401 allows anonymous authentication UI. Network failures,
 rate limits, or service outages surface as errors, not logout. Future authentication pages must use
 the same `requireAnonymousSession` guard. The session-read BFF expires both local platform cookies on
