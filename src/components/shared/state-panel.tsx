@@ -2,7 +2,6 @@ import { useId, type ReactNode } from 'react';
 import {
 	AlertCircleIcon,
 	Clock01Icon,
-	DashboardSquare01Icon,
 	FileSearchIcon,
 	Folder01Icon,
 	LockPasswordIcon,
@@ -15,7 +14,7 @@ import { stateContent, type StateKind } from './state-content';
 import { BrandLogo } from './brand-logo';
 import styles from './state-panel.module.css';
 
-const illustrations: Record<StateKind, IconSvgElement> = {
+const illustrations: Record<Exclude<StateKind, 'loading'>, IconSvgElement> = {
 	'401': ShieldKeyIcon,
 	'403': LockPasswordIcon,
 	'404': FileSearchIcon,
@@ -23,7 +22,6 @@ const illustrations: Record<StateKind, IconSvgElement> = {
 	'500': AlertCircleIcon,
 	'503': WifiError01Icon,
 	empty: Folder01Icon,
-	loading: DashboardSquare01Icon,
 };
 
 /** Shared presentation only; callers own data, authorization, and meaningful recovery actions. */
@@ -43,8 +41,25 @@ export function StatePanel({
 	readonly children?: ReactNode;
 }) {
 	const id = useId();
-	const content = stateContent[kind];
 	const Heading = headingLevel === 1 ? 'h1' : 'h2';
+	if (kind === 'loading') {
+		return (
+			<section
+				className={styles.panel}
+				data-layout={layout}
+				data-state={kind}
+				aria-labelledby={`${id}-title`}
+			>
+				<div className={styles.loading} role="status" aria-live="polite" aria-atomic="true">
+					<span className={styles.spinner} aria-hidden="true" />
+					<Heading id={`${id}-title`} className={styles.loadingTitle}>
+						{title ?? stateContent.loading.title}
+					</Heading>
+				</div>
+			</section>
+		);
+	}
+	const content = stateContent[kind];
 	return (
 		<section
 			className={styles.panel}
@@ -81,11 +96,6 @@ export function StatePanel({
 				{description ?? content.description}
 			</p>
 			{children ? <div className={styles.actions}>{children}</div> : null}
-			{kind === 'loading' ? (
-				<p role="status" className={styles.status}>
-					Loading current platform records…
-				</p>
-			) : null}
 			<p className={styles.hint}>{content.hint}</p>
 		</section>
 	);
