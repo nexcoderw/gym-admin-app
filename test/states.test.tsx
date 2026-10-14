@@ -9,6 +9,7 @@ import { StatePanel } from '@/components/shared/state-panel';
 import { RecoveryState } from '@/components/shared/recovery-state';
 import { stateContent } from '@/components/shared/state-content';
 import DashboardError from '@/app/dashboard/error';
+import OrganizationsLoading from '@/app/organizations/loading';
 import GlobalError from '@/app/global-error';
 import { DashboardOverview } from '@/components/dashboard/dashboard-overview';
 import { summary } from './fixtures';
@@ -123,8 +124,25 @@ describe('workspace recovery and empty states', () => {
 	});
 
 	it('announces loading without providing mutation or retry controls', () => {
-		render(<StatePanel kind="loading" />);
-		expect(screen.getByRole('status').textContent).toContain('Loading current platform records');
+		const view = render(<StatePanel kind="loading" layout="page" />);
+		const status = screen.getByRole('status');
+		expect(status.textContent).toBe('Loading your overview');
+		expect(status.getAttribute('aria-live')).toBe('polite');
+		expect(status.getAttribute('aria-atomic')).toBe('true');
+		expect(status.querySelectorAll('[aria-hidden="true"]')).toHaveLength(1);
+		expect(screen.getAllByRole('heading')).toHaveLength(1);
+		expect(view.container.querySelector('svg, img')).toBeNull();
+		expect(view.container.querySelector('p')).toBeNull();
+		expect(screen.queryByText('NEXCODE')).toBeNull();
+		expect(screen.queryByRole('button')).toBeNull();
+		expect(screen.queryByRole('link')).toBeNull();
+	});
+
+	it('uses the same minimal loader with an organization-specific status and main landmark', () => {
+		render(<OrganizationsLoading />);
+		expect(screen.getByRole('main').id).toBe('main');
+		expect(screen.getByRole('status').textContent).toBe('Loading organizations');
+		expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Loading organizations');
 		expect(screen.queryByRole('button')).toBeNull();
 	});
 
