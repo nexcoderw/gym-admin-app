@@ -12,7 +12,7 @@
 	overflow: hidden;
 }
 .dialog[data-size='small'] {
-	inline-size: min(28rem, calc(100% - var(--space-8)));
+	inline-size: min(27rem, calc(100% - var(--space-8)));
 }
 .dialog[data-size='large'] {
 	inline-size: min(44rem, calc(100% - var(--space-8)));
