@@ -9,7 +9,11 @@ type AuthStep = 'sign-in' | 'verification';
 
 const steps = [
 	{ key: 'sign-in', title: 'Sign in', detail: 'Email address and password' },
-	{ key: 'verification', title: 'Verify it’s you', detail: 'Authenticator, recovery or email code' },
+	{
+		key: 'verification',
+		title: 'Verify it’s you',
+		detail: 'Authenticator, recovery or email code',
+	},
 	{ key: 'workspace', title: 'Open the platform', detail: 'Manage gyms and platform approvals' },
 ] as const;
 

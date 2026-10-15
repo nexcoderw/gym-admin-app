@@ -31,7 +31,7 @@ const actions = {
 	activation: {
 		trigger: 'Activate gym',
 		verb: 'Activate',
-		confirm: 'Confirm activation',
+		confirm: 'Confirm',
 		icon: CheckmarkCircle01Icon,
 		next: 'ACTIVE',
 		description:
@@ -40,7 +40,7 @@ const actions = {
 	suspension: {
 		trigger: 'Suspend gym',
 		verb: 'Suspend',
-		confirm: 'Confirm suspension',
+		confirm: 'Confirm',
 		icon: PauseIcon,
 		next: 'SUSPENDED',
 		description:
@@ -49,7 +49,7 @@ const actions = {
 	archival: {
 		trigger: 'Archive gym',
 		verb: 'Archive',
-		confirm: 'Confirm archival',
+		confirm: 'Confirm',
 		icon: Archive03Icon,
 		next: 'ARCHIVED',
 		description:
