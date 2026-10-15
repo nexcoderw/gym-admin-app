@@ -3,9 +3,16 @@ import Image from 'next/image';
 import styles from './brand-logo.module.css';
 
 /** The N monogram is decorative alongside the accessible Albert Sans wordmark. */
-export function BrandLogo({ subtitle = 'Gym platform' }: { readonly subtitle?: string }) {
+export function BrandLogo({
+	subtitle = 'Gym platform',
+	tone = 'default',
+}: {
+	readonly subtitle?: string;
+	/** `inverse` is for placement on the solid primary surface. */
+	readonly tone?: 'default' | 'inverse';
+}) {
 	return (
-		<div className={styles.logo}>
+		<div className={styles.logo} data-tone={tone}>
 			<Image
 				src="/nexcode-mark.svg"
 				alt=""
