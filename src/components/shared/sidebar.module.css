@@ -1,33 +1,12 @@
-/* Compact: the sidebar is a header with the brand above navigation and the account. */
+/* Compact: the sidebar is a header with the brand above the navigation. */
 .sidebar {
 	min-width: 0;
 	padding: var(--space-4) var(--gutter);
 	border-block-end: 1px solid var(--border);
 	background: var(--surface);
 	display: grid;
-	grid-template-columns: minmax(0, 1fr) auto;
 	gap: var(--space-3);
 	align-items: center;
-}
-.brand {
-	grid-column: 1 / -1;
-}
-.account {
-	min-width: 0;
-	display: flex;
-	align-items: center;
-	justify-content: flex-end;
-	gap: var(--space-2);
-}
-.name {
-	max-width: 12ch;
-	font-size: var(--text-caption);
-	overflow-wrap: anywhere;
-}
-.label {
-	display: none;
-	font-size: var(--text-small);
-	color: var(--text-muted);
 }
 @media (min-width: 60rem) {
 	.sidebar {
@@ -39,27 +18,7 @@
 		border-inline-end: 1px solid var(--border);
 		border-block-end: none;
 	}
-	.account {
-		margin-block-start: auto;
-		padding: var(--space-4);
-		border-block-start: 1px solid var(--border);
-		display: grid;
-		justify-content: stretch;
-		gap: var(--space-3);
-	}
-	.name {
-		max-width: none;
-		font-size: var(--text-small);
-	}
-	.label {
-		display: block;
-	}
 	.brand {
 		padding-inline: var(--space-3);
-	}
-}
-@media (max-width: 40rem) {
-	.name {
-		display: none;
 	}
 }
