@@ -1,11 +1,22 @@
 .badge {
 	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
 	padding: var(--space-1) var(--space-3);
 	border-radius: var(--radius-pill);
 	background: var(--surface-raised);
 	color: var(--text-secondary);
 	font-size: var(--text-caption);
 	font-weight: 600;
+	white-space: nowrap;
+}
+/* The visible label carries meaning; the dot only aids scanning a grid. */
+.badge::before {
+	content: '';
+	inline-size: 0.375rem;
+	block-size: 0.375rem;
+	border-radius: var(--radius-pill);
+	background: currentColor;
 }
 .badge[data-status='ACTIVE'] {
 	background: var(--success-background);
@@ -18,4 +29,9 @@
 .badge[data-status='SUSPENDED'] {
 	background: var(--danger-background);
 	color: var(--danger);
+}
+@media (forced-colors: active) {
+	.badge {
+		border: 1px solid CanvasText;
+	}
 }
