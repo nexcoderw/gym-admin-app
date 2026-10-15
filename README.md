@@ -1,20 +1,21 @@
 # NEXCODE Gym Admin
 
 Private superadmin frontend foundation for admin.gym.rw; proposed repository: nexcoderw/gym-admin.
-Next.js owns the UI and eleven explicit BFF adapters. NestJS owns authentication and effective
-permissions. gym-db owns every schema and migration. No sibling project was changed.
+Next.js owns the UI and explicit BFF adapters. NestJS owns authentication and effective
+permissions. gym-db owns every schema and migration.
 
-## Organization management — Step 13
+## Organization management — Steps 13–14
 
 Implemented page: `/organizations`, a responsive card registry. Registration, details and name
 editing open as modal dialogs over the list; the former `/organizations/new`, `/organizations/[id]`
 and `/organizations/[id]/edit` pages were removed. The list reads current authorized records
 through server-only adapters, not self-HTTP. One shared `OrganizationForm` dialog registers and
 renames gyms. Registration creates PENDING records only, editing changes name only, and
-activation/suspension require an explicit confirmation. Confirmed successes close the dialog,
+activation, suspension and archival require an explicit confirmation. Confirmed successes close the dialog,
 refresh the server-rendered list and show a top-center toast; failures stay inline in the dialog.
-No delete, archive, existing-slug editing, tenant login, owner/subscription data, permission
-provisioning or audit-history UI is included.
+Archival retains the registry record, slug and audit history and has no restoration path in this
+interface. No permanent delete, existing-slug editing, tenant login, owner/subscription data,
+permission provisioning or audit-history UI is included.
 
 ### Backend prerequisites for live mutations
 
@@ -39,6 +40,7 @@ Browser components use the centralized frontend paths and same-origin cookies.
 | PATCH `/api/organizations/[id]`           | PATCH `/organizations/:id`           | `update`                   |
 | POST `/api/organizations/[id]/activation` | POST `/organizations/:id/activation` | `activate`                 |
 | POST `/api/organizations/[id]/suspension` | POST `/organizations/:id/suspension` | `suspend`                  |
+| POST `/api/organizations/[id]/archival`   | POST `/organizations/:id/archival`   | `archive`                  |
 
 The full permission names are `platform.organizations.<suffix>`. Each adapter checks a live Nest
 session and its exact permission before calling the organization operation. The page enforces
@@ -104,8 +106,11 @@ The BFF detail GET requires an ETag exactly quoting the canonical UTC updatedAt;
 same value. The edit dialog sends If-Match built from the `updatedAt` of the record snapshot it
 opened (`organizationEtag`), so a concurrent change fails with 412 instead of being overwritten.
 412 means stale organization, **not** MFA enrollment. Stale edits require reload, not automatic
-resubmission. Activation is PENDING/SUSPENDED → ACTIVE, suspension ACTIVE → SUSPENDED. The
-confirmation names the gym, shows the status change, focuses Cancel and restores focus to its
+resubmission. Activation is PENDING/SUSPENDED → ACTIVE, suspension ACTIVE → SUSPENDED, and archival
+is PENDING/ACTIVE/SUSPENDED → ARCHIVED. The archive confirmation states that the record and history
+remain, the slug stays reserved, and the admin UI cannot restore the gym. Archived records remain
+readable but offer no edit or lifecycle controls. Every confirmation names the gym, shows the
+status change, focuses Cancel and restores focus to its
 trigger. It re-reads the latest version before sending expectedUpdatedAt; a changed version requires
 a new confirmation. These transitions do not grant subscriptions, provision a domain, cancel billing
 or delete members.
@@ -130,7 +135,7 @@ From app/admin, format only the changed areas and inspect the diff:
 
 ```bash
 cd /Users/dvniels/Desktop/projects/gym/app/admin
-npx prettier --write src/app/globals.css src/lib/contracts/organizations.ts src/constants/routes.ts src/components/shared src/components/organizations src/app/organizations test/dialog-toast.test.tsx test/organizations-pages.test.ts test/organizations-ui.test.tsx test/e2e/organizations.spec.ts README.md
+npx prettier --write src/lib/contracts/organizations.ts src/constants/routes.ts src/lib/server/endpoints/organizations/archive.ts 'src/app/api/organizations/[id]/archival/route.ts' src/components/organizations/organization-details.tsx src/components/organizations/organization-lifecycle-actions.tsx src/components/organizations/organization-list.tsx test/organizations-routes.test.ts test/organizations-ui.test.tsx test/e2e/organizations.spec.ts README.md
 npm run format:check
 npm run lint
 npm run typecheck
@@ -142,7 +147,8 @@ Tests cover strict contracts, each fixed operation/permission, Origin/CSRF rejec
 expired/rejected sessions, safe errors, PATCH/201/ETag, cookie rejection, the list page, empty/real
 cards, permission-gated triggers, filter/cursor behavior, duplicate prevention, locked dismissal
 while pending, stale editing, dialog labelling/focus/backdrop/Escape, details-to-edit switching,
-success toasts (live region, auto-dismiss, hover pause, limit), lifecycle confirmation and
+success toasts (live region, auto-dismiss, hover pause, limit), lifecycle and archival confirmation,
+archived-record action suppression, stale archival refusal, and
 audit-unavailable registration. Existing auth/dashboard tests remain regression coverage.
 No tests, build, formatting, browser automation or database commands were executed by the agent.
 
@@ -154,15 +160,19 @@ credentials. Record a fresh test login/MFA session privately through the existin
 ```bash
 npx playwright codegen --save-storage=/private/tmp/gym-admin-organization-session.json http://localhost:4000
 chmod 600 /private/tmp/gym-admin-organization-session.json
-PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE=/private/tmp/gym-admin-organization-session.json npm run test:e2e -- test/e2e/organizations.spec.ts
+PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE=/private/tmp/gym-admin-organization-session.json \
+PLAYWRIGHT_ORGANIZATIONS_MUTATIONS=1 \
+npm run test:e2e -- test/e2e/organizations.spec.ts
 ```
 
 Close codegen after successful test login/MFA. Its credential-bearing storage file and retained
 traces must stay private/uncommitted and be removed by the human when no longer required. Refresh
 the session when expired. Missing test-session configuration fails protected scenarios explicitly,
-not as a silent skip. The focused browser test mocks only the browser's organization mutation
-response; initial server-page/session/permission checks remain real. It verifies unavailable-state
-presentation and responsive keyboard use, not real mutation/audit persistence.
+not as a silent skip. The protected browser suite requires an explicit mutation opt-in and a
+localhost admin origin. Its archival case registers and archives only its own unique fictional
+record; the unavailable-state case mocks only the browser mutation response. Initial server-page,
+session and permission checks remain real. Browser success does not prove audit persistence;
+inspect the committed organization and audit rows independently.
 
 Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists and confirm
 five cards per row at 1280px and wider, with page edges aligned to the topbar text;
@@ -173,6 +183,80 @@ check each lifecycle confirmation and invalid transition; remove a test permissi
 session and confirm direct page/BFF rejection; inspect at 320/768/1440px and 200% zoom with keyboard
 and screen reader. Verify actual durable audit rows through an authorized backend/database review,
 not this UI. Do not declare production readiness until that separate evidence exists.
+
+### Step 14 real full-stack organization acceptance
+
+This procedure is human-operated and must use an isolated development database, fictional data and
+an approved administrator. Before starting, confirm the reviewed integrity migration and scoped
+runtime grants are deployed, the API uses the intended development database and restricted runtime
+role, the admin uses that API, MFA is complete, all seven Organization permissions are effective,
+and an authorized operator can inspect committed audit rows. Never run lifecycle smoke tests in
+production.
+
+Use one new fictional organization and record only safe request IDs and outcomes. Sign in, complete
+MFA, confirm the live session, and open Organizations. Then:
+
+1. Register the gym; verify HTTP 201, PENDING persistence and exactly one CREATE audit event.
+2. Rename it; verify the new name and exactly one UPDATE audit event.
+3. Activate it; verify ACTIVE and exactly one ACTIVATE audit event.
+4. Suspend it; verify SUSPENDED and exactly one SUSPEND audit event.
+5. Reactivate it; verify ACTIVE and a second ACTIVATE audit event.
+6. Archive it; verify ARCHIVED and exactly one ARCHIVE audit event.
+7. Verify the default list excludes it and the ARCHIVED filter returns the same stable UUID.
+8. Verify its slug, record and full audit history remain and normal edit/activation are rejected.
+9. Sign out and verify every protected page and BFF operation denies the ended session.
+
+Those six successful mutations must produce exactly six matching committed Organization audit
+events. For each, verify organization UUID, actor PlatformStaff UUID, server request ID, action,
+previous/resulting status, exact changed fields, permitted name metadata and valid timestamps. No
+cookie, password, MFA value or token may appear. A successful HTTP response alone is not evidence;
+inspect both the organization and committed audit row using the approved database process.
+
+Also test wrong password, invalid MFA, absent/expired/revoked sessions, missing archive permission,
+foreign Origin, invalid CSRF, duplicate/reserved/malformed slugs, stale version, invalid transition,
+repeated archival, audit failure and backend outage. Every rejected or uncertain mutation must lack
+both a committed state change and a successful audit event. Do not retry an uncertain POST; reload
+and reconcile its server state first.
+
+Run repository verification in dependency order only after the forward migration and grants are
+approved and installed on the verified disposable targets:
+
+```bash
+cd /Users/dvniels/Desktop/projects/gym/api/db
+npm run migration:status
+npm run prisma:validate
+npm run prisma:generate
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run test:integration
+npm run build
+
+cd /Users/dvniels/Desktop/projects/gym/api/api
+npm run format:check
+npm run lint
+npm run typecheck
+npm run test:unit
+npm run test:integration
+npm run test:e2e
+npm run build
+
+cd /Users/dvniels/Desktop/projects/gym/app/admin
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+# Requires separately started API/admin services and the private approved storage state above.
+npm run test:e2e
+```
+
+Before the database integration suite, deploy the approved migration to the independently marked
+disposable database with the database repository's `npm run migration:test:deploy`; never point it
+at development or production. API integration/e2e tests need the compatible built local database
+package and their configured test environment. Playwright needs human-started services and browser
+state. None of these commands were executed by the agent.
 
 ## Inspection and scope
 
