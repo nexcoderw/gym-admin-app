@@ -513,6 +513,36 @@ describe('organization lifecycle confirmation', () => {
 		expect(router.refresh).toHaveBeenCalledOnce();
 	});
 
+	it('archives only after explicit confirmation and reports the retained record', async () => {
+		const archived = {
+			...organization,
+			status: 'ARCHIVED',
+			archivedAt: '2026-10-13T13:00:00.000Z',
+			updatedAt: '2026-10-13T13:00:00.000Z',
+		} as const;
+		fetchMock.mockResolvedValueOnce(Response.json(organization)).mockResolvedValueOnce(
+			Response.json(archived),
+		);
+		renderList();
+		fireEvent.click(screen.getByRole('button', { name: 'Soho Gym' }));
+		fireEvent.click(screen.getByRole('button', { name: 'Archive gym' }));
+		const confirm = screen.getByRole('dialog', { name: 'Archive Soho Gym?' });
+		expect(within(confirm).getByText(/retaining its registry record and audit history/u)).toBeDefined();
+		expect(within(confirm).getByText(/slug remains reserved/u)).toBeDefined();
+		expect(within(confirm).getByText(/cannot restore/u)).toBeDefined();
+		expect(document.activeElement).toBe(within(confirm).getByRole('button', { name: 'Cancel' }));
+		fireEvent.click(within(confirm).getByRole('button', { name: 'Confirm archival' }));
+		await waitFor(() =>
+			expect(screen.getByText('Soho Gym has been archived and retained for audit history.')).toBeDefined(),
+		);
+		expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/organizations/${organization.id}/archival`);
+		expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
+			JSON.stringify({ expectedUpdatedAt: organization.updatedAt }),
+		);
+		expect(screen.queryByRole('dialog')).toBeNull();
+		expect(router.refresh).toHaveBeenCalledOnce();
+	});
+
 	it('refuses a lifecycle change after a newer read and hides all controls for archived gyms', async () => {
 		fetchMock.mockResolvedValueOnce(
 			Response.json({ ...organization, updatedAt: '2026-10-13T13:00:00.000Z' }),
@@ -527,10 +557,89 @@ describe('organization lifecycle confirmation', () => {
 		expect(first.onReload).toHaveBeenCalledOnce();
 		first.view.unmount();
 		renderDetails({ ...organization, status: 'ARCHIVED' });
+		expect(screen.queryByRole('button', { name: 'Edit gym name' })).toBeNull();
 		expect(screen.queryByRole('button', { name: 'Activate gym' })).toBeNull();
 		expect(screen.queryByRole('button', { name: 'Suspend gym' })).toBeNull();
 		expect(screen.queryByRole('button', { name: /delete|archive/iu })).toBeNull();
 		expect(screen.getByText(/Preview only/u)).toBeDefined();
+	});
+
+	it('keeps archival unconfirmed after a stale read and restores focus when cancelled', async () => {
+		fetchMock.mockResolvedValueOnce(
+			Response.json({
+				...organization,
+				status: 'ACTIVE',
+				updatedAt: '2026-10-13T13:00:00.000Z',
+			}),
+		);
+		const active = { ...organization, status: 'ACTIVE' } as const;
+		const { onLifecycleChange } = renderDetails(active, [
+			organizationPermissions.read,
+			organizationPermissions.archive,
+		]);
+		const trigger = screen.getByRole('button', { name: 'Archive gym' });
+		fireEvent.click(trigger);
+		fireEvent.click(screen.getByRole('button', { name: 'Cancel' }));
+		expect(document.activeElement).toBe(trigger);
+		fireEvent.click(trigger);
+		fireEvent.click(screen.getByRole('button', { name: 'Confirm archival' }));
+		await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('changed'));
+		expect(fetchMock).toHaveBeenCalledOnce();
+		expect(onLifecycleChange).not.toHaveBeenCalled();
+		expect(router.refresh).not.toHaveBeenCalled();
+	});
+
+	it('prevents duplicate archival submissions while backend confirmation is pending', async () => {
+		const active = { ...organization, status: 'ACTIVE' } as const;
+		let resolveMutation: ((response: Response) => void) | undefined;
+		const mutation = new Promise<Response>((resolve) => {
+			resolveMutation = resolve;
+		});
+		fetchMock.mockResolvedValueOnce(Response.json(active)).mockReturnValueOnce(mutation);
+		const { onLifecycleChange } = renderDetails(active, [
+			organizationPermissions.read,
+			organizationPermissions.archive,
+		]);
+		fireEvent.click(screen.getByRole('button', { name: 'Archive gym' }));
+		const submit = screen.getByRole('button', { name: 'Confirm archival' });
+		fireEvent.click(submit);
+		await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(2));
+		expect(submit.getAttribute('aria-busy')).toBe('true');
+		fireEvent.click(submit);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+		await act(async () => {
+			resolveMutation?.(
+				Response.json({
+					...active,
+					status: 'ARCHIVED',
+					archivedAt: '2026-10-13T13:00:00.000Z',
+					updatedAt: '2026-10-13T13:00:00.000Z',
+				}),
+			);
+			await mutation;
+		});
+		await waitFor(() => expect(onLifecycleChange).toHaveBeenCalledOnce());
+	});
+
+	it('keeps archival failure inline without a success toast or refresh', async () => {
+		fetchMock
+			.mockResolvedValueOnce(Response.json(organization))
+			.mockResolvedValueOnce(
+				Response.json(
+					{ error: { code: 'ORGANIZATION_AUDIT_UNAVAILABLE' } },
+					{ status: 503 },
+				),
+			);
+		renderList();
+		fireEvent.click(screen.getByRole('button', { name: 'Soho Gym' }));
+		fireEvent.click(screen.getByRole('button', { name: 'Archive gym' }));
+		fireEvent.click(screen.getByRole('button', { name: 'Confirm archival' }));
+		await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('audit setup'));
+		expect(screen.getByRole('dialog', { name: 'Archive Soho Gym?' })).toBeDefined();
+		expect(
+			screen.queryByText('Soho Gym has been archived and retained for audit history.'),
+		).toBeNull();
+		expect(router.refresh).not.toHaveBeenCalled();
 	});
 
 	it('restores trigger focus on cancellation without sending a lifecycle request', () => {
