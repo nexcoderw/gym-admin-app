@@ -1,0 +1,73 @@
+/* Collapsed it is a 44px circle; the toolbar aligns it to the end, so opening grows it leftwards. */
+.search {
+	display: flex;
+	align-items: center;
+	flex: 0 0 2.75rem;
+	min-inline-size: 0;
+	block-size: 2.75rem;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	background: var(--surface);
+	overflow: hidden;
+	transition:
+		flex-basis 220ms var(--motion-ease),
+		border-color var(--motion-fast) var(--motion-ease);
+}
+.search[data-open='true'] {
+	flex: 0 1 22rem;
+}
+.search:focus-within {
+	border-color: var(--primary);
+}
+/* Overflow would clip inner focus rings, so the whole pill shows keyboard focus instead. */
+.search:has(:focus-visible) {
+	outline: 3px solid var(--focus);
+	outline-offset: 2px;
+}
+.toggle,
+.input,
+.close {
+	outline: none;
+}
+.toggle {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	inline-size: calc(2.75rem - 2px);
+	block-size: 100%;
+	padding: 0;
+	border: 0;
+	border-radius: var(--radius-pill);
+	background: none;
+	color: var(--text-secondary);
+	transition:
+		background var(--motion-fast) var(--motion-ease),
+		color var(--motion-fast) var(--motion-ease);
+}
+.toggle:hover {
+	background: var(--surface-hover);
+	color: var(--primary);
+}
+.search[data-open='true'] .toggle {
+	color: var(--primary);
+}
+.input {
+	flex: 1 1 0%;
+	min-inline-size: 0;
+	min-height: 0;
+	block-size: 100%;
+	padding: 0 var(--space-1);
+	border: 0;
+	background: transparent;
+}
+.input::-webkit-search-cancel-button {
+	appearance: none;
+}
+.close {
+	flex: 0 0 auto;
+}
+@media (forced-colors: active) {
+	.search {
+		border-color: CanvasText;
+	}
+}
