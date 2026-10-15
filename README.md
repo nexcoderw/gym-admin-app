@@ -208,11 +208,13 @@ them initially. Browsers receive same-origin font assets. The compact scale uses
 Generic font fallbacks support loading/failure, not an additional designed typeface.
 
 Desktop uses a quiet 15rem sidebar; compact screens keep navigation and logout available in a header.
-The sidebar is its own component (`components/shared/sidebar.tsx`) holding the brand and the
-navigation registry (active only on an exact or nested path, via `isCurrentDestination`). The
-topbar in `AppShell` shows "NEXCODE Gym · Administration workspace" on the left, with the signed-in
-name, "Platform staff" and Sign out on the right. On compact screens the topbar sits beside the
-sidebar header: Sign out is always visible and the name appears from 40rem.
+`AppShell` only places three parts. `Sidebar` (`components/shared/sidebar.tsx`) holds the brand and
+the "Platform navigation" links from the navigation registry (active only on an exact or nested
+path, via `isCurrentDestination`). `Navbar` (`components/shared/navbar.tsx`) is the top bar: a
+breadcrumb on the left (NEXCODE Gym › current page, labelled via `currentDestination`; it grants
+nothing) and the signed-in name, "Platform staff" and Sign out on the right. On compact screens
+the navbar sits beside the sidebar header: Sign out is always visible and the name appears from
+40rem.
 Below 40rem, secondary metric descriptions and redundant metadata are hidden, but all actual counts,
 labels, errors and actions remain available. Grids reflow from one to two to four columns as space
 allows. Motion respects reduced-motion preferences; no automatic dark theme or fake metrics exist.
