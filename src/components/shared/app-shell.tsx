@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { LogoutButton } from '@/components/auth/logout-button';
 import { Sidebar } from './sidebar';
 import { ToastProvider } from './toast';
+import { WorkspaceBreadcrumb } from './workspace-breadcrumb';
 import styles from './app-shell.module.css';
 
 /** Sidebar for brand and navigation; the topbar carries the signed-in account and Sign out. */
@@ -20,9 +21,9 @@ export function AppShell({
 			<div className={styles.shell}>
 				<Sidebar permissions={permissions} className={styles.sidebar} />
 				<header className={styles.topbar}>
-					<p className={styles.title}>
-						NEXCODE Gym <span>Administration workspace</span>
-					</p>
+					<div className={styles.location}>
+						<WorkspaceBreadcrumb />
+					</div>
 					<div className={styles.account}>
 						<div className={styles.identity}>
 							<p className={styles.name}>{displayName}</p>
