@@ -123,6 +123,7 @@ export function OrganizationForm(props: Props) {
 	}
 	return (
 		<Dialog
+			size="small"
 			title={editing ? 'Edit gym name' : 'Register Gym'}
 			description={
 				editing
