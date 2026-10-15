@@ -18,27 +18,30 @@ afterEach(cleanup);
 const allDestinations = ['platform.dashboard.read', organizationPermissions.read];
 
 describe('workspace shell', () => {
-	it('frames the page with the sidebar, the topbar text and one main region', () => {
+	it('puts the signed-in operator and sign out in the topbar, not the sidebar', () => {
 		location.pathname = '/organizations';
 		render(
 			<AppShell permissions={allDestinations} displayName="Fictional Operator">
 				<h1>Organizations</h1>
 			</AppShell>,
 		);
-		expect(screen.getByRole('complementary', { name: 'Platform workspace' })).toBeDefined();
+		const topbar = screen.getByRole('banner');
+		expect(within(topbar).getByText('Administration workspace')).toBeDefined();
+		expect(within(topbar).getByText('Fictional Operator')).toBeDefined();
+		expect(within(topbar).getByText('Platform staff')).toBeDefined();
+		expect(within(topbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
+		const sidebar = screen.getByRole('complementary', { name: 'Platform workspace' });
+		expect(within(sidebar).queryByRole('button', { name: 'Sign out' })).toBeNull();
+		expect(within(sidebar).queryByText('Fictional Operator')).toBeNull();
 		expect(screen.getAllByRole('main')).toHaveLength(1);
-		expect(screen.getByText('Administration workspace')).toBeDefined();
 	});
 
-	it('keeps brand, navigation, the signed-in operator and sign out inside the sidebar', () => {
+	it('keeps the brand and permitted navigation inside the sidebar', () => {
 		location.pathname = '/dashboard';
-		render(<Sidebar permissions={allDestinations} displayName="Fictional Operator" />);
+		render(<Sidebar permissions={allDestinations} />);
 		const sidebar = screen.getByRole('complementary', { name: 'Platform workspace' });
 		expect(within(sidebar).getByText('NEXCODE')).toBeDefined();
 		expect(within(sidebar).getByRole('navigation', { name: 'Platform navigation' })).toBeDefined();
-		expect(within(sidebar).getByText('Fictional Operator')).toBeDefined();
-		expect(within(sidebar).getByText('Platform staff')).toBeDefined();
-		expect(within(sidebar).getByRole('button', { name: 'Sign out' })).toBeDefined();
 		expect(within(sidebar).getByRole('link', { name: 'Overview' }).getAttribute('aria-current')).toBe(
 			'page',
 		);
@@ -46,7 +49,7 @@ describe('workspace shell', () => {
 
 	it('lists only permitted destinations and never activates a lookalike path prefix', () => {
 		location.pathname = '/organizations-archive';
-		render(<Sidebar permissions={[organizationPermissions.read]} displayName="Fictional Operator" />);
+		render(<Sidebar permissions={[organizationPermissions.read]} />);
 		const nav = screen.getByRole('navigation', { name: 'Platform navigation' });
 		expect(within(nav).queryByRole('link', { name: 'Overview' })).toBeNull();
 		expect(
