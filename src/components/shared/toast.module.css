@@ -1,0 +1,57 @@
+.viewport {
+	position: fixed;
+	inset-block-start: var(--space-4);
+	inset-inline: var(--space-4);
+	z-index: var(--layer-toast);
+	display: grid;
+	justify-items: center;
+	pointer-events: none;
+}
+.list {
+	display: grid;
+	gap: var(--space-2);
+	inline-size: min(28rem, 100%);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.toast {
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-inline-size: 0;
+	padding: var(--space-2) var(--space-2) var(--space-2) var(--space-3);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-control);
+	background: var(--surface);
+	box-shadow: var(--shadow-overlay);
+	pointer-events: auto;
+	animation: drop 200ms var(--motion-ease);
+}
+.icon {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	inline-size: 2rem;
+	block-size: 2rem;
+	border-radius: var(--radius-pill);
+	background: var(--success-background);
+	color: var(--success);
+}
+.message {
+	flex: 1 1 auto;
+	min-inline-size: 0;
+	color: var(--text-primary);
+	font-weight: 600;
+}
+@keyframes drop {
+	from {
+		opacity: 0;
+		transform: translateY(-0.75rem);
+	}
+}
+@media (forced-colors: active) {
+	.toast {
+		border-color: CanvasText;
+	}
+}
