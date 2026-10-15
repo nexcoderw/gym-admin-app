@@ -52,3 +52,15 @@
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
+/* The registry spans the full workspace width, so wide monitors add columns instead of
+   stretching four cards across the screen. */
+@container (min-width: 80rem) {
+	.grid {
+		grid-template-columns: repeat(5, minmax(0, 1fr));
+	}
+}
+@container (min-width: 100rem) {
+	.grid {
+		grid-template-columns: repeat(6, minmax(0, 1fr));
+	}
+}
