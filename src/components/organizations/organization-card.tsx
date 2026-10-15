@@ -78,7 +78,7 @@ export function OrganizationCard({
 			</dl>
 			<div className={styles.footer}>
 				<span className={styles.cue} aria-hidden="true">
-					View details
+					Details
 					<HugeiconsIcon icon={ArrowRight01Icon} size={16} color="currentColor" />
 				</span>
 				{canUpdate ? (
