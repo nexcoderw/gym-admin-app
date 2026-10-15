@@ -66,7 +66,15 @@ Ordering remains Nest's createdAt descending / UUID ascending; next results use 
 nextCursor with the same filter. Changing the status clears the cursor. Restart returns the first
 result set without inventing page numbers or downloading every organization. Invalid/expired
 cursors show recovery, never an empty registry. Zero items appears only after a validated success.
-Status filters are toggle buttons (`aria-pressed`) that stay focusable while loading.
+The toolbar shows the live count on the left and two round icon buttons on the right. **Filter**
+opens a dropdown of All/Pending/Active/Suspended/Archived (`aria-pressed` options with a check
+mark). It opens focused on the current status, supports arrows/Home/End, and closes on Escape,
+outside press or tabbing away, returning focus to the icon. A dot on the icon marks an applied
+status. **Search** grows a field from right to left and filters only the gyms already loaded in
+this view, by name or slug, without requests; gym-api's list endpoint accepts only
+limit/status/cursor, so registry-wide search would need a backend change. The count reports "N of
+M gyms in this view match"; no match shows an honest empty state with **Clear search**. Escape
+clears the term first, then closes the field.
 
 Cards use container queries on the registry width (so the sidebar is accounted for): one column on
 phones, then two, three, four and five columns at 30, 44, 52 and 58rem. Workspace pages span the
