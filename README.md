@@ -69,12 +69,13 @@ cursors show recovery, never an empty registry. Zero items appears only after a 
 Status filters are toggle buttons (`aria-pressed`) that stay focusable while loading.
 
 Cards use container queries on the registry width (so the sidebar is accounted for): one column on
-phones, then two, three, four, five and six columns at 30, 44, 58, 80 and 100rem. Workspace pages
-span the full width between the topbar's gutters (no centered maximum width), so 1280–1536px
-screens show four cards per row, about 1680px shows five and 1920px shows six. Each card shows the
-status, slug, and registered and last-updated dates
-(Africa/Kigali). The gym name is a real button whose overlay makes the whole card open details;
-the edit action is a separately named icon button. Long names and slugs wrap instead of clipping.
+phones, then two, three, four and five columns at 30, 44, 52 and 60rem. Workspace pages span the
+full width between the topbar's gutters (no centered maximum width), so windows from about 1264px
+show five cards per row; wider screens stay at five. Each card is also a size container: when it is
+narrower than 10rem of content it tightens its header and stacks its dates. Each card shows the
+status, slug, and registered and last-updated dates (Africa/Kigali). The gym name is a real button
+whose overlay makes the whole card open details; the edit action is a separately named icon
+button. Long names and slugs wrap instead of clipping.
 
 Dialogs use the shared `Dialog` primitive built on native `showModal()`: inert background, labelled
 title and description, Escape and backdrop dismissal, an explicit return-focus trigger (Safari does
@@ -148,7 +149,7 @@ response; initial server-page/session/permission checks remain real. It verifies
 presentation and responsive keyboard use, not real mutation/audit persistence.
 
 Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists and confirm
-at least four cards per row at 1280px and wider, with page edges aligned to the topbar text;
+five cards per row at 1280px and wider, with page edges aligned to the topbar text;
 register Soho Gym with a unique nonreserved slug; verify the real 201, the success toast and the
 new card; open its details dialog and rename it; open the edit dialog for the same gym in two
 windows and confirm the second save fails as stale;
