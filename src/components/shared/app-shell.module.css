@@ -1,10 +1,10 @@
-/* Compact: brand and navigation on the left, the signed-in account and Sign out on the right. */
+/* Compact: sidebar (brand and links) on the left, navbar (account and Sign out) on the right. */
 .shell {
 	display: grid;
 	grid-template-columns: minmax(0, 1fr) auto;
 	grid-template-rows: auto 1fr;
 	grid-template-areas:
-		'sidebar topbar'
+		'sidebar navbar'
 		'main main';
 	min-height: 100svh;
 	background: var(--surface-raised);
@@ -12,68 +12,21 @@
 .sidebar {
 	grid-area: sidebar;
 }
-.topbar {
-	grid-area: topbar;
-	display: flex;
-	align-items: flex-start;
-	justify-content: flex-end;
-	gap: var(--space-4);
-	min-width: 0;
-	padding: var(--space-4) var(--gutter) var(--space-4) 0;
-	background: var(--surface);
-	border-block-end: 1px solid var(--border);
-	font-size: var(--text-small);
+.navbar {
+	grid-area: navbar;
 }
-/* The breadcrumb repeats what the compact navigation row already shows, so it appears on desktop. */
-.location {
-	display: none;
-	min-width: 0;
-}
-.account {
-	display: flex;
-	align-items: center;
-	gap: var(--space-3);
-	min-width: 0;
-}
-/* The name is redundant on phones; Sign out always stays visible. */
-.identity {
-	display: none;
-	min-width: 0;
-	text-align: end;
-}
-.name {
-	font-weight: 600;
-	overflow-wrap: anywhere;
-}
-.label {
-	color: var(--text-muted);
-	font-size: var(--text-caption);
-}
-/* Same inline gutter as the topbar (and the compact header): page content starts and ends exactly
-   where the topbar content does, at every width, instead of being centered in a narrower column. */
+/* Same inline gutter as the navbar (and the compact header): page content starts and ends exactly
+   where the navbar content does, at every width, instead of being centered in a narrower column. */
 .main {
 	grid-area: main;
 	min-width: 0;
 	padding: var(--space-6) var(--gutter);
 }
-@media (min-width: 40rem) {
-	.identity {
-		display: grid;
-	}
-}
 @media (min-width: 60rem) {
 	.shell {
 		grid-template-columns: var(--sidebar-width) minmax(0, 1fr);
 		grid-template-areas:
-			'sidebar topbar'
+			'sidebar navbar'
 			'sidebar main';
-	}
-	.topbar {
-		align-items: center;
-		justify-content: space-between;
-		padding: var(--space-2) var(--gutter);
-	}
-	.location {
-		display: block;
 	}
 }
