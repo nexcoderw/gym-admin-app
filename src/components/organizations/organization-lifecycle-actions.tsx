@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
+	Archive03Icon,
 	ArrowRight01Icon,
 	Cancel01Icon,
 	CheckmarkCircle01Icon,
@@ -23,14 +24,14 @@ import {
 import { OrganizationStatusBadge } from './organization-status-badge';
 import styles from './organization-lifecycle-actions.module.css';
 
-export type LifecycleAction = 'activation' | 'suspension';
+export type LifecycleAction = 'activation' | 'suspension' | 'archival';
 type Confirmation = { readonly action: LifecycleAction; readonly trigger: HTMLElement };
 
 const actions = {
 	activation: {
 		trigger: 'Activate gym',
 		verb: 'Activate',
-		confirm: 'Confirm',
+		confirm: 'Confirm activation',
 		icon: CheckmarkCircle01Icon,
 		next: 'ACTIVE',
 		description:
@@ -39,11 +40,20 @@ const actions = {
 	suspension: {
 		trigger: 'Suspend gym',
 		verb: 'Suspend',
-		confirm: 'Confirm',
+		confirm: 'Confirm suspension',
 		icon: PauseIcon,
 		next: 'SUSPENDED',
 		description:
 			'This changes the gym lifecycle to suspended. It does not delete members or cancel subscription billing.',
+	},
+	archival: {
+		trigger: 'Archive gym',
+		verb: 'Archive',
+		confirm: 'Confirm archival',
+		icon: Archive03Icon,
+		next: 'ARCHIVED',
+		description:
+			'This permanently removes the gym from normal use while retaining its registry record and audit history. Its slug remains reserved and this interface cannot restore it.',
 	},
 } as const;
 
@@ -61,6 +71,12 @@ export function availableLifecycleActions(
 	}
 	if (permissions.includes(organizationPermissions.suspend) && organization.status === 'ACTIVE') {
 		available.push('suspension');
+	}
+	if (
+		permissions.includes(organizationPermissions.archive) &&
+		organization.status !== 'ARCHIVED'
+	) {
+		available.push('archival');
 	}
 	return available;
 }
@@ -121,10 +137,13 @@ export function OrganizationLifecycleActions({
 					'This gym has changed. Reload its current details and confirm the action again.',
 				);
 			}
+			const mutationPath = {
+				activation: browserApi.activateOrganization,
+				suspension: browserApi.suspendOrganization,
+				archival: browserApi.archiveOrganization,
+			}[action](organization.id);
 			const updated = await browserRequest(
-				action === 'activation'
-					? browserApi.activateOrganization(organization.id)
-					: browserApi.suspendOrganization(organization.id),
+				mutationPath,
 				'POST',
 				{ expectedUpdatedAt: latest.updatedAt },
 				organizationSchema,
