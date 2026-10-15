@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { GET as list, POST as create } from '@/app/api/organizations/route';
 import { GET as get, PATCH as update } from '@/app/api/organizations/[id]/route';
 import { POST as activate } from '@/app/api/organizations/[id]/activation/route';
+import { POST as archive } from '@/app/api/organizations/[id]/archival/route';
 import { POST as suspend } from '@/app/api/organizations/[id]/suspension/route';
 import { organizationPermissions } from '@/lib/contracts/organizations';
 import { upstreamFailure } from '@/lib/server/http/errors';
@@ -21,12 +22,13 @@ function request(method = 'GET', path = '', body?: unknown, extra: Record<string
 	});
 }
 const operations = [
-	{ permission: organizationPermissions.read, method: 'GET', path: '', status: 200, run: () => list(request()) },
-	{ permission: organizationPermissions.read, method: 'GET', path: `/${organization.id}`, status: 200, run: () => get(request('GET', `/${organization.id}`), params) },
-	{ permission: organizationPermissions.create, method: 'POST', path: '', status: 201, run: () => create(request('POST', '', { name: organization.name, slug: organization.slug })) },
-	{ permission: organizationPermissions.update, method: 'PATCH', path: `/${organization.id}`, status: 200, run: () => update(request('PATCH', `/${organization.id}`, { name: organization.name }, { 'If-Match': organizationEtag }), params) },
-	{ permission: organizationPermissions.activate, method: 'POST', path: `/${organization.id}/activation`, status: 200, run: () => activate(request('POST', `/${organization.id}/activation`, { expectedUpdatedAt: organization.updatedAt }), params) },
-	{ permission: organizationPermissions.suspend, method: 'POST', path: `/${organization.id}/suspension`, status: 200, run: () => suspend(request('POST', `/${organization.id}/suspension`, { expectedUpdatedAt: organization.updatedAt }), params) },
+	{ permission: organizationPermissions.read, method: 'GET', path: '', status: 200, resultStatus: 'PENDING', run: () => list(request()) },
+	{ permission: organizationPermissions.read, method: 'GET', path: `/${organization.id}`, status: 200, resultStatus: 'PENDING', run: () => get(request('GET', `/${organization.id}`), params) },
+	{ permission: organizationPermissions.create, method: 'POST', path: '', status: 201, resultStatus: 'PENDING', run: () => create(request('POST', '', { name: organization.name, slug: organization.slug })) },
+	{ permission: organizationPermissions.update, method: 'PATCH', path: `/${organization.id}`, status: 200, resultStatus: 'PENDING', run: () => update(request('PATCH', `/${organization.id}`, { name: organization.name }, { 'If-Match': organizationEtag }), params) },
+	{ permission: organizationPermissions.activate, method: 'POST', path: `/${organization.id}/activation`, status: 200, resultStatus: 'ACTIVE', run: () => activate(request('POST', `/${organization.id}/activation`, { expectedUpdatedAt: organization.updatedAt }), params) },
+	{ permission: organizationPermissions.suspend, method: 'POST', path: `/${organization.id}/suspension`, status: 200, resultStatus: 'SUSPENDED', run: () => suspend(request('POST', `/${organization.id}/suspension`, { expectedUpdatedAt: organization.updatedAt }), params) },
+	{ permission: organizationPermissions.archive, method: 'POST', path: `/${organization.id}/archival`, status: 200, resultStatus: 'ARCHIVED', run: () => archive(request('POST', `/${organization.id}/archival`, { expectedUpdatedAt: organization.updatedAt }), params) },
 ];
 
 beforeEach(() => {
@@ -48,7 +50,7 @@ describe('organization BFF boundaries', () => {
 	it.each(operations)('maps $method $path with exact $permission and status', async (operation) => {
 		organizationResponse = () => Response.json(operation.path === '' && operation.method === 'GET'
 			? { items: [organization], nextCursor: null }
-			: { ...organization, status: operation.permission === organizationPermissions.activate ? 'ACTIVE' : operation.permission === organizationPermissions.suspend ? 'SUSPENDED' : 'PENDING' },
+			: { ...organization, status: operation.resultStatus },
 			{ status: operation.status, headers: { ETag: organizationEtag } });
 		const response = await operation.run();
 		expect(response.status).toBe(operation.status);
@@ -88,6 +90,103 @@ describe('organization BFF boundaries', () => {
 		const response = await create(request('POST', '', { name: 'Soho Gym', slug: 'soho' }, { Origin: origin }));
 		expect(response.status).toBe(403);
 		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	it('rejects malformed archival UUIDs and bodies before session or organization access', async () => {
+		expect(
+			(
+				await archive(
+					request('POST', '/not-a-uuid/archival', {
+						expectedUpdatedAt: organization.updatedAt,
+					}),
+					{ params: Promise.resolve({ id: 'not-a-uuid' }) },
+				)
+			).status,
+		).toBe(400);
+		expect(
+			(
+				await archive(
+					request('POST', `/${organization.id}/archival`, {
+						expectedUpdatedAt: organization.updatedAt,
+						actorPlatformStaffId: session.platformStaffId,
+					}),
+					params,
+				)
+			).status,
+		).toBe(400);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	it('rejects anonymous, expired, foreign-origin and invalid-CSRF archival requests', async () => {
+		const body = { expectedUpdatedAt: organization.updatedAt };
+		expect(
+			(
+				await archive(
+					request('POST', `/${organization.id}/archival`, body, {
+						Cookie: `nexcode-platform-csrf=${csrf}`,
+					}),
+					params,
+				)
+			).status,
+		).toBe(401);
+		expect(fetchMock).not.toHaveBeenCalled();
+		fetchMock.mockResolvedValueOnce(
+			Response.json({ ...session, expiresAt: '2000-01-01T00:00:00.000Z', permissions }),
+		);
+		expect(
+			(await archive(request('POST', `/${organization.id}/archival`, body), params)).status,
+		).toBe(401);
+		expect(fetchMock).toHaveBeenCalledOnce();
+		fetchMock.mockClear();
+		expect(
+			(
+				await archive(
+					request('POST', `/${organization.id}/archival`, body, {
+						Origin: 'https://foreign.example.invalid',
+					}),
+					params,
+				)
+			).status,
+		).toBe(403);
+		expect(
+			(
+				await archive(
+					request('POST', `/${organization.id}/archival`, body, {
+						'x-platform-csrf-token': 'wrong',
+					}),
+					params,
+				)
+			).status,
+		).toBe(403);
+		expect(fetchMock).not.toHaveBeenCalled();
+	});
+	it.each([
+		[409, 'ORGANIZATION_TRANSITION_CONFLICT'],
+		[412, 'ORGANIZATION_STALE'],
+		[503, 'ORGANIZATION_AUDIT_UNAVAILABLE'],
+	] as const)('maps archival failure %s %s without exposing provider details', async (status, code) => {
+		organizationResponse = () =>
+			Response.json({ code, message: 'private SQL at internal-host' }, { status });
+		const response = await archive(
+			request('POST', `/${organization.id}/archival`, {
+				expectedUpdatedAt: organization.updatedAt,
+			}),
+			params,
+		);
+		expect(response.status).toBe(status);
+		const text = await response.text();
+		expect(text).toContain(code);
+		expect(text).not.toContain('private SQL');
+		expect(text).not.toContain('internal-host');
+	});
+	it('rejects an archival response that does not confirm the archived state', async () => {
+		organizationResponse = () => Response.json({ ...organization, status: 'ACTIVE' });
+		const response = await archive(
+			request('POST', `/${organization.id}/archival`, {
+				expectedUpdatedAt: organization.updatedAt,
+			}),
+			params,
+		);
+		expect(response.status).toBe(502);
+		expect(response.headers.get('set-cookie')).toBeNull();
 	});
 	it('rejects invalid CSRF, body, UUID and If-Match before session or organization fetch', async () => {
 		expect((await create(request('POST', '', {}, { 'x-platform-csrf-token': 'wrong' }))).status).toBe(403);
