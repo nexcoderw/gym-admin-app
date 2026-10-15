@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { Add01Icon } from '@hugeicons/core-free-icons';
+import { Add01Icon, Cancel01Icon } from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { PageHeader } from '@/components/shared/page-header';
@@ -20,7 +20,9 @@ import { OrganizationCard } from './organization-card';
 import { OrganizationDetails } from './organization-details';
 import { OrganizationForm } from './organization-form';
 import type { LifecycleAction } from './organization-lifecycle-actions';
-import { OrganizationPagination, OrganizationStatusFilter } from './organization-list-controls';
+import { OrganizationPagination } from './organization-list-controls';
+import { OrganizationSearch } from './organization-search';
+import { OrganizationStatusFilter } from './organization-status-filter';
 import styles from './organization-list.module.css';
 
 /** Dialogs keep the record snapshot the operator opened; a background refresh cannot alter it. */
@@ -48,12 +50,24 @@ export function OrganizationList({
 	const toast = useToast();
 	const [refreshing, startRefresh] = useTransition();
 	const [dialog, setDialog] = useState<ActiveDialog>({ kind: 'none' });
+	const [term, setTerm] = useState('');
 	const canCreate = permissions.includes(organizationPermissions.create);
 	const canUpdate = permissions.includes(organizationPermissions.update);
 	const count = data.items.length;
+	const noun = count === 1 ? 'gym' : 'gyms';
+	// Matches only the records loaded in this view; the list API has no server-side search.
+	const needle = term.trim().toLocaleLowerCase('en');
+	const visible = needle
+		? data.items.filter(
+				(item) =>
+					item.name.toLocaleLowerCase('en').includes(needle) || item.slug.includes(needle),
+			)
+		: data.items;
 	const scope = query.status ? `${query.status.toLowerCase()} ` : '';
 	const more = data.nextCursor ? ' · more results available' : '';
-	const summary = `${count} ${scope}${count === 1 ? 'gym' : 'gyms'} in this view${more}`;
+	const summary = needle
+		? `${visible.length} of ${count} ${noun} in this view match “${term.trim()}”`
+		: `${count} ${scope}${noun} in this view${more}`;
 	function close() {
 		setDialog({ kind: 'none' });
 	}
@@ -100,14 +114,17 @@ export function OrganizationList({
 			/>
 			<section className={styles.registry} aria-label="Organization registry" aria-busy={refreshing}>
 				<div className={styles.toolbar}>
-					<OrganizationStatusFilter
-						status={query.status}
-						pending={refreshing}
-						onChange={(status) => navigate(status)}
-					/>
 					<p className={styles.summary} role="status">
 						{refreshing ? 'Loading current organizations…' : summary}
 					</p>
+					<div className={styles.tools}>
+						<OrganizationSearch term={term} onTermChange={setTerm} />
+						<OrganizationStatusFilter
+							status={query.status}
+							pending={refreshing}
+							onChange={(status) => navigate(status)}
+						/>
+					</div>
 				</div>
 				{count === 0 ? (
 					<div className={styles.empty}>
@@ -131,9 +148,27 @@ export function OrganizationList({
 							}
 						/>
 					</div>
+				) : visible.length === 0 ? (
+					<div className={styles.empty}>
+						<StatePanel
+							kind="empty"
+							layout="compact"
+							headingLevel={2}
+							title={`No gyms in this view match “${term.trim()}”`}
+							description={
+								data.nextCursor
+									? 'Search checks only the gyms loaded here, by name or slug. Try another term, or clear the search and open the next results.'
+									: 'Search checks the gyms loaded here, by name or slug. Try another term or clear the search.'
+							}
+						>
+							<Button icon={Cancel01Icon} variant="secondary" onClick={() => setTerm('')}>
+								Clear search
+							</Button>
+						</StatePanel>
+					</div>
 				) : (
 					<ul className={styles.grid} role="list">
-						{data.items.map((organization) => (
+						{visible.map((organization) => (
 							<li key={organization.id} className={styles.item}>
 								<OrganizationCard
 									organization={organization}
