@@ -47,20 +47,14 @@
 		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
 }
-@container (min-width: 58rem) {
+@container (min-width: 52rem) {
 	.grid {
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
-/* The registry spans the full workspace width, so wide monitors add columns instead of
-   stretching four cards across the screen. */
-@container (min-width: 80rem) {
+/* Five per row from about a 1264px window (sidebar included); capped at five on wider screens. */
+@container (min-width: 60rem) {
 	.grid {
 		grid-template-columns: repeat(5, minmax(0, 1fr));
-	}
-}
-@container (min-width: 100rem) {
-	.grid {
-		grid-template-columns: repeat(6, minmax(0, 1fr));
 	}
 }
