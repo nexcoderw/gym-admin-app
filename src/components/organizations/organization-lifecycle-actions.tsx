@@ -30,7 +30,7 @@ const actions = {
 	activation: {
 		trigger: 'Activate gym',
 		verb: 'Activate',
-		confirm: 'Confirm activation',
+		confirm: 'Confirm',
 		icon: CheckmarkCircle01Icon,
 		next: 'ACTIVE',
 		description:
