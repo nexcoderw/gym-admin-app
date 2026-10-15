@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react';
 
-import { LogoutButton } from '@/components/auth/logout-button';
+import { Navbar } from './navbar';
 import { Sidebar } from './sidebar';
 import { ToastProvider } from './toast';
-import { WorkspaceBreadcrumb } from './workspace-breadcrumb';
 import styles from './app-shell.module.css';
 
-/** Sidebar for brand and navigation; the topbar carries the signed-in account and Sign out. */
+/** Places the sidebar (brand and links), the navbar (location and account) and page content. */
 export function AppShell({
 	children,
 	permissions,
@@ -20,18 +19,7 @@ export function AppShell({
 		<ToastProvider>
 			<div className={styles.shell}>
 				<Sidebar permissions={permissions} className={styles.sidebar} />
-				<header className={styles.topbar}>
-					<div className={styles.location}>
-						<WorkspaceBreadcrumb />
-					</div>
-					<div className={styles.account}>
-						<div className={styles.identity}>
-							<p className={styles.name}>{displayName}</p>
-							<p className={styles.label}>Platform staff</p>
-						</div>
-						<LogoutButton />
-					</div>
-				</header>
+				<Navbar displayName={displayName} className={styles.navbar} />
 				<main id="main" tabIndex={-1} className={styles.main}>
 					{children}
 				</main>
