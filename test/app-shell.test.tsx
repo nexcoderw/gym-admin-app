@@ -3,6 +3,7 @@ import { cleanup, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppShell } from '@/components/shared/app-shell';
+import { Navbar } from '@/components/shared/navbar';
 import { Sidebar } from '@/components/shared/sidebar';
 import { currentDestination, isCurrentDestination } from '@/constants/navigation';
 import { organizationPermissions } from '@/lib/contracts/organizations';
@@ -18,24 +19,33 @@ afterEach(cleanup);
 const allDestinations = ['platform.dashboard.read', organizationPermissions.read];
 
 describe('workspace shell', () => {
-	it('puts the signed-in operator and sign out in the topbar, not the sidebar', () => {
+	it('composes the sidebar links and the navbar account without mixing them', () => {
 		location.pathname = '/organizations';
 		render(
 			<AppShell permissions={allDestinations} displayName="Fictional Operator">
 				<h1>Organizations</h1>
 			</AppShell>,
 		);
-		const topbar = screen.getByRole('banner');
-		const breadcrumb = within(topbar).getByRole('navigation', { name: 'Breadcrumb' });
-		expect(within(breadcrumb).getByText('NEXCODE Gym')).toBeDefined();
-		expect(within(breadcrumb).getByText('Organizations').getAttribute('aria-current')).toBe('page');
-		expect(within(topbar).getByText('Fictional Operator')).toBeDefined();
-		expect(within(topbar).getByText('Platform staff')).toBeDefined();
-		expect(within(topbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
+		const navbar = screen.getByRole('banner');
+		expect(within(navbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
+		expect(within(navbar).queryByRole('navigation', { name: 'Platform navigation' })).toBeNull();
 		const sidebar = screen.getByRole('complementary', { name: 'Platform workspace' });
+		expect(within(sidebar).getByRole('navigation', { name: 'Platform navigation' })).toBeDefined();
 		expect(within(sidebar).queryByRole('button', { name: 'Sign out' })).toBeNull();
 		expect(within(sidebar).queryByText('Fictional Operator')).toBeNull();
 		expect(screen.getAllByRole('main')).toHaveLength(1);
+	});
+
+	it('shows the current page breadcrumb, the operator and sign out in the navbar', () => {
+		location.pathname = '/organizations';
+		render(<Navbar displayName="Fictional Operator" />);
+		const navbar = screen.getByRole('banner');
+		const breadcrumb = within(navbar).getByRole('navigation', { name: 'Breadcrumb' });
+		expect(within(breadcrumb).getByText('NEXCODE Gym')).toBeDefined();
+		expect(within(breadcrumb).getByText('Organizations').getAttribute('aria-current')).toBe('page');
+		expect(within(navbar).getByText('Fictional Operator')).toBeDefined();
+		expect(within(navbar).getByText('Platform staff')).toBeDefined();
+		expect(within(navbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
 	});
 
 	it('keeps the brand and permitted navigation inside the sidebar', () => {
