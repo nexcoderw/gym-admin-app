@@ -30,7 +30,7 @@ describe('protected route recovery composition', () => {
 			expect(requirePlatformSession).toHaveBeenCalledOnce();
 			expect(screen.getAllByRole('main')).toHaveLength(1);
 			expect(screen.queryByRole('complementary')).toBeNull();
-			expect(screen.queryByText('Administration workspace')).toBeNull();
+			expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
 		},
 	);
 	it.each([
@@ -47,7 +47,7 @@ describe('protected route recovery composition', () => {
 		);
 		expect(screen.getAllByRole('main')).toHaveLength(1);
 		expect(screen.queryByRole('complementary')).toBeNull();
-		expect(screen.queryByText('Administration workspace')).toBeNull();
+		expect(screen.queryByRole('navigation', { name: 'Breadcrumb' })).toBeNull();
 		expect(screen.queryByText('Never render diagnostics')).toBeNull();
 	});
 });
