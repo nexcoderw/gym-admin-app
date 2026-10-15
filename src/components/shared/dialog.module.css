@@ -1,0 +1,111 @@
+/* The dialog box itself has no padding, so only clicks on ::backdrop target the element. */
+.dialog {
+	inline-size: min(34rem, calc(100% - var(--space-8)));
+	max-inline-size: none;
+	max-block-size: min(46rem, calc(100svh - var(--space-8)));
+	padding: 0;
+	border: 1px solid var(--border);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
+	color: var(--text-primary);
+	box-shadow: var(--shadow-overlay);
+	overflow: hidden;
+}
+.dialog[data-size='small'] {
+	inline-size: min(28rem, calc(100% - var(--space-8)));
+}
+.dialog[data-size='large'] {
+	inline-size: min(44rem, calc(100% - var(--space-8)));
+}
+.dialog[open] {
+	animation: enter 180ms var(--motion-ease);
+}
+.dialog::backdrop {
+	background: var(--backdrop);
+}
+.surface {
+	display: flex;
+	flex-direction: column;
+	max-block-size: inherit;
+	min-inline-size: 0;
+}
+.header {
+	display: flex;
+	align-items: flex-start;
+	justify-content: space-between;
+	gap: var(--space-3);
+	padding: var(--space-5) var(--space-4) var(--space-4) var(--space-6);
+	border-block-end: 1px solid var(--border);
+}
+.heading {
+	display: grid;
+	gap: var(--space-1);
+	min-inline-size: 0;
+	padding-block-start: var(--space-2);
+}
+.title {
+	font-size: var(--text-subheading);
+}
+.description {
+	color: var(--text-secondary);
+	font-size: var(--text-small);
+}
+.body {
+	flex: 1 1 auto;
+	min-block-size: 0;
+	padding: var(--space-6);
+	overflow-y: auto;
+	overscroll-behavior: contain;
+}
+.footer {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-3);
+	padding: var(--space-4) var(--space-6);
+	border-block-start: 1px solid var(--border);
+	background: var(--surface-raised);
+}
+@media (min-width: 30rem) {
+	.footer {
+		grid-auto-flow: column;
+		grid-auto-columns: minmax(0, 1fr);
+	}
+}
+/* Compact screens present the dialog as a bottom sheet within thumb reach. */
+@media (max-width: 40rem) {
+	.dialog,
+	.dialog[data-size] {
+		inline-size: 100%;
+		max-block-size: calc(100svh - var(--space-8));
+		margin-block-end: 0;
+		border-end-start-radius: 0;
+		border-end-end-radius: 0;
+	}
+	.dialog[open] {
+		animation-name: rise;
+	}
+	.header {
+		padding-inline-start: var(--space-4);
+	}
+	.body,
+	.footer {
+		padding-inline: var(--space-4);
+	}
+}
+@keyframes enter {
+	from {
+		opacity: 0;
+		transform: translateY(0.5rem) scale(0.98);
+	}
+}
+@keyframes rise {
+	from {
+		transform: translateY(1.5rem);
+		opacity: 0;
+	}
+}
+@media (forced-colors: active) {
+	.dialog {
+		border-color: CanvasText;
+	}
+}
