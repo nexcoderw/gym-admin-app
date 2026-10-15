@@ -1,0 +1,29 @@
+.breadcrumb {
+	min-inline-size: 0;
+}
+.list {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: var(--space-2);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	font-size: var(--text-small);
+}
+.root {
+	color: var(--text-secondary);
+	font-weight: 600;
+}
+.item {
+	display: inline-flex;
+	align-items: center;
+	gap: var(--space-2);
+	min-inline-size: 0;
+	color: var(--text-secondary);
+}
+.current {
+	color: var(--text-primary);
+	font-weight: 700;
+	overflow-wrap: anywhere;
+}
