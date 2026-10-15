@@ -30,3 +30,14 @@
 	font-weight: 400;
 	line-height: 1.4;
 }
+/* On the primary surface the wordmark turns light and the blue mark gets a light ring to stay visible. */
+.logo[data-tone='inverse'] {
+	color: var(--on-primary);
+}
+.logo[data-tone='inverse'] .subtitle {
+	color: color-mix(in srgb, var(--on-primary) 78%, transparent);
+}
+.logo[data-tone='inverse'] .mark {
+	border-radius: 0.75rem;
+	box-shadow: 0 0 0 2px var(--on-primary);
+}
