@@ -1,22 +1,12 @@
 import { ArrowRight01Icon, Link01Icon, PencilEdit01Icon } from '@hugeicons/core-free-icons';
 import { HugeiconsIcon } from '@hugeicons/react';
 
+import { Avatar } from '@/components/shared/avatar';
 import { IconButton } from '@/components/shared/icon-button';
 import type { Organization } from '@/lib/contracts/organizations';
 import { formatOrganizationDate } from './organization-dates';
 import { OrganizationStatusBadge } from './organization-status-badge';
 import styles from './organization-card.module.css';
-
-/** Decorative initials from the first two words; the full name is always visible beside them. */
-function monogram(name: string): string {
-	return name
-		.trim()
-		.split(/\s+/u)
-		.slice(0, 2)
-		.map((word) => Array.from(word)[0] ?? '')
-		.join('')
-		.toLocaleUpperCase('en');
-}
 
 /**
  * The name button's overlay makes the whole card open the details dialog while assistive
@@ -37,9 +27,7 @@ export function OrganizationCard({
 	return (
 		<article className={styles.card} aria-labelledby={nameId}>
 			<div className={styles.top}>
-				<span className={styles.monogram} aria-hidden="true">
-					{monogram(organization.name)}
-				</span>
+				<Avatar name={organization.name} shape="rounded" />
 				<OrganizationStatusBadge status={organization.status} />
 			</div>
 			<div className={styles.identity}>
