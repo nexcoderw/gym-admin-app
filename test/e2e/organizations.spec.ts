@@ -66,11 +66,11 @@ test.describe('approved organization test administrator', () => {
 			await dialog.getByRole('button', { name: 'Cancel' }).click();
 			await expect(dialog).toBeHidden();
 		}
-		// Wide screens place four cards in one row when the registry has at least four records.
+		// At 1440px five cards share a row when the registry has at least five records.
 		const cards = page.getByRole('region', { name: 'Organization registry' }).getByRole('listitem');
-		if ((await cards.count()) >= 4) {
+		if ((await cards.count()) >= 5) {
 			const tops = await cards.evaluateAll((items) =>
-				items.slice(0, 4).map((item) => Math.round(item.getBoundingClientRect().top)),
+				items.slice(0, 5).map((item) => Math.round(item.getBoundingClientRect().top)),
 			);
 			expect(new Set(tops).size).toBe(1);
 		}
