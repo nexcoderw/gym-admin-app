@@ -49,7 +49,7 @@ describe('independent organization page authorization', () => {
 		permissions = [];
 		const markup = renderToStaticMarkup(await runList());
 		expect(markup).toContain('required organization permission');
-		expect(markup).not.toContain('Administration workspace');
+		expect(markup).not.toContain('Platform navigation');
 		expect(fetchMock.mock.calls.every(([url]) => String(url).endsWith('/auth/session'))).toBe(true);
 	});
 	it('redirects rejected sessions to login only', async () => {
@@ -59,7 +59,7 @@ describe('independent organization page authorization', () => {
 	it('renders validated cards with dialog triggers and no dialog or sub-page links', async () => {
 		const markup = renderToStaticMarkup(await runList());
 		expect(markup).toContain('Soho Gym');
-		expect(markup).toContain('Administration workspace');
+		expect(markup).toContain('Platform navigation');
 		expect(markup).toContain('Register Gym');
 		expect(markup).toContain('Edit Soho Gym');
 		expect(markup).not.toContain('<dialog');
