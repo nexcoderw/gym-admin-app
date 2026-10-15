@@ -45,14 +45,18 @@ describe('workspace shell', () => {
 		expect(screen.getByText('Administration workspace')).toBeDefined();
 	});
 
-	it('shows the operator with decorative initials and keeps sign out available', () => {
+	it('shows the signed-in operator and sign out in the topbar, not the sidebar', () => {
 		location.pathname = '/dashboard';
 		renderShell();
+		const topbar = screen.getByRole('banner');
+		expect(within(topbar).getByText('Fictional Operator')).toBeDefined();
+		expect(within(topbar).getByText('Platform staff')).toBeDefined();
+		expect(within(topbar).getByText('FO').getAttribute('aria-hidden')).toBe('true');
+		expect(within(topbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
 		const sidebar = screen.getByRole('complementary', { name: 'Platform workspace' });
-		expect(within(sidebar).getByText('Fictional Operator')).toBeDefined();
-		expect(within(sidebar).getByText('Platform staff')).toBeDefined();
-		expect(within(sidebar).getByText('FO').getAttribute('aria-hidden')).toBe('true');
-		expect(within(sidebar).getByRole('button', { name: 'Sign out' })).toBeDefined();
+		expect(within(sidebar).getByText('Administration workspace')).toBeDefined();
+		expect(within(sidebar).queryByRole('button', { name: 'Sign out' })).toBeNull();
+		expect(within(sidebar).queryByText('Fictional Operator')).toBeNull();
 	});
 
 	it('lists only permitted destinations and never activates a lookalike path prefix', () => {
