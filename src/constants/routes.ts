@@ -24,4 +24,5 @@ export const browserApi = {
 	organization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}`,
 	activateOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/activation`,
 	suspendOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/suspension`,
+	archiveOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/archival`,
 } as const;
