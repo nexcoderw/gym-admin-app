@@ -1,0 +1,100 @@
+/* The range reads on the left; the controls always sit at the end of the row. */
+.pagination {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3) var(--space-4);
+	min-inline-size: 0;
+	transition: opacity var(--motion-fast) var(--motion-ease);
+}
+.pagination[aria-busy='true'] {
+	opacity: 0.7;
+}
+.range {
+	color: var(--text-secondary);
+	font-size: var(--text-small);
+	font-variant-numeric: tabular-nums;
+}
+.range strong {
+	color: var(--text-primary);
+	font-weight: 700;
+}
+/* A floating pill: circular arrows framing the page numbers, the current page as a wider tab. */
+.controls {
+	display: flex;
+	align-items: center;
+	gap: var(--space-1);
+	margin-block: 0;
+	margin-inline: auto 0;
+	padding: var(--space-1);
+	border: 1px solid var(--border);
+	border-radius: var(--radius-pill);
+	background: var(--surface);
+	box-shadow: var(--shadow-raised);
+	list-style: none;
+}
+.step,
+.page {
+	display: grid;
+	place-items: center;
+	min-inline-size: 2.75rem;
+	block-size: 2.75rem;
+	padding: 0 var(--space-2);
+	border: 0;
+	border-radius: var(--radius-pill);
+	background: none;
+	color: var(--text-secondary);
+	font-size: var(--text-body);
+	font-weight: 600;
+	font-variant-numeric: tabular-nums;
+	transition:
+		background var(--motion-fast) var(--motion-ease),
+		color var(--motion-fast) var(--motion-ease),
+		min-inline-size var(--motion-fast) var(--motion-ease);
+}
+.step {
+	color: var(--primary);
+	background: var(--surface-hover);
+}
+.step:hover:not(:disabled),
+.page:hover:not([aria-current='page']) {
+	background: var(--surface-raised);
+	color: var(--primary);
+}
+.step:disabled {
+	background: none;
+	color: var(--text-secondary);
+	opacity: 0.4;
+}
+.page[aria-current='page'] {
+	min-inline-size: 3.5rem;
+	background: var(--primary);
+	color: var(--on-primary);
+	font-weight: 700;
+	box-shadow: var(--shadow-raised);
+}
+.page[aria-disabled='true'] {
+	cursor: progress;
+}
+.gap {
+	min-inline-size: 1.5rem;
+	color: var(--text-secondary);
+	text-align: center;
+	letter-spacing: 0.1em;
+}
+/* Phones keep the arrows and the current page; other numbers return once there is room. */
+@media (max-width: 30rem) {
+	.slot[data-current='false'],
+	.gap {
+		display: none;
+	}
+}
+@media (forced-colors: active) {
+	.controls {
+		border-color: CanvasText;
+	}
+	.page[aria-current='page'] {
+		outline: 2px solid CanvasText;
+	}
+}
