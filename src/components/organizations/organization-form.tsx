@@ -4,29 +4,38 @@ import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import {
 	Building03Icon,
-	Link01Icon,
+	Cancel01Icon,
 	CheckmarkCircle01Icon,
+	Link01Icon,
 	RefreshIcon,
 } from '@hugeicons/core-free-icons';
+
 import { Button } from '@/components/shared/button';
-import { ButtonLink } from '@/components/shared/button-link';
-import { Card } from '@/components/shared/card';
+import { Dialog } from '@/components/shared/dialog';
+import { IconButton } from '@/components/shared/icon-button';
 import { Input } from '@/components/shared/input';
 import { browserApi, routes } from '@/constants/routes';
 import { browserCsrf, browserRequest, OrganizationRequestError } from '@/lib/client/mutations';
 import { suggestOrganizationSlug } from '@/lib/client/organization-slug';
 import {
 	createOrganizationSchema,
-	updateOrganizationSchema,
+	organizationEtag,
 	organizationSchema,
+	updateOrganizationSchema,
 	type Organization,
 } from '@/lib/contracts/organizations';
 import styles from './organization-form.module.css';
 
-type Props =
-	| { readonly mode: 'create' }
-	| { readonly mode: 'edit'; readonly organization: Organization; readonly etag: string };
+type Props = {
+	readonly returnFocus?: HTMLElement | null;
+	readonly onClose: () => void;
+	/** Receives only a record confirmed by the expected status and response validation. */
+	readonly onSaved: (organization: Organization) => void;
+	/** Closes the dialog and re-reads server-owned records after a stale or unconfirmed result. */
+	readonly onReload: () => void;
+} & ({ readonly mode: 'create' } | { readonly mode: 'edit'; readonly organization: Organization });
 
+/** The single registration and rename form; it is always presented in a modal dialog. */
 export function OrganizationForm(props: Props) {
 	const router = useRouter();
 	const formId = useId();
@@ -46,6 +55,7 @@ export function OrganizationForm(props: Props) {
 	const [slugOverride, setSlugOverride] = useState<string | null>(null);
 	const slug = slugOverride ?? suggestOrganizationSlug(name);
 	const editing = props.mode === 'edit';
+	const locked = pending || blocked;
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
 		if (submitted.current || blocked) return;
@@ -81,12 +91,12 @@ export function OrganizationForm(props: Props) {
 				{
 					domain: 'organizations',
 					expectedStatus: editing ? 200 : 201,
-					...(props.mode === 'edit' ? { ifMatch: props.etag } : {}),
+					// The precondition is the version shown when this dialog opened, never a later read.
+					...(props.mode === 'edit' ? { ifMatch: organizationEtag(props.organization) } : {}),
 				},
 			);
 			if (!mounted.current) return;
-			router.replace(routes.organization(row.id));
-			router.refresh();
+			props.onSaved(row);
 		} catch (failure) {
 			if (!mounted.current) return;
 			if (failure instanceof OrganizationRequestError && failure.status === 401) {
@@ -112,13 +122,47 @@ export function OrganizationForm(props: Props) {
 		}
 	}
 	return (
-		<Card className={styles.panel}>
-			<form onSubmit={submit} aria-busy={pending} className={styles.form}>
-				<p className={styles.note}>
-					{editing
-						? 'Only the gym name can be changed. Its UUID, slug and lifecycle are preserved.'
-						: 'Registration creates a pending organization. Activation is a separate platform approval.'}
-				</p>
+		<Dialog
+			title={editing ? 'Edit gym name' : 'Register Gym'}
+			description={
+				editing
+					? 'Only the gym name can be changed. Its UUID, slug and lifecycle are preserved.'
+					: 'Registration creates a pending organization. Activation is a separate platform approval.'
+			}
+			dismissible={!pending}
+			returnFocus={props.returnFocus}
+			onClose={props.onClose}
+			footer={
+				<>
+					{blocked ? (
+						<Button icon={RefreshIcon} variant="secondary" width="full" onClick={props.onReload}>
+							{editing ? 'Reload current records' : 'Review registry'}
+						</Button>
+					) : (
+						<Button
+							icon={Cancel01Icon}
+							variant="secondary"
+							width="full"
+							disabled={pending}
+							onClick={props.onClose}
+						>
+							Cancel
+						</Button>
+					)}
+					<Button
+						type="submit"
+						form={formId}
+						icon={CheckmarkCircle01Icon}
+						width="full"
+						pending={pending}
+						disabled={blocked}
+					>
+						{editing ? 'Save gym name' : 'Register Gym'}
+					</Button>
+				</>
+			}
+		>
+			<form id={formId} onSubmit={submit} aria-busy={pending} className={styles.form}>
 				<Input
 					id={`${formId}-name`}
 					name="name"
@@ -127,11 +171,13 @@ export function OrganizationForm(props: Props) {
 					value={name}
 					onChange={(event) => setName(event.target.value)}
 					required
-					disabled={pending || blocked}
+					disabled={locked}
+					autoComplete="off"
 					error={fieldErrors.name}
 					hint="A meaningful name, up to 160 characters."
+					data-autofocus
 				/>
-				{!editing ? (
+				{props.mode === 'create' ? (
 					<Input
 						id={`${formId}-slug`}
 						name="slug"
@@ -140,7 +186,7 @@ export function OrganizationForm(props: Props) {
 						value={slug}
 						onChange={(event) => setSlugOverride(event.target.value)}
 						required
-						disabled={pending || blocked}
+						disabled={locked}
 						minLength={3}
 						maxLength={63}
 						autoCapitalize="none"
@@ -148,58 +194,30 @@ export function OrganizationForm(props: Props) {
 						spellCheck={false}
 						error={fieldErrors.slug}
 						hint="Generated from the gym name; you can edit it before registration. Use 3–63 lowercase letters, numbers and single hyphens, starting with a letter."
+						trailingAction={
+							slugOverride !== null ? (
+								<IconButton
+									icon={RefreshIcon}
+									label="Use gym name"
+									disabled={locked}
+									onClick={() => setSlugOverride(null)}
+								/>
+							) : undefined
+						}
 					/>
 				) : (
-					<p>
-						Slug: <strong>{props.organization.slug}</strong>
-					</p>
+					<div className={styles.fixed}>
+						<span className={styles.fixedLabel}>Slug</span>
+						<span className={styles.fixedValue}>{props.organization.slug}</span>
+						<span className={styles.fixedHint}>Slugs cannot be changed after registration.</span>
+					</div>
 				)}
-				{!editing && slugOverride !== null ? (
-					<Button
-						icon={RefreshIcon}
-						variant="secondary"
-						onClick={() => setSlugOverride(null)}
-						disabled={pending || blocked}
-					>
-						Use gym name
-					</Button>
-				) : null}
 				{error ? (
-					<p role="alert" className="error-message">
+					<p role="alert" className={`error-message ${styles.alert}`}>
 						{error}
 					</p>
 				) : null}
-				<Button
-					type="submit"
-					icon={CheckmarkCircle01Icon}
-					width="full"
-					pending={pending}
-					disabled={blocked}
-				>
-					{editing ? 'Save gym name' : 'Register Gym'}
-				</Button>
-				{blocked && editing ? (
-					<Button
-						icon={RefreshIcon}
-						width="full"
-						variant="secondary"
-						onClick={() => window.location.reload()}
-					>
-						Reload current records
-					</Button>
-				) : null}
-				<ButtonLink
-					href={
-						props.mode === 'edit'
-							? routes.organization(props.organization.id)
-							: routes.organizations
-					}
-					icon={RefreshIcon}
-					variant="secondary"
-				>
-					{editing ? 'Back to gym' : 'Review registry'}
-				</ButtonLink>
 			</form>
-		</Card>
+		</Dialog>
 	);
 }
