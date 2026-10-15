@@ -6,6 +6,7 @@ export const organizationPermissions = {
 	update: 'platform.organizations.update',
 	activate: 'platform.organizations.activate',
 	suspend: 'platform.organizations.suspend',
+	archive: 'platform.organizations.archive',
 } as const;
 export type OrganizationPermission = (typeof organizationPermissions)[keyof typeof organizationPermissions];
 
