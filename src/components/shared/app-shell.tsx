@@ -11,8 +11,9 @@ import { WorkspaceBreadcrumb } from './workspace-breadcrumb';
 import styles from './app-shell.module.css';
 
 /**
- * Authenticated workspace frame. The sidebar brand row and the topbar share one height token so
- * their dividing lines meet; page content uses the topbar's gutters so the edges align.
+ * Authenticated workspace frame: the sidebar holds the brand and navigation, the topbar holds the
+ * location and the signed-in account. The sidebar brand row and the topbar share one height token
+ * so their dividing lines meet; page content uses the topbar's gutters so the edges align.
  */
 export function AppShell({
 	children,
@@ -33,6 +34,20 @@ export function AppShell({
 					<div className={styles.navigation}>
 						<Navbar permissions={permissions} />
 					</div>
+					<div className={styles.workspace}>
+						<span className={styles.workspaceIcon} aria-hidden="true">
+							<HugeiconsIcon icon={SecurityCheckIcon} size={18} color="currentColor" />
+						</span>
+						<div className={styles.workspaceText}>
+							<p className={styles.workspaceName}>Administration workspace</p>
+							<p className={styles.workspaceNote}>Platform staff only</p>
+						</div>
+					</div>
+				</aside>
+				<header className={styles.topbar}>
+					<div className={styles.location}>
+						<WorkspaceBreadcrumb />
+					</div>
 					<div className={styles.account}>
 						<span className={styles.avatar}>
 							<Avatar name={displayName} tone="solid" />
@@ -42,24 +57,13 @@ export function AppShell({
 							<p className={styles.role}>Platform staff</p>
 						</div>
 						<div className={styles.signOut}>
-							<LogoutButton width="full" />
+							<LogoutButton />
 						</div>
 					</div>
-				</aside>
-				<div className={styles.content}>
-					<header className={styles.topbar}>
-						<WorkspaceBreadcrumb />
-						<p className={styles.workspace}>
-							<span className={styles.workspaceIcon} aria-hidden="true">
-								<HugeiconsIcon icon={SecurityCheckIcon} size={16} color="currentColor" />
-							</span>
-							Administration workspace
-						</p>
-					</header>
-					<main id="main" tabIndex={-1} className={styles.main}>
-						{children}
-					</main>
-				</div>
+				</header>
+				<main id="main" tabIndex={-1} className={styles.main}>
+					{children}
+				</main>
 			</div>
 		</ToastProvider>
 	);
