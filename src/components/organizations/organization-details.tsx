@@ -30,7 +30,8 @@ export function OrganizationDetails({
 	readonly onLifecycleChange: (organization: Organization, action: LifecycleAction) => void;
 	readonly onReload: () => void;
 }) {
-	const canUpdate = permissions.includes(organizationPermissions.update);
+	const canUpdate =
+		organization.status !== 'ARCHIVED' && permissions.includes(organizationPermissions.update);
 	const hasActions = canUpdate || availableLifecycleActions(organization, permissions).length > 0;
 	const timeline = [
 		['Registered', organization.createdAt],
