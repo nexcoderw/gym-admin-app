@@ -24,12 +24,10 @@
 	border-block-end: 1px solid var(--border);
 	font-size: var(--text-small);
 }
-.title {
+/* The breadcrumb repeats what the compact navigation row already shows, so it appears on desktop. */
+.location {
 	display: none;
-}
-.title span {
-	margin-inline-start: var(--space-2);
-	color: var(--text-muted);
+	min-width: 0;
 }
 .account {
 	display: flex;
@@ -75,7 +73,7 @@
 		justify-content: space-between;
 		padding: var(--space-2) var(--gutter);
 	}
-	.title {
+	.location {
 		display: block;
 	}
 }
