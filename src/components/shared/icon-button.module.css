@@ -1,0 +1,26 @@
+.button {
+	display: inline-grid;
+	place-items: center;
+	flex: 0 0 auto;
+	inline-size: 2.75rem;
+	block-size: 2.75rem;
+	padding: 0;
+	border: 1px solid transparent;
+	border-radius: var(--radius-pill);
+	background: transparent;
+	color: var(--text-secondary);
+	transition:
+		background var(--motion-fast) var(--motion-ease),
+		color var(--motion-fast) var(--motion-ease);
+}
+.button[data-variant='outline'] {
+	border-color: var(--border);
+	background: var(--surface);
+}
+.button:hover:not(:disabled) {
+	background: var(--surface-hover);
+	color: var(--primary);
+}
+.button:disabled {
+	opacity: 0.5;
+}
