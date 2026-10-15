@@ -1,9 +1,6 @@
 import { renderToStaticMarkup } from 'react-dom/server';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import ListPage from '@/app/organizations/page';
-import DetailPage from '@/app/organizations/[id]/page';
-import NewPage from '@/app/organizations/new/page';
-import EditPage from '@/app/organizations/[id]/edit/page';
 import { organizationPermissions } from '@/lib/contracts/organizations';
 import { session } from './fixtures';
 import { organization, organizationEtag } from './organization-fixtures';
@@ -23,17 +20,7 @@ vi.mock('next/navigation', () => ({
 }));
 const fetchMock = vi.fn<typeof fetch>();
 let permissions: string[];
-const params = { params: Promise.resolve({ id: organization.id }) };
-const pages = [
-	{
-		label: 'list',
-		permission: organizationPermissions.read,
-		run: () => ListPage({ searchParams: Promise.resolve({}) }),
-	},
-	{ label: 'details', permission: organizationPermissions.read, run: () => DetailPage(params) },
-	{ label: 'registration', permission: organizationPermissions.create, run: () => NewPage() },
-	{ label: 'editing', permission: organizationPermissions.update, run: () => EditPage(params) },
-];
+const runList = () => ListPage({ searchParams: Promise.resolve({}) });
 beforeEach(() => {
 	vi.stubEnv('NODE_ENV', 'development');
 	vi.stubEnv('ADMIN_ORIGIN', 'http://localhost:4000');
@@ -58,24 +45,31 @@ afterEach(() => {
 });
 
 describe('independent organization page authorization', () => {
-	it.each(pages)('blocks $label without $permission before any organization read', async (page) => {
+	it('blocks the registry without read permission before any organization read', async () => {
 		permissions = [];
-		const markup = renderToStaticMarkup(await page.run());
+		const markup = renderToStaticMarkup(await runList());
 		expect(markup).toContain('required organization permission');
 		expect(markup).not.toContain('Administration workspace');
 		expect(fetchMock.mock.calls.every(([url]) => String(url).endsWith('/auth/session'))).toBe(true);
 	});
-	it.each(pages)('redirects rejected sessions on $label to login only', async (page) => {
+	it('redirects rejected sessions to login only', async () => {
 		fetchMock.mockResolvedValueOnce(Response.json({}, { status: 401 }));
-		await expect(page.run()).rejects.toThrow('Redirect to /login');
+		await expect(runList()).rejects.toThrow('Redirect to /login');
 	});
-	it('renders a validated list and name-only edit with the server precondition', async () => {
-		expect(renderToStaticMarkup(await ListPage({ searchParams: Promise.resolve({}) }))).toContain(
-			'Soho Gym',
-		);
-		const markup = renderToStaticMarkup(await EditPage(params));
-		expect(markup).toContain('Save gym name');
+	it('renders validated cards with dialog triggers and no dialog or sub-page links', async () => {
+		const markup = renderToStaticMarkup(await runList());
+		expect(markup).toContain('Soho Gym');
 		expect(markup).toContain('Administration workspace');
-		expect(markup).not.toContain('name="slug"');
+		expect(markup).toContain('Register Gym');
+		expect(markup).toContain('Edit Soho Gym');
+		expect(markup).not.toContain('<dialog');
+		expect(markup).not.toContain(`/organizations/${organization.id}`);
+	});
+	it('hides registration and editing triggers without their permissions', async () => {
+		permissions = [organizationPermissions.read];
+		const markup = renderToStaticMarkup(await runList());
+		expect(markup).toContain('Soho Gym');
+		expect(markup).not.toContain('Register Gym');
+		expect(markup).not.toContain('Edit Soho Gym');
 	});
 });
