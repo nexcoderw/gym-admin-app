@@ -1,95 +1,54 @@
+/* Columns follow the space the registry actually has, so the sidebar is accounted for. */
 .registry {
 	display: grid;
-	gap: var(--space-6);
-	min-width: 0;
+	gap: var(--space-5);
+	min-inline-size: 0;
+	container-type: inline-size;
 }
-.controls {
+.toolbar {
 	display: flex;
 	flex-wrap: wrap;
-	align-items: end;
-	gap: var(--space-4);
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3) var(--space-4);
 }
-.controls > span {
-	flex-basis: 100%;
-	font-size: var(--text-small);
+.summary {
 	color: var(--text-secondary);
+	font-size: var(--text-small);
+	font-variant-numeric: tabular-nums;
 }
-.filter {
+.grid {
 	display: grid;
-	gap: var(--space-2);
-	flex: 1 1 14rem;
+	grid-template-columns: minmax(0, 1fr);
+	gap: var(--space-4);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+	transition: opacity var(--motion-fast) var(--motion-ease);
 }
-.filter select {
-	width: 100%;
+.item {
+	min-inline-size: 0;
 }
-.actions {
-	display: flex;
-	flex-wrap: wrap;
-	gap: var(--space-3);
+.registry[aria-busy='true'] .grid {
+	opacity: 0.6;
 }
-.panel {
-	min-width: 0;
+.empty {
+	border: 1px dashed var(--border-control);
+	border-radius: var(--radius-panel);
+	background: var(--surface);
 }
-.table {
-	width: 100%;
-	border-collapse: collapse;
-	text-align: start;
-}
-.caption {
-	text-align: start;
-	font-weight: 600;
-	padding-block-end: var(--space-4);
-}
-.table th,
-.table td {
-	padding: var(--space-4) var(--space-2);
-	border-block-end: 1px solid var(--border);
-	overflow-wrap: anywhere;
-}
-.table thead {
-	color: var(--text-secondary);
-	font-size: var(--text-small);
-}
-.srOnly {
-	position: absolute;
-	width: 1px;
-	height: 1px;
-	clip-path: inset(50%);
-	overflow: hidden;
-}
-@media (max-width: 60rem) {
-	.registered {
-		display: none;
+@container (min-width: 30rem) {
+	.grid {
+		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
 }
-@media (max-width: 42rem) {
-	.table thead {
-		position: absolute;
-		clip-path: inset(50%);
+@container (min-width: 44rem) {
+	.grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
 	}
-	.table tbody,
-	.table tr,
-	.table th,
-	.table td {
-		display: block;
-	}
-	.table tr {
-		padding-block: var(--space-4);
-		border-block-end: 1px solid var(--border);
-	}
-	.table th,
-	.table td {
-		padding: var(--space-2) 0;
-		border: 0;
-	}
-	.table .registered {
-		display: none;
-	}
-	.table td[data-label]::before {
-		content: attr(data-label) ': ';
-		color: var(--text-secondary);
-	}
-	.actions {
-		width: 100%;
+}
+@container (min-width: 58rem) {
+	.grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
