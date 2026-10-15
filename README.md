@@ -69,8 +69,8 @@ cursors show recovery, never an empty registry. Zero items appears only after a 
 Status filters are toggle buttons (`aria-pressed`) that stay focusable while loading.
 
 Cards use container queries on the registry width (so the sidebar is accounted for): one column on
-phones, then two, three, four and five columns at 30, 44, 52 and 60rem. Workspace pages span the
-full width between the topbar's gutters (no centered maximum width), so windows from about 1264px
+phones, then two, three, four and five columns at 30, 44, 52 and 58rem. Workspace pages span the
+full width between the topbar's gutters (no centered maximum width), so windows from about 1256px
 show five cards per row; wider screens stay at five. Each card is also a size container: when it is
 narrower than 10rem of content it tightens its header and stacks its dates. Each card shows the
 status, slug, and registered and last-updated dates (Africa/Kigali). The gym name is a real button
@@ -207,15 +207,16 @@ them initially. Browsers receive same-origin font assets. The compact scale uses
 13px secondary text, 12px metadata and 20–24px page headings, with 16px form inputs and 48px controls.
 Generic font fallbacks support loading/failure, not an additional designed typeface.
 
-Desktop uses a sticky 15rem sidebar and a sticky 4rem topbar. The sidebar brand row shares the
-`--topbar-height` token, so their dividing lines meet. Navigation renders the single registry,
-grouped under its `group` label, with icon tiles. The active destination (exact or nested path
-only, via `isCurrentDestination`) gets a filled icon tile, a heavier label and an indicator bar,
-so color is not the only cue. An account card shows decorative initials (`Avatar`), the display
-name, "Platform staff" and Sign out. The topbar shows a breadcrumb (NEXCODE Gym › current section)
-derived from the same registry, plus an "Administration workspace" badge; it grants nothing. Compact
-screens turn the sidebar into a header: brand and Sign out (plus initials and name from 40rem)
-above one wrapping row of the same navigation links. Nothing is hidden behind a menu.
+Desktop uses a sticky 16.5rem sidebar and a sticky 4rem topbar. The sidebar brand row shares the
+`--topbar-height` token, so their dividing lines meet. The sidebar holds the brand, the single
+navigation registry grouped under its `group` label, and an "Administration workspace" card at
+the bottom. The active destination (exact or nested path only, via `isCurrentDestination`) gets a
+tinted row, a heavier label and an indicator bar, so color is not the only cue. The topbar shows a
+breadcrumb (NEXCODE Gym › current section) from the same registry; it grants nothing. On the right
+are the signed-in account (decorative `Avatar` initials, display name, "Platform staff") and Sign
+out. On compact screens, brand and the wrapping navigation row sit on the left, with the account
+and Sign out on the right. Initials and name appear from 40rem; Sign out is always visible. Nothing
+is hidden behind a menu.
 Below 40rem, secondary metric descriptions and redundant metadata are hidden, but all actual counts,
 labels, errors and actions remain available. Grids reflow from one to two to four columns as space
 allows. Motion respects reduced-motion preferences; no automatic dark theme or fake metrics exist.
