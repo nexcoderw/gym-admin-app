@@ -6,11 +6,15 @@ permissions. gym-db owns every schema and migration. No sibling project was chan
 
 ## Organization management — Step 13
 
-Implemented pages: `/organizations`, `/organizations/new`, `/organizations/[id]` and
-`/organizations/[id]/edit`. List/detail pages read current authorized records through server-only
-adapters, not self-HTTP. Registration creates PENDING records only, editing changes name only, and
-activation/suspension require an explicit confirmation. No delete, archive, existing-slug editing, tenant
-login, owner/subscription data, permission provisioning or audit-history UI is included.
+Implemented page: `/organizations`, a responsive card registry. Registration, details and name
+editing open as modal dialogs over the list; the former `/organizations/new`, `/organizations/[id]`
+and `/organizations/[id]/edit` pages were removed. The list reads current authorized records
+through server-only adapters, not self-HTTP. One shared `OrganizationForm` dialog registers and
+renames gyms. Registration creates PENDING records only, editing changes name only, and
+activation/suspension require an explicit confirmation. Confirmed successes close the dialog,
+refresh the server-rendered list and show a top-center toast; failures stay inline in the dialog.
+No delete, archive, existing-slug editing, tenant login, owner/subscription data, permission
+provisioning or audit-history UI is included.
 
 ### Backend prerequisites for live mutations
 
@@ -37,10 +41,10 @@ Browser components use the centralized frontend paths and same-origin cookies.
 | POST `/api/organizations/[id]/suspension` | POST `/organizations/:id/suspension` | `suspend`                  |
 
 The full permission names are `platform.organizations.<suffix>`. Each adapter checks a live Nest
-session and its exact permission before calling the organization operation. Pages enforce their
-own permission independently; edit also needs read permission to load its current record. Navbar
-visibility uses effective permissions and stays active for nested routes, but does not authorize
-anything. Expiry/revocation follows existing fixed-login recovery; confirmed BFF 401 responses clear
+session and its exact permission before calling the organization operation. The page enforces
+read permission independently. Register, edit and lifecycle triggers are shown only for the
+matching effective permissions; that is presentation only, and each BFF route re-checks its own
+permission. Navbar visibility uses effective permissions but does not authorize anything. Expiry/revocation follows existing fixed-login recovery; confirmed BFF 401 responses clear
 only supplied platform cookies. Service outages do not falsely log an administrator out.
 
 Requests and responses use strict browser-safe Zod contracts. Name normalization/Unicode bounds,
@@ -62,17 +66,30 @@ Ordering remains Nest's createdAt descending / UUID ascending; next results use 
 nextCursor with the same filter. Changing the status clears the cursor. Restart returns the first
 result set without inventing page numbers or downloading every organization. Invalid/expired
 cursors show recovery, never an empty registry. Zero items appears only after a validated success.
-Native controls and the responsive list keep essential actions available at 320px; registered date
-is hidden on smaller lists but remains in details. Dates display in Africa/Kigali.
+Status filters are toggle buttons (`aria-pressed`) that stay focusable while loading.
 
-Detail GET requires a valid ETag exactly quoting the returned canonical UTC updatedAt. Name editing
-preserves that ETag and sends If-Match; 412 means stale organization, **not** MFA enrollment.
-Authentication's existing 412 interpretation remains unchanged. Stale edits require reload, not
-automatic resubmission. Activation is PENDING/SUSPENDED → ACTIVE, suspension ACTIVE → SUSPENDED.
-The dialog names the gym, focuses Cancel, contains keyboard focus natively, restores trigger focus
-and supports Escape except while a request is pending. It re-reads the latest version before sending
-expectedUpdatedAt; a changed version requires a new confirmation. These transitions do not grant
-subscriptions, provision a domain, cancel billing or delete members.
+Cards use container queries on the registry width (so the sidebar is accounted for): one column on
+phones, then two, three and four columns at 30, 44 and 58rem. A 1280px laptop and wider screens
+show four cards per row. Each card shows the status, slug, and registered and last-updated dates
+(Africa/Kigali). The gym name is a real button whose overlay makes the whole card open details;
+the edit action is a separately named icon button. Long names and slugs wrap instead of clipping.
+
+Dialogs use the shared `Dialog` primitive built on native `showModal()`: inert background, labelled
+title and description, Escape and backdrop dismissal, an explicit return-focus trigger (Safari does
+not focus clicked buttons) and a bottom-sheet presentation below 40rem. Dismissal is disabled while
+a request is pending. Toasts use the shared `ToastProvider` mounted in `AppShell`: a polite live
+region at the top center, at most three messages, dismissed after five seconds unless hovered or
+focused, each with a dismiss button. Toasts appear only after the BFF confirmed the change.
+
+The BFF detail GET requires an ETag exactly quoting the canonical UTC updatedAt; gym-api sets that
+same value. The edit dialog sends If-Match built from the `updatedAt` of the record snapshot it
+opened (`organizationEtag`), so a concurrent change fails with 412 instead of being overwritten.
+412 means stale organization, **not** MFA enrollment. Stale edits require reload, not automatic
+resubmission. Activation is PENDING/SUSPENDED → ACTIVE, suspension ACTIVE → SUSPENDED. The
+confirmation names the gym, shows the status change, focuses Cancel and restores focus to its
+trigger. It re-reads the latest version before sending expectedUpdatedAt; a changed version requires
+a new confirmation. These transitions do not grant subscriptions, provision a domain, cancel billing
+or delete members.
 
 Shared transport now supports PATCH, exact 201, allowlisted query/If-Match and validated ETag without
 removing redirects, no-store, timeouts, cookie allowlists or JSON bounds. Organization Set-Cookie
@@ -82,11 +99,11 @@ Every button uses Hugeicons and the same shared loading treatment; Button accept
 ref solely for dialog focus management. The light palette, fonts and existing component system are
 unchanged. No installs or package/lockfile changes were needed.
 
-Pending submissions are guarded synchronously as well as visually. Success navigation requires the
+Pending submissions are guarded synchronously as well as visually. A success toast requires the
 expected status and validated response. An ambiguous registration/network outcome disables another
-submission and directs the administrator to review the registry; there is no automatic POST retry
-or reload-to-retry button. Unknown outcomes must be reconciled before attempting another creation.
-Late responses from an unmounted form cannot navigate or update its state.
+submission; **Review registry** closes the dialog and re-reads the list. There is no automatic POST
+retry. Unknown outcomes must be reconciled before attempting another creation. Late responses from
+a closed dialog cannot show a toast or update its state.
 
 ### Human verification (not executed by the agent)
 
@@ -94,7 +111,7 @@ From app/admin, format only the changed areas and inspect the diff:
 
 ```bash
 cd /Users/dvniels/Desktop/projects/gym/app/admin
-npx prettier --write src/lib/contracts/organizations.ts src/lib/server/http/upstream.ts src/lib/server/organizations-access.ts src/lib/server/organization-pages.ts src/lib/server/endpoints/organizations src/lib/client/mutations.ts src/constants/routes.ts src/constants/navigation.ts src/components/shared/button.tsx src/components/shared/navbar.tsx src/components/organizations src/app/organizations src/app/api/organizations test/components.test.tsx test/organization-fixtures.ts test/organizations-contracts.test.ts test/organizations-routes.test.ts test/organizations-pages.test.ts test/organizations-ui.test.tsx test/e2e/organizations.spec.ts README.md
+npx prettier --write src/app/globals.css src/lib/contracts/organizations.ts src/constants/routes.ts src/components/shared src/components/organizations src/app/organizations test/dialog-toast.test.tsx test/organizations-pages.test.ts test/organizations-ui.test.tsx test/e2e/organizations.spec.ts README.md
 npm run format:check
 npm run lint
 npm run typecheck
@@ -103,9 +120,11 @@ npm run build
 ```
 
 Tests cover strict contracts, each fixed operation/permission, Origin/CSRF rejection, forged claims,
-expired/rejected sessions, safe errors, PATCH/201/ETag, cookie rejection, pages, empty/real rows,
-filter/cursor behavior, duplicate prevention, stale editing, modal focus, lifecycle confirmation
-and audit-unavailable registration. Existing auth/dashboard tests remain regression coverage.
+expired/rejected sessions, safe errors, PATCH/201/ETag, cookie rejection, the list page, empty/real
+cards, permission-gated triggers, filter/cursor behavior, duplicate prevention, locked dismissal
+while pending, stale editing, dialog labelling/focus/backdrop/Escape, details-to-edit switching,
+success toasts (live region, auto-dismiss, hover pause, limit), lifecycle confirmation and
+audit-unavailable registration. Existing auth/dashboard tests remain regression coverage.
 No tests, build, formatting, browser automation or database commands were executed by the agent.
 
 Browser verification requires human-started admin (4000) and an approved development/test backend
@@ -126,9 +145,10 @@ not as a silent skip. The focused browser test mocks only the browser's organiza
 response; initial server-page/session/permission checks remain real. It verifies unavailable-state
 presentation and responsive keyboard use, not real mutation/audit persistence.
 
-Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists; register
-Soho Gym with a unique nonreserved slug; verify real 201 and returned detail UUID; rename using a
-current ETag; change the same gym in another window and confirm stale saves cannot overwrite it;
+Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists and confirm
+four cards per row at 1280px and wider; register Soho Gym with a unique nonreserved slug; verify the
+real 201, the success toast and the new card; open its details dialog and rename it; open the edit
+dialog for the same gym in two windows and confirm the second save fails as stale;
 check each lifecycle confirmation and invalid transition; remove a test permission/revoke the test
 session and confirm direct page/BFF rejection; inspect at 320/768/1440px and 200% zoom with keyboard
 and screen reader. Verify actual durable audit rows through an authorized backend/database review,
