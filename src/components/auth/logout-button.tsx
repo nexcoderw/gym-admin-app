@@ -10,7 +10,7 @@ import { browserApi, routes } from '@/constants/routes';
 import { browserCsrf, post } from '@/lib/client/mutations';
 import styles from './logout-button.module.css';
 
-export function LogoutButton({ width = 'small' }: { readonly width?: 'full' | 'small' }) {
+export function LogoutButton() {
 	const router = useRouter();
 	const [pending, setPending] = useState(false);
 	const [error, setError] = useState('');
@@ -35,7 +35,7 @@ export function LogoutButton({ width = 'small' }: { readonly width?: 'full' | 's
 			<Button
 				variant="secondary"
 				icon={Logout01Icon}
-				width={width}
+				width="small"
 				pending={pending}
 				onClick={signOut}
 			>
