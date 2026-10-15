@@ -1,29 +1,52 @@
-.nav {
-	display: grid;
+/* Compact: sits beside the sidebar header and keeps Sign out visible. */
+.navbar {
+	display: flex;
+	align-items: flex-start;
+	justify-content: flex-end;
+	gap: var(--space-4);
 	min-width: 0;
-	gap: var(--space-2);
+	padding: var(--space-4) var(--gutter) var(--space-4) 0;
+	background: var(--surface);
+	border-block-end: 1px solid var(--border);
+	font-size: var(--text-small);
 }
-.link {
+/* The breadcrumb repeats what the compact navigation row already shows, so it appears on desktop. */
+.location {
+	display: none;
 	min-width: 0;
+}
+.account {
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
-	min-height: 44px;
-	padding: var(--space-3) var(--space-4);
-	border: 1px solid transparent;
-	border-radius: var(--radius-pill);
-	font-size: var(--text-small);
+	min-width: 0;
+}
+/* The name is redundant on phones; Sign out always stays visible. */
+.identity {
+	display: none;
+	min-width: 0;
+	text-align: end;
+}
+.name {
 	font-weight: 600;
 	overflow-wrap: anywhere;
-	color: var(--text-secondary);
-	text-decoration: none;
-	transition: background var(--motion-fast) var(--motion-ease);
 }
-.link:hover {
-	background: var(--surface-hover);
+.label {
+	color: var(--text-muted);
+	font-size: var(--text-caption);
 }
-.link[aria-current='page'] {
-	background: var(--surface-hover);
-	color: var(--primary);
-	border-color: var(--primary);
+@media (min-width: 40rem) {
+	.identity {
+		display: grid;
+	}
+}
+@media (min-width: 60rem) {
+	.navbar {
+		align-items: center;
+		justify-content: space-between;
+		padding: var(--space-2) var(--gutter);
+	}
+	.location {
+		display: block;
+	}
 }
