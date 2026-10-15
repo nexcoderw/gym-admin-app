@@ -1,5 +1,4 @@
 import type { Metadata } from 'next';
-import { PageHeader } from '@/components/shared/page-header';
 import { AppShell } from '@/components/shared/app-shell';
 import { OrganizationList } from '@/components/organizations/organization-list';
 import { OrganizationProblem } from '@/components/organizations/organization-problem';
@@ -11,7 +10,12 @@ import { serverContext } from '@/lib/server/session';
 
 export const metadata: Metadata = { title: 'Organizations' };
 
-export default async function OrganizationsPage({ searchParams }: { searchParams: Promise<Record<string, string | string[] | undefined>> }) {
+/** Registration, details and editing open as dialogs over this list; there are no sub-pages. */
+export default async function OrganizationsPage({
+	searchParams,
+}: {
+	searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
 	const result = await organizationPage(organizationPermissions.read, async () => {
 		const query = organizationInput(organizationListQuerySchema, await searchParams);
 		return { query, data: await listOrganizations(query, await serverContext()) };
@@ -19,8 +23,7 @@ export default async function OrganizationsPage({ searchParams }: { searchParams
 	if (!result.ok) return <OrganizationProblem status={result.status} message={result.message} />;
 	return (
 		<AppShell permissions={result.permissions} displayName={result.displayName}>
-			<PageHeader title="Organizations" description="Manage the gym registry and platform lifecycle approvals." />
-			<OrganizationList {...result.value} canCreate={result.permissions.includes(organizationPermissions.create)} />
+			<OrganizationList {...result.value} permissions={result.permissions} />
 		</AppShell>
 	);
 }
