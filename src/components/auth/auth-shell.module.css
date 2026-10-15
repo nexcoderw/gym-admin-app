@@ -1,0 +1,177 @@
+/* Compact: one white column with the brand above the form. */
+.page {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr);
+	min-block-size: 100svh;
+	background: var(--surface);
+}
+.brandPanel {
+	display: none;
+}
+.content {
+	display: grid;
+	grid-template-rows: auto 1fr auto;
+	gap: var(--space-8);
+	min-inline-size: 0;
+	padding: var(--space-6) var(--gutter);
+}
+.compactBrand {
+	min-inline-size: 0;
+}
+.formArea {
+	align-self: center;
+	justify-self: center;
+	inline-size: min(100%, 26rem);
+	min-inline-size: 0;
+}
+.formArea[data-step='verification'] {
+	inline-size: min(100%, 30rem);
+}
+.footer {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: var(--space-2);
+	color: var(--text-muted);
+	font-size: var(--text-caption);
+	text-align: center;
+}
+.srOnly {
+	position: absolute;
+	inline-size: 1px;
+	block-size: 1px;
+	clip-path: inset(50%);
+	overflow: hidden;
+	white-space: nowrap;
+}
+/* Wide screens: a solid brand panel with the sign-in progress beside the form. */
+@media (min-width: 60rem) {
+	.page {
+		grid-template-columns: minmax(0, 5fr) minmax(0, 6fr);
+	}
+	.brandPanel {
+		position: relative;
+		display: flex;
+		flex-direction: column;
+		justify-content: space-between;
+		gap: var(--space-12);
+		min-inline-size: 0;
+		padding: var(--space-12);
+		overflow: hidden;
+		background: var(--primary);
+		color: var(--on-primary);
+	}
+	/* Panel content stacks above the decorative rings, which carry no information. */
+	.brandPanel > * {
+		position: relative;
+		z-index: 1;
+	}
+	.brandPanel::before,
+	.brandPanel::after {
+		content: '';
+		position: absolute;
+		z-index: 0;
+		border: 1px solid color-mix(in srgb, var(--on-primary) 14%, transparent);
+		border-radius: 50%;
+		pointer-events: none;
+	}
+	.brandPanel::before {
+		inset-block-end: -12rem;
+		inset-inline-end: -10rem;
+		inline-size: 30rem;
+		block-size: 30rem;
+	}
+	.brandPanel::after {
+		inset-block-end: -6rem;
+		inset-inline-end: -4rem;
+		inline-size: 18rem;
+		block-size: 18rem;
+		border-color: color-mix(in srgb, var(--accent) 45%, transparent);
+	}
+	.content {
+		padding: var(--space-12) var(--space-16);
+	}
+	.compactBrand,
+	.footer {
+		display: none;
+	}
+	.formArea {
+		grid-row: 1 / -1;
+	}
+}
+.pitch {
+	display: grid;
+	gap: var(--space-8);
+	max-inline-size: 26rem;
+}
+.statement {
+	font-family: var(--font-heading);
+	font-size: var(--text-title);
+	font-weight: 700;
+	line-height: 1.25;
+	letter-spacing: -0.01em;
+	text-wrap: balance;
+}
+.steps {
+	display: grid;
+	gap: var(--space-5);
+	margin: 0;
+	padding: 0;
+	list-style: none;
+}
+.step {
+	display: grid;
+	grid-template-columns: auto minmax(0, 1fr);
+	align-items: start;
+	gap: var(--space-4);
+}
+.marker {
+	display: grid;
+	place-items: center;
+	inline-size: 2rem;
+	block-size: 2rem;
+	border: 1px solid color-mix(in srgb, var(--on-primary) 45%, transparent);
+	border-radius: var(--radius-pill);
+	font-size: var(--text-small);
+	font-weight: 700;
+	font-variant-numeric: tabular-nums;
+}
+.step[data-state='current'] .marker {
+	border-color: var(--on-primary);
+	background: var(--on-primary);
+	color: var(--primary);
+}
+.step[data-state='done'] .marker {
+	border-color: var(--on-primary);
+}
+.stepText {
+	display: grid;
+	gap: var(--space-1);
+	min-inline-size: 0;
+	padding-block-start: var(--space-1);
+}
+.stepTitle {
+	font-weight: 700;
+}
+.step[data-state='next'] .stepTitle {
+	color: color-mix(in srgb, var(--on-primary) 78%, transparent);
+}
+.stepDetail {
+	color: color-mix(in srgb, var(--on-primary) 78%, transparent);
+	font-size: var(--text-small);
+}
+.panelNote {
+	display: flex;
+	align-items: center;
+	gap: var(--space-2);
+	color: color-mix(in srgb, var(--on-primary) 78%, transparent);
+	font-size: var(--text-small);
+}
+@media (forced-colors: active) {
+	.brandPanel {
+		border-inline-end: 1px solid CanvasText;
+	}
+	.step[data-state='current'] .marker {
+		outline: 2px solid CanvasText;
+	}
+}
