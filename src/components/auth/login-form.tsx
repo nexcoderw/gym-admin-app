@@ -6,6 +6,7 @@ import { HugeiconsIcon } from '@hugeicons/react';
 import {
 	LockPasswordIcon,
 	Mail01Icon,
+	SecurityCheckIcon,
 	ShieldKeyIcon,
 	ViewIcon,
 	ViewOffSlashIcon,
@@ -74,6 +75,7 @@ export function LoginForm() {
 			aria-busy={pending}
 		>
 			<div className={styles.heading}>
+				<p className={styles.eyebrow}>Step 1 of 2</p>
 				<h1>Welcome back</h1>
 				<p>Sign in to your NEXCODE administrator account.</p>
 			</div>
@@ -129,6 +131,7 @@ export function LoginForm() {
 				Continue to verification
 			</Button>
 			<p className={styles.note}>
+				<HugeiconsIcon icon={SecurityCheckIcon} size={16} color="currentColor" aria-hidden="true" />
 				Next, verify your identity using one of your available sign-in methods.
 			</p>
 		</form>
