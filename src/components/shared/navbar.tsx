@@ -33,7 +33,7 @@ export function Navbar({ permissions }: { permissions: readonly string[] }) {
 										className={styles.link}
 									>
 										<span className={styles.icon} aria-hidden="true">
-											<HugeiconsIcon icon={item.icon} size={18} color="currentColor" />
+											<HugeiconsIcon icon={item.icon} size={20} color="currentColor" />
 										</span>
 										<span className={styles.label}>{item.label}</span>
 									</Link>
