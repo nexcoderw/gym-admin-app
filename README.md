@@ -69,8 +69,10 @@ cursors show recovery, never an empty registry. Zero items appears only after a 
 Status filters are toggle buttons (`aria-pressed`) that stay focusable while loading.
 
 Cards use container queries on the registry width (so the sidebar is accounted for): one column on
-phones, then two, three and four columns at 30, 44 and 58rem. A 1280px laptop and wider screens
-show four cards per row. Each card shows the status, slug, and registered and last-updated dates
+phones, then two, three, four, five and six columns at 30, 44, 58, 80 and 100rem. Workspace pages
+span the full width between the topbar's gutters (no centered maximum width), so 1280–1536px
+screens show four cards per row, about 1680px shows five and 1920px shows six. Each card shows the
+status, slug, and registered and last-updated dates
 (Africa/Kigali). The gym name is a real button whose overlay makes the whole card open details;
 the edit action is a separately named icon button. Long names and slugs wrap instead of clipping.
 
@@ -146,9 +148,10 @@ response; initial server-page/session/permission checks remain real. It verifies
 presentation and responsive keyboard use, not real mutation/audit persistence.
 
 Manual acceptance after backend prerequisites: inspect filtered/empty/next-cursor lists and confirm
-four cards per row at 1280px and wider; register Soho Gym with a unique nonreserved slug; verify the
-real 201, the success toast and the new card; open its details dialog and rename it; open the edit
-dialog for the same gym in two windows and confirm the second save fails as stale;
+at least four cards per row at 1280px and wider, with page edges aligned to the topbar text;
+register Soho Gym with a unique nonreserved slug; verify the real 201, the success toast and the
+new card; open its details dialog and rename it; open the edit dialog for the same gym in two
+windows and confirm the second save fails as stale;
 check each lifecycle confirmation and invalid transition; remove a test permission/revoke the test
 session and confirm direct page/BFF rejection; inspect at 320/768/1440px and 200% zoom with keyboard
 and screen reader. Verify actual durable audit rows through an authorized backend/database review,
