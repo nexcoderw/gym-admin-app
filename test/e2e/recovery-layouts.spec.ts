@@ -10,7 +10,7 @@ for (const status of ['401', '403', '404', '429', '500', '503']) {
 		await expect(main).toHaveCount(1);
 		await expect(main.locator(`[data-state="${status}"]`)).toBeVisible();
 		await expect(page.getByRole('complementary')).toHaveCount(0);
-		await expect(page.getByText('Administration workspace', { exact: true })).toHaveCount(0);
+		await expect(page.getByRole('navigation', { name: 'Breadcrumb' })).toHaveCount(0);
 		for (const width of [320, 768, 1440]) {
 			await page.setViewportSize({ width, height: 900 });
 			await expect(main.getByRole('heading', { level: 1 })).toBeVisible();
