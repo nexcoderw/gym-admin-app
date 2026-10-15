@@ -207,7 +207,15 @@ them initially. Browsers receive same-origin font assets. The compact scale uses
 13px secondary text, 12px metadata and 20–24px page headings, with 16px form inputs and 48px controls.
 Generic font fallbacks support loading/failure, not an additional designed typeface.
 
-Desktop uses a quiet sidebar; compact screens keep navigation and logout available in a header.
+Desktop uses a sticky 15rem sidebar and a sticky 4rem topbar. The sidebar brand row shares the
+`--topbar-height` token, so their dividing lines meet. Navigation renders the single registry,
+grouped under its `group` label, with icon tiles. The active destination (exact or nested path
+only, via `isCurrentDestination`) gets a filled icon tile, a heavier label and an indicator bar,
+so color is not the only cue. An account card shows decorative initials (`Avatar`), the display
+name, "Platform staff" and Sign out. The topbar shows a breadcrumb (NEXCODE Gym › current section)
+derived from the same registry, plus an "Administration workspace" badge; it grants nothing. Compact
+screens turn the sidebar into a header: brand and Sign out (plus initials and name from 40rem)
+above one wrapping row of the same navigation links. Nothing is hidden behind a menu.
 Below 40rem, secondary metric descriptions and redundant metadata are hidden, but all actual counts,
 labels, errors and actions remain available. Grids reflow from one to two to four columns as space
 allows. Motion respects reduced-motion preferences; no automatic dark theme or fake metrics exist.

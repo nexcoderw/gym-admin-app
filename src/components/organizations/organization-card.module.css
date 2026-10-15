@@ -29,18 +29,6 @@
 	justify-content: space-between;
 	gap: var(--space-3);
 }
-.monogram {
-	display: grid;
-	place-items: center;
-	flex: 0 0 auto;
-	inline-size: 2.5rem;
-	block-size: 2.5rem;
-	border-radius: var(--radius-control);
-	background: var(--surface-hover);
-	color: var(--primary);
-	font-family: var(--font-heading);
-	font-weight: 700;
-}
 .identity {
 	display: grid;
 	gap: var(--space-1);
@@ -131,10 +119,6 @@
 @container (max-width: 10rem) {
 	.top {
 		gap: var(--space-2);
-	}
-	.monogram {
-		inline-size: 2.25rem;
-		block-size: 2.25rem;
 	}
 	.meta {
 		grid-template-columns: minmax(0, 1fr);
