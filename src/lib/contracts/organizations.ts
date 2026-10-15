@@ -71,6 +71,14 @@ export type CreateOrganizationRequest = z.infer<typeof createOrganizationSchema>
 export type UpdateOrganizationRequest = z.infer<typeof updateOrganizationSchema>;
 export type OrganizationActionRequest = z.infer<typeof organizationActionSchema>;
 
+/**
+ * Nest's ETag quotes the canonical updatedAt. Building If-Match from the record the operator
+ * reviewed keeps a stale edit failing with 412 instead of overwriting a concurrent change.
+ */
+export function organizationEtag(organization: Pick<Organization, 'updatedAt'>): string {
+	return `"${organization.updatedAt}"`;
+}
+
 /** Shared safe translations; provider messages and arbitrary codes are never displayed. */
 export function organizationFailure(status: number, code?: string) {
 	const messages: Record<number, [string, string]> = {
