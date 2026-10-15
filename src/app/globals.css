@@ -49,9 +49,7 @@
 	--text-title: 1.5rem;
 	--text-metric: 1.75rem;
 	--control-height: 3rem;
-	--sidebar-width: 16.5rem;
-	--topbar-height: 4rem;
-	--layer-header: 20;
+	--sidebar-width: 15rem;
 	--gutter: clamp(1rem, 3vw, 2rem);
 	--motion-fast: 120ms;
 	--motion-ease: cubic-bezier(0.2, 0, 0, 1);
