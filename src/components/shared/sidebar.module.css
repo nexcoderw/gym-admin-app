@@ -8,6 +8,35 @@
 	gap: var(--space-3);
 	align-items: center;
 }
+.nav {
+	display: grid;
+	min-width: 0;
+	gap: var(--space-2);
+}
+.link {
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: var(--space-3);
+	min-height: 44px;
+	padding: var(--space-3) var(--space-4);
+	border: 1px solid transparent;
+	border-radius: var(--radius-pill);
+	font-size: var(--text-small);
+	font-weight: 600;
+	overflow-wrap: anywhere;
+	color: var(--text-secondary);
+	text-decoration: none;
+	transition: background var(--motion-fast) var(--motion-ease);
+}
+.link:hover {
+	background: var(--surface-hover);
+}
+.link[aria-current='page'] {
+	background: var(--surface-hover);
+	color: var(--primary);
+	border-color: var(--primary);
+}
 @media (min-width: 60rem) {
 	.sidebar {
 		display: flex;
