@@ -16,6 +16,41 @@ test.describe('approved organization test administrator', () => {
 		}
 	});
 
+	test('archives only its newly registered fictional fixture and retains it in the archived filter', async ({
+		page,
+	}, testInfo) => {
+		if (process.env.PLAYWRIGHT_ORGANIZATIONS_MUTATIONS !== '1') {
+			throw new Error(
+				'Set PLAYWRIGHT_ORGANIZATIONS_MUTATIONS=1 only for the approved isolated development target.',
+			);
+		}
+		const target = new URL(process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4000');
+		if (!['localhost', '127.0.0.1'].includes(target.hostname)) {
+			throw new Error('Organization mutation browser tests are restricted to a local admin origin.');
+		}
+		const suffix = `${Date.now().toString(36)}-${testInfo.project.name.replace(/[^a-z0-9]+/giu, '-')}`;
+		const name = `Step Fourteen ${suffix}`;
+		await page.goto('/organizations');
+		await page.getByRole('button', { name: 'Register Gym' }).click();
+		const registration = page.getByRole('dialog', { name: 'Register Gym' });
+		await registration.getByLabel('Gym name').fill(name);
+		await registration.getByRole('button', { name: 'Register Gym' }).click();
+		await expect(page.getByText(`${name} was registered as a pending gym.`)).toBeVisible();
+		await page.getByRole('button', { name }).click();
+		await page.getByRole('button', { name: 'Archive gym' }).click();
+		const confirmation = page.getByRole('dialog', { name: `Archive ${name}?` });
+		await expect(confirmation).toContainText('retaining its registry record and audit history');
+		await expect(confirmation).toContainText('slug remains reserved');
+		await confirmation.getByRole('button', { name: 'Confirm archival' }).click();
+		await expect(
+			page.getByText(`${name} has been archived and retained for audit history.`),
+		).toBeVisible();
+		await expect(page.getByRole('button', { name })).toHaveCount(0);
+		await page.getByRole('button', { name: 'Filter by status: All' }).click();
+		await page.getByRole('button', { name: 'Archived', exact: true }).click();
+		await expect(page.getByRole('button', { name })).toBeVisible();
+	});
+
 	test('shows honest audit unavailability in the registration dialog without a success toast', async ({
 		page,
 	}) => {
