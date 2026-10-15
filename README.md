@@ -61,11 +61,19 @@ entry. A manually edited slug is preserved when the name changes; **Use gym name
 generation. Suggestions do not check or guarantee uniqueness: the server still validates the final
 slug, and conflicts require an explicit correction. Existing organization slugs remain immutable.
 
-List state is shareable through limit (default 20, max 50), status and optional UUID cursor.
-Ordering remains Nest's createdAt descending / UUID ascending; next results use the returned
-nextCursor with the same filter. Changing the status clears the cursor. Restart returns the first
-result set without inventing page numbers or downloading every organization. Invalid/expired
-cursors show recovery, never an empty registry. Zero items appears only after a validated success.
+List state is shareable through limit (default 20, max 50), status, optional UUID cursor and an
+optional `trail`. `trail` is frontend-only and never forwarded to Nest: a single comma-separated
+list of the cursors of earlier pages (at most 49, and only together with a cursor). Ordering remains
+Nest's createdAt descending / UUID ascending. Because the API pages forward only and reports no
+total, the shared `Pagination` component (`components/shared/pagination.tsx`) shows only pages known
+to exist: those already visited (replayed from `trail`) plus the next one when Nest returns a
+nextCursor. No totals or page numbers are invented and nothing beyond one result set is downloaded.
+It sits at the bottom right with a "Showing 21–40" range, circular Previous/Next arrows and numbered
+pages (first, last and neighbours, with "…" gaps). Phones keep the arrows and the current page. It
+hides when everything fits on one page. Changing the status clears the cursor and trail.
+Invalid/expired cursors show recovery, never an empty registry. Zero items appears only after a
+validated success. Other features reuse `Pagination` by passing their page, reachable page count
+and page size; APIs with verified totals can also pass `totalItems`.
 The toolbar shows the live count on the left and two round icon buttons on the right. **Filter**
 opens a dropdown of All/Pending/Active/Suspended/Archived (`aria-pressed` options with a check
 mark). It opens focused on the current status, supports arrows/Home/End, and closes on Escape,
