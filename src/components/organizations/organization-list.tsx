@@ -36,6 +36,7 @@ type ActiveDialog =
 const lifecycleMessages: Record<LifecycleAction, (name: string) => string> = {
 	activation: (name) => `${name} is now active.`,
 	suspension: (name) => `${name} has been suspended.`,
+	archival: (name) => `${name} has been archived and retained for audit history.`,
 };
 
 export function OrganizationList({
@@ -193,7 +194,7 @@ export function OrganizationList({
 							<li key={organization.id} className={styles.item}>
 								<OrganizationCard
 									organization={organization}
-									canUpdate={canUpdate}
+									canUpdate={canUpdate && organization.status !== 'ARCHIVED'}
 									onOpen={(trigger) => setDialog({ kind: 'details', organization, trigger })}
 									onEdit={(trigger) => setDialog({ kind: 'edit', organization, trigger })}
 								/>
