@@ -1,6 +1,6 @@
 .nav {
 	display: grid;
-	gap: var(--space-5);
+	gap: var(--space-6);
 	min-inline-size: 0;
 }
 .group {
@@ -14,7 +14,7 @@
 	color: var(--text-secondary);
 	font-size: var(--text-caption);
 	font-weight: 700;
-	letter-spacing: 0.06em;
+	letter-spacing: 0.08em;
 	text-transform: uppercase;
 }
 /* Compact: one wrapping row of destinations, never hidden behind a menu. */
@@ -27,12 +27,13 @@
 	list-style: none;
 }
 .link {
+	position: relative;
 	display: flex;
 	align-items: center;
 	gap: var(--space-3);
 	min-inline-size: 0;
 	min-block-size: 2.75rem;
-	padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+	padding: var(--space-2) var(--space-3);
 	border-radius: var(--radius-control);
 	color: var(--text-secondary);
 	font-size: var(--text-body);
@@ -40,21 +41,11 @@
 	text-decoration: none;
 	transition:
 		background var(--motion-fast) var(--motion-ease),
-		color var(--motion-fast) var(--motion-ease),
-		box-shadow var(--motion-fast) var(--motion-ease);
+		color var(--motion-fast) var(--motion-ease);
 }
 .icon {
-	display: grid;
-	place-items: center;
+	display: inline-flex;
 	flex: 0 0 auto;
-	inline-size: 2.25rem;
-	block-size: 2.25rem;
-	border-radius: var(--radius-control);
-	background: var(--surface-raised);
-	color: var(--text-secondary);
-	transition:
-		background var(--motion-fast) var(--motion-ease),
-		color var(--motion-fast) var(--motion-ease);
 }
 .label {
 	min-inline-size: 0;
@@ -64,19 +55,20 @@
 	background: var(--surface-raised);
 	color: var(--text-primary);
 }
-.link:hover .icon {
-	color: var(--primary);
-}
-/* Active: filled icon tile, heavier label and an indicator bar, so color is not the only cue. */
+/* Active: tinted row, primary label and an indicator bar, so color is not the only cue. */
 .link[aria-current='page'] {
 	background: var(--surface-hover);
 	color: var(--primary);
 	font-weight: 700;
-	box-shadow: inset 0 -2px 0 var(--primary);
 }
-.link[aria-current='page'] .icon {
+.link[aria-current='page']::before {
+	content: '';
+	position: absolute;
+	inset-inline: var(--space-3);
+	inset-block-end: 0;
+	block-size: 2px;
+	border-radius: var(--radius-pill);
 	background: var(--primary);
-	color: var(--on-primary);
 }
 @media (min-width: 60rem) {
 	.groupLabel {
@@ -85,12 +77,18 @@
 	.list {
 		display: grid;
 	}
-	.link[aria-current='page'] {
-		box-shadow: inset 3px 0 0 var(--primary);
+	.link[aria-current='page']::before {
+		inset-inline: 0 auto;
+		inset-block: var(--space-2);
+		inline-size: 3px;
+		block-size: auto;
 	}
 }
 @media (forced-colors: active) {
 	.link[aria-current='page'] {
 		outline: 2px solid CanvasText;
+	}
+	.link[aria-current='page']::before {
+		background: Highlight;
 	}
 }
