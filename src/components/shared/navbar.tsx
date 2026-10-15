@@ -1,28 +1,28 @@
-'use client';
-
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { HugeiconsIcon } from '@hugeicons/react';
-
-import { isCurrentDestination, visibleNavigation } from '@/constants/navigation';
+import { LogoutButton } from '@/components/auth/logout-button';
+import { WorkspaceBreadcrumb } from './workspace-breadcrumb';
 import styles from './navbar.module.css';
 
-export function Navbar({ permissions }: { permissions: readonly string[] }) {
-	const pathname = usePathname();
+/** Top bar: where the operator is (breadcrumb) and who is signed in, with Sign out. */
+export function Navbar({
+	displayName,
+	className = '',
+}: {
+	readonly displayName: string;
+	/** Lets the shell place the navbar in its grid without reaching into this markup. */
+	readonly className?: string;
+}) {
 	return (
-		<nav aria-label="Platform navigation" className={styles.nav}>
-			{visibleNavigation(permissions).map((item) => (
-				<Link
-					key={item.key}
-					href={item.href}
-					prefetch={false}
-					aria-current={isCurrentDestination(pathname, item.href) ? 'page' : undefined}
-					className={styles.link}
-				>
-					<HugeiconsIcon icon={item.icon} size={20} color="currentColor" aria-hidden="true" />
-					{item.label}
-				</Link>
-			))}
-		</nav>
+		<header className={`${styles.navbar} ${className}`}>
+			<div className={styles.location}>
+				<WorkspaceBreadcrumb />
+			</div>
+			<div className={styles.account}>
+				<div className={styles.identity}>
+					<p className={styles.name}>{displayName}</p>
+					<p className={styles.label}>Platform staff</p>
+				</div>
+				<LogoutButton />
+			</div>
+		</header>
 	);
 }
