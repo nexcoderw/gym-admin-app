@@ -321,7 +321,13 @@ allows. Motion respects reduced-motion preferences; no automatic dark theme or f
 
 ## Shared controls and login
 
-Login uses one centered, responsive sign-in panel with concise copy rather than a marketing column.
+Login and verification share `AuthShell` (`components/auth/auth-shell.tsx`). On wide screens a solid
+primary brand panel holds the inverse logo, one factual statement, a real three-step sign-in
+progress tracker (Sign in → Verify it’s you → Open the platform, with `aria-current="step"` and
+completed steps marked) and the private-workspace note. It has no marketing claims or metrics, and
+only decorative rings. The form sits on a clean white surface beside it. Compact screens show the
+logo above the form and the note below it. Both forms carry a "Step 1/2 of 2" eyebrow; verification
+methods are icon cards that keep their native radio controls.
 Both password and MFA steps retain their existing validation and authentication behavior.
 Every text Input has a required decorative `icon` alongside its visible label. Buttons also require
 an `icon`; shared Button owns rendering it and replaces it with one consistent spinner when pending.
