@@ -1,3 +1,4 @@
+/* Each card is a size container so its content adapts to the column width it receives. */
 .card {
 	position: relative;
 	display: flex;
@@ -5,7 +6,8 @@
 	gap: var(--space-4);
 	block-size: 100%;
 	min-inline-size: 0;
-	padding: var(--space-5);
+	padding: var(--space-4);
+	container-type: inline-size;
 	border: 1px solid var(--border);
 	border-radius: var(--radius-panel);
 	background: var(--surface);
@@ -22,6 +24,7 @@
 }
 .top {
 	display: flex;
+	flex-wrap: wrap;
 	align-items: center;
 	justify-content: space-between;
 	gap: var(--space-3);
@@ -122,6 +125,21 @@
 .edit {
 	position: relative;
 	z-index: 1;
+}
+/* Narrow five-column cards (about 1280px screens): keep the badge beside the initials and stack
+   the dates rather than breaking each date across lines. */
+@container (max-width: 10rem) {
+	.top {
+		gap: var(--space-2);
+	}
+	.monogram {
+		inline-size: 2.25rem;
+		block-size: 2.25rem;
+	}
+	.meta {
+		grid-template-columns: minmax(0, 1fr);
+		gap: var(--space-2);
+	}
 }
 @media (forced-colors: active) {
 	.card {
