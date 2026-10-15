@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { createOrganizationSchema, organizationActionSchema, organizationEtagSchema, organizationListQuerySchema, organizationSchema, reservedOrganizationSlugs, updateOrganizationSchema } from '@/lib/contracts/organizations';
+import { createOrganizationSchema, organizationActionSchema, organizationEtagSchema, organizationListQuerySchema, organizationSchema, organizationTrailLimit, reservedOrganizationSlugs, updateOrganizationSchema } from '@/lib/contracts/organizations';
 import { organization, organizationEtag } from './organization-fixtures';
 
 describe('organization contract parity', () => {
@@ -32,6 +32,24 @@ describe('organization contract parity', () => {
 		expect(organizationListQuerySchema.parse({})).toEqual({ limit: 20 });
 		expect(organizationListQuerySchema.parse({ limit: '50', status: 'ACTIVE', cursor: organization.id })).toEqual({ limit: 50, status: 'ACTIVE', cursor: organization.id });
 		for (const input of [{ limit: '01' }, { limit: '51' }, { limit: '20\n' }, { cursor: '../login' }, { offset: '20' }, { status: ['ACTIVE', 'PENDING'] }]) {
+			expect(organizationListQuerySchema.safeParse(input).success).toBe(false);
+		}
+	});
+	it('accepts a bounded frontend page trail only alongside a cursor', () => {
+		const earlier = '2b9e8f4a-1c3d-4e5f-8a7b-9c0d1e2f3a4b';
+		expect(organizationListQuerySchema.parse({ cursor: organization.id, trail: `${earlier},${earlier}` })).toEqual({
+			limit: 20,
+			cursor: organization.id,
+			trail: [earlier, earlier],
+		});
+		const tooLong = Array.from({ length: organizationTrailLimit + 1 }, () => earlier).join(',');
+		for (const input of [
+			{ trail: earlier },
+			{ cursor: organization.id, trail: '' },
+			{ cursor: organization.id, trail: 'not-a-uuid' },
+			{ cursor: organization.id, trail: tooLong },
+			{ cursor: organization.id, trail: [earlier, earlier] },
+		]) {
 			expect(organizationListQuerySchema.safeParse(input).success).toBe(false);
 		}
 	});
