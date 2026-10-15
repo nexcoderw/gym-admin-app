@@ -38,6 +38,7 @@
 	--shadow-raised: 0 6px 16px rgb(17 17 17 / 8%);
 	--shadow-overlay: 0 16px 40px rgb(17 17 17 / 16%);
 	--backdrop: rgb(17 17 17 / 45%);
+	--backdrop-blur: 6px;
 	--layer-toast: 30;
 	--font-heading: var(--font-albert-sans), sans-serif;
 	--font-body: var(--font-dm-sans), sans-serif;

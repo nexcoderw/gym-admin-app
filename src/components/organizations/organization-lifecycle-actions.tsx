@@ -39,7 +39,7 @@ const actions = {
 	suspension: {
 		trigger: 'Suspend gym',
 		verb: 'Suspend',
-		confirm: 'Confirm suspension',
+		confirm: 'Confirm',
 		icon: PauseIcon,
 		next: 'SUSPENDED',
 		description:
