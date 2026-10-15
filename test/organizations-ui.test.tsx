@@ -288,17 +288,86 @@ describe('organization card registry', () => {
 				permissions={allPermissions}
 			/>,
 		);
-		expect(screen.getByRole('button', { name: 'Pending' }).getAttribute('aria-pressed')).toBe(
-			'true',
-		);
 		fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
 		expect(router.replace).toHaveBeenCalledWith(
 			`/organizations?limit=20&status=PENDING&cursor=${organization.id}`,
 		);
+		const trigger = screen.getByRole('button', { name: 'Filter by status: Pending' });
+		fireEvent.click(trigger);
 		fireEvent.click(screen.getByRole('button', { name: 'Active' }));
 		expect(router.replace).toHaveBeenLastCalledWith('/organizations?limit=20&status=ACTIVE');
+		expect(screen.queryByRole('group', { name: 'Filter by lifecycle status' })).toBeNull();
+		expect(document.activeElement).toBe(trigger);
+		fireEvent.click(trigger);
 		fireEvent.click(screen.getByRole('button', { name: 'All' }));
 		expect(router.replace).toHaveBeenLastCalledWith('/organizations?limit=20');
+	});
+
+	it('opens the status dropdown on the current option and supports arrows and Escape', () => {
+		withToasts(
+			<OrganizationList
+				data={{ items: [organization], nextCursor: null }}
+				query={{ limit: 20, status: 'PENDING' }}
+				permissions={allPermissions}
+			/>,
+		);
+		const trigger = screen.getByRole('button', { name: 'Filter by status: Pending' });
+		expect(trigger.getAttribute('aria-expanded')).toBe('false');
+		fireEvent.click(trigger);
+		expect(trigger.getAttribute('aria-expanded')).toBe('true');
+		const menu = screen.getByRole('group', { name: 'Filter by lifecycle status' });
+		const options = within(menu).getAllByRole('button');
+		expect(options.map((option) => option.textContent)).toEqual([
+			'All',
+			'Pending',
+			'Active',
+			'Suspended',
+			'Archived',
+		]);
+		const pending = within(menu).getByRole('button', { name: 'Pending' });
+		expect(pending.getAttribute('aria-pressed')).toBe('true');
+		expect(document.activeElement).toBe(pending);
+		fireEvent.keyDown(pending, { key: 'ArrowDown' });
+		expect(document.activeElement).toBe(within(menu).getByRole('button', { name: 'Active' }));
+		fireEvent.keyDown(document.activeElement ?? menu, { key: 'Escape' });
+		expect(screen.queryByRole('group', { name: 'Filter by lifecycle status' })).toBeNull();
+		expect(document.activeElement).toBe(trigger);
+		expect(router.replace).not.toHaveBeenCalled();
+	});
+
+	it('searches only the loaded cards by name or slug, without requests or navigation', () => {
+		const second = {
+			...organization,
+			id: '4f1c51c4-2fd1-4b9f-9a8e-0c2f6b3c8d11',
+			name: 'Kigali Fit',
+			slug: 'kigali-fit',
+		};
+		renderList([organization, second]);
+		const toggle = screen.getByRole('button', { name: 'Search gyms' });
+		expect(toggle.getAttribute('aria-expanded')).toBe('false');
+		expect(screen.queryByRole('searchbox')).toBeNull();
+		fireEvent.click(toggle);
+		const field = screen.getByRole('searchbox', { name: 'Search gyms in this view' });
+		expect(document.activeElement).toBe(field);
+		fireEvent.change(field, { target: { value: 'KIGALI' } });
+		expect(within(screen.getByRole('list')).getAllByRole('article')).toHaveLength(1);
+		expect(screen.getByRole('status').textContent).toBe('1 of 2 gyms in this view match “KIGALI”');
+		fireEvent.change(field, { target: { value: 'kigali-' } });
+		expect(screen.getByRole('button', { name: 'Kigali Fit' })).toBeDefined();
+		expect(screen.queryByRole('button', { name: 'Soho Gym' })).toBeNull();
+		fireEvent.change(field, { target: { value: 'zzz' } });
+		expect(screen.getByText('No gyms in this view match “zzz”')).toBeDefined();
+		fireEvent.click(screen.getByRole('button', { name: 'Clear search' }));
+		expect(within(screen.getByRole('list')).getAllByRole('article')).toHaveLength(2);
+		fireEvent.change(field, { target: { value: 'soho' } });
+		fireEvent.keyDown(field, { key: 'Escape' });
+		expect(field).toHaveProperty('value', '');
+		expect(screen.getByRole('searchbox')).toBe(field);
+		fireEvent.keyDown(field, { key: 'Escape' });
+		expect(screen.queryByRole('searchbox')).toBeNull();
+		expect(document.activeElement).toBe(toggle);
+		expect(fetchMock).not.toHaveBeenCalled();
+		expect(router.replace).not.toHaveBeenCalled();
 	});
 
 	it('registers in a dialog, then closes it, shows a success toast and refreshes', async () => {
