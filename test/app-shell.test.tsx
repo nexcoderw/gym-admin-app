@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { AppShell } from '@/components/shared/app-shell';
 import { Sidebar } from '@/components/shared/sidebar';
-import { isCurrentDestination } from '@/constants/navigation';
+import { currentDestination, isCurrentDestination } from '@/constants/navigation';
 import { organizationPermissions } from '@/lib/contracts/organizations';
 
 const location = vi.hoisted(() => ({ pathname: '/organizations' }));
@@ -26,7 +26,9 @@ describe('workspace shell', () => {
 			</AppShell>,
 		);
 		const topbar = screen.getByRole('banner');
-		expect(within(topbar).getByText('Administration workspace')).toBeDefined();
+		const breadcrumb = within(topbar).getByRole('navigation', { name: 'Breadcrumb' });
+		expect(within(breadcrumb).getByText('NEXCODE Gym')).toBeDefined();
+		expect(within(breadcrumb).getByText('Organizations').getAttribute('aria-current')).toBe('page');
 		expect(within(topbar).getByText('Fictional Operator')).toBeDefined();
 		expect(within(topbar).getByText('Platform staff')).toBeDefined();
 		expect(within(topbar).getByRole('button', { name: 'Sign out' })).toBeDefined();
@@ -57,5 +59,18 @@ describe('workspace shell', () => {
 		).toBeNull();
 		expect(isCurrentDestination('/organizations/1d899ab0', '/organizations')).toBe(true);
 		expect(isCurrentDestination('/organizations-archive', '/organizations')).toBe(false);
+	});
+
+	it('shows only the workspace name in the breadcrumb outside a registered destination', () => {
+		location.pathname = '/organizations-archive';
+		render(
+			<AppShell permissions={allDestinations} displayName="Fictional Operator">
+				<h1>Unregistered page</h1>
+			</AppShell>,
+		);
+		const breadcrumb = screen.getByRole('navigation', { name: 'Breadcrumb' });
+		expect(within(breadcrumb).getAllByRole('listitem')).toHaveLength(1);
+		expect(within(breadcrumb).getByText('NEXCODE Gym')).toBeDefined();
+		expect(currentDestination('/dashboard')?.label).toBe('Overview');
 	});
 });
