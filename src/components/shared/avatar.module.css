@@ -1,0 +1,27 @@
+.avatar {
+	display: grid;
+	place-items: center;
+	flex: 0 0 auto;
+	inline-size: 2.25rem;
+	block-size: 2.25rem;
+	border-radius: var(--radius-pill);
+	background: var(--surface-hover);
+	color: var(--primary);
+	font-family: var(--font-heading);
+	font-size: var(--text-small);
+	font-weight: 700;
+	letter-spacing: 0.02em;
+	line-height: 1;
+}
+.avatar[data-shape='rounded'] {
+	border-radius: var(--radius-control);
+}
+.avatar[data-tone='solid'] {
+	background: var(--primary);
+	color: var(--on-primary);
+}
+@media (forced-colors: active) {
+	.avatar {
+		border: 1px solid CanvasText;
+	}
+}
