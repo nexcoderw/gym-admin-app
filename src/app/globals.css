@@ -49,7 +49,6 @@
 	--text-title: 1.5rem;
 	--text-metric: 1.75rem;
 	--control-height: 3rem;
-	--content-max: 72rem;
 	--sidebar-width: 15rem;
 	--gutter: clamp(1rem, 3vw, 2rem);
 	--motion-fast: 120ms;
