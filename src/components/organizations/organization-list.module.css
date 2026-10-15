@@ -52,8 +52,9 @@
 		grid-template-columns: repeat(4, minmax(0, 1fr));
 	}
 }
-/* Five per row from about a 1264px window (sidebar included); capped at five on wider screens. */
-@container (min-width: 60rem) {
+/* Five per row from about a 1256px window (16.5rem sidebar included); capped at five on wider
+   screens. Narrow five-column cards switch to their compact layout. */
+@container (min-width: 58rem) {
 	.grid {
 		grid-template-columns: repeat(5, minmax(0, 1fr));
 	}
