@@ -1,7 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { ArrowLeft01Icon, Key01Icon, Mail01Icon, ShieldKeyIcon } from '@hugeicons/core-free-icons';
+import {
+	ArrowLeft01Icon,
+	Key01Icon,
+	Mail01Icon,
+	ShieldKeyIcon,
+	SmartPhone01Icon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
@@ -10,6 +17,12 @@ import { emailOtpSentSchema, verifiedSchema, type MfaChallenge } from '@/lib/con
 import { post } from '@/lib/client/mutations';
 import { readLiveSession } from '@/lib/client/session';
 import styles from './mfa-form.module.css';
+
+const methodDetails = {
+	totp: { label: 'Authenticator', icon: SmartPhone01Icon },
+	recovery_code: { label: 'Recovery code', icon: Key01Icon },
+	email_otp: { label: 'Email code', icon: Mail01Icon },
+} as const;
 
 export function MfaForm({
 	challenge,
@@ -73,7 +86,9 @@ export function MfaForm({
 			setRetryAt(Date.now() + sent.retryAfterSeconds * 1000);
 		} catch (failure) {
 			if (mounted.current)
-				setError(failure instanceof Error ? failure.message : 'Email could not be sent. Try again.');
+				setError(
+					failure instanceof Error ? failure.message : 'Email could not be sent. Try again.',
+				);
 		} finally {
 			inFlight.current = false;
 			if (mounted.current) setSending(false);
@@ -129,7 +144,7 @@ export function MfaForm({
 			aria-busy={busy}
 		>
 			<div className={styles.heading}>
-				<p className={styles.eyebrow}>SIGN-IN VERIFICATION</p>
+				<p className={styles.eyebrow}>Step 2 of 2</p>
 				<h1 ref={heading} tabIndex={-1}>
 					Verify it’s you
 				</h1>
@@ -142,22 +157,21 @@ export function MfaForm({
 						.filter((value) => challenge.methods.includes(value))
 						.map((value) => (
 							<label key={value} data-selected={method === value}>
-								<input
-									type="radio"
-									name="method"
-									value={value}
-									checked={method === value}
-									onChange={() => {
-										setMethod(value);
-										setError('');
-									}}
-								/>
-								<span>
-									{value === 'totp'
-										? 'Authenticator'
-										: value === 'recovery_code'
-											? 'Recovery code'
-											: 'Email code'}
+								<span className={styles.methodIcon} aria-hidden="true">
+									<HugeiconsIcon icon={methodDetails[value].icon} size={20} color="currentColor" />
+								</span>
+								<span className={styles.methodChoice}>
+									<input
+										type="radio"
+										name="method"
+										value={value}
+										checked={method === value}
+										onChange={() => {
+											setMethod(value);
+											setError('');
+										}}
+									/>
+									<span>{methodDetails[value].label}</span>
 								</span>
 							</label>
 						))}
