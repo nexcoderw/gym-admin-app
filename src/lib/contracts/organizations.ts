@@ -52,6 +52,8 @@ export const organizationListSchema = z.object({
 	nextCursor: organizationIdSchema.nullable(),
 }).strict().refine((value) => value.nextCursor === null || value.items.at(-1)?.id === value.nextCursor,
 	'Pagination must use the last emitted organization UUID.');
+/** Earlier pages' cursors kept in the URL; capped so a shared link stays a sensible length. */
+export const organizationTrailLimit = 49;
 export const organizationListQuerySchema = z.object({
 	limit: z.preprocess(
 		(value) => typeof value === 'string' && /^[1-9][0-9]*(?![\s\S])/u.test(value) ? Number(value) : value,
@@ -59,7 +61,15 @@ export const organizationListQuerySchema = z.object({
 	),
 	status: organizationStatusSchema.optional(),
 	cursor: organizationIdSchema.optional(),
-}).strict();
+	// Frontend-only and never forwarded to Nest: the API pages forward only, so Previous and
+	// page numbers replay these already-visited cursors instead of guessing offsets.
+	// Only a single comma-separated value: a repeated `trail` key arrives as an array and fails.
+	trail: z.string()
+		.transform((value) => value.split(','))
+		.pipe(z.array(organizationIdSchema).min(1).max(organizationTrailLimit))
+		.optional(),
+}).strict().refine((value) => value.trail === undefined || value.cursor !== undefined,
+	'A page trail requires a cursor.');
 export const createOrganizationSchema = z.object({ name: nameSchema, slug: slugSchema }).strict();
 export const updateOrganizationSchema = z.object({ name: nameSchema }).strict();
 export const organizationActionSchema = z.object({ expectedUpdatedAt: organizationTimestampSchema }).strict();
