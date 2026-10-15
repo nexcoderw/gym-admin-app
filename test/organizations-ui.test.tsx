@@ -288,7 +288,7 @@ describe('organization card registry', () => {
 				permissions={allPermissions}
 			/>,
 		);
-		fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
+		fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
 		expect(router.replace).toHaveBeenCalledWith(
 			`/organizations?limit=20&status=PENDING&cursor=${organization.id}`,
 		);
@@ -301,6 +301,38 @@ describe('organization card registry', () => {
 		fireEvent.click(trigger);
 		fireEvent.click(screen.getByRole('button', { name: 'All' }));
 		expect(router.replace).toHaveBeenLastCalledWith('/organizations?limit=20');
+	});
+
+	it('numbers cursor pages from the URL trail and returns to any visited page', () => {
+		const page2 = '2b9e8f4a-1c3d-4e5f-8a7b-9c0d1e2f3a4b';
+		const page3 = '3c0f9a5b-2d4e-4f6a-9b8c-0d1e2f3a4b5c';
+		const page4 = '4d1a0b6c-3e5f-4a7b-8c9d-1e2f3a4b5c6d';
+		withToasts(
+			<OrganizationList
+				data={{ items: [organization], nextCursor: page4 }}
+				query={{ limit: 20, cursor: page3, trail: [page2] }}
+				permissions={allPermissions}
+			/>,
+		);
+		const pages = screen.getByRole('navigation', { name: 'Organization pages' });
+		expect(within(pages).getByRole('button', { name: 'Page 3' }).getAttribute('aria-current')).toBe(
+			'page',
+		);
+		expect(within(pages).getByText('41–41')).toBeDefined();
+		fireEvent.click(within(pages).getByRole('button', { name: 'Next page' }));
+		expect(router.replace).toHaveBeenLastCalledWith(
+			`/organizations?limit=20&cursor=${page4}&trail=${page2}%2C${page3}`,
+		);
+		fireEvent.click(within(pages).getByRole('button', { name: 'Previous page' }));
+		expect(router.replace).toHaveBeenLastCalledWith(`/organizations?limit=20&cursor=${page2}`);
+		fireEvent.click(within(pages).getByRole('button', { name: 'Page 1' }));
+		expect(router.replace).toHaveBeenLastCalledWith('/organizations?limit=20');
+		expect(within(pages).queryByRole('button', { name: 'Page 5' })).toBeNull();
+	});
+
+	it('hides pagination when every gym fits on one page', () => {
+		renderList();
+		expect(screen.queryByRole('navigation', { name: 'Organization pages' })).toBeNull();
 	});
 
 	it('opens the status dropdown on the current option and supports arrows and Escape', () => {
