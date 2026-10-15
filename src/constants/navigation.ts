@@ -25,3 +25,13 @@ export const navigation = [
 export function visibleNavigation(permissions: readonly string[]) {
 	return navigation.filter((item) => permissions.includes(item.requiredPermission));
 }
+
+/** Exact or nested-path match, so `/organizations-archive` never activates `/organizations`. */
+export function isCurrentDestination(pathname: string, href: string): boolean {
+	return pathname === href || pathname.startsWith(`${href}/`);
+}
+
+/** Location label only, for the breadcrumb; it never grants access to the destination. */
+export function currentDestination(pathname: string) {
+	return navigation.find((item) => isCurrentDestination(pathname, item.href));
+}
