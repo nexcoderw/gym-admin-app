@@ -25,4 +25,7 @@ export const browserApi = {
 	activateOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/activation`,
 	suspendOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/suspension`,
 	archiveOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/archival`,
+	ownerInvitations: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/owner-invitations`,
+	revokeOwnerInvitation: (id: string, invitationId: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/owner-invitations/${encodeURIComponent(invitationId)}/revocation`,
 } as const;
