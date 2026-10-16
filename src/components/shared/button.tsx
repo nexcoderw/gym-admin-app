@@ -8,7 +8,8 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 	readonly pending?: boolean;
 	readonly icon: IconSvgElement;
 	readonly variant?: 'primary' | 'secondary';
-	readonly width?: 'full' | 'medium' | 'small';
+	readonly size?: 'md' | 'sm';
+	readonly width?: 'full' | 'medium' | 'small' | 'auto';
 	readonly children: ReactNode;
 }
 
@@ -16,6 +17,7 @@ export function Button({
 	pending = false,
 	icon,
 	variant = 'primary',
+	size = 'md',
 	width = 'medium',
 	disabled,
 	className = '',
@@ -30,6 +32,7 @@ export function Button({
 			disabled={disabled || pending}
 			aria-busy={pending}
 			data-variant={variant}
+			data-size={size}
 			data-width={width}
 			className={`${styles.button} ${className}`}
 		>
