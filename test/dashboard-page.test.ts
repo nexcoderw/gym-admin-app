@@ -7,7 +7,10 @@ import DashboardPage from '@/app/dashboard/page';
 import { requirePlatformSession, serverContext } from '@/lib/server/session';
 import { session, summary, token, csrf } from './fixtures';
 
-vi.mock('@/lib/server/session', () => ({ serverContext: vi.fn(), requirePlatformSession: vi.fn() }));
+vi.mock('@/lib/server/session', () => ({
+	serverContext: vi.fn(),
+	requirePlatformSession: vi.fn(),
+}));
 vi.mock('@/components/shared/app-shell', () => ({
 	AppShell: ({ children }: { children: ReactNode }) =>
 		createElement('div', { 'data-workspace-shell': true }, children),
