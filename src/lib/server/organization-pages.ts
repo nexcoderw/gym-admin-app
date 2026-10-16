@@ -7,11 +7,18 @@ import { BffError } from './http/errors';
 import { requirePlatformSession } from './session';
 
 /** Keeps Next redirects and rendering out of the data-loading error handler. */
-export async function organizationPage<T>(permission: OrganizationPermission, load: () => Promise<T>) {
+export async function organizationPage<T>(
+	permission: OrganizationPermission,
+	load: () => Promise<T>,
+) {
 	try {
 		const session = await requirePlatformSession();
 		if (!session.permissions.includes(permission)) {
-			throw new BffError(403, 'ACCESS_DENIED', 'Your account does not have the required organization permission.');
+			throw new BffError(
+				403,
+				'ACCESS_DENIED',
+				'Your account does not have the required organization permission.',
+			);
 		}
 		return {
 			ok: true,
