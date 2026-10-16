@@ -8,11 +8,15 @@ test.describe('owner invitation management with controlled browser responses', (
 	test.use({ storageState: process.env.PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE });
 	test.beforeEach(() => {
 		if (!process.env.PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE) {
-			throw new Error('Provide an approved disposable administrator session with organization-read and all three owner-invitation permissions.');
+			throw new Error(
+				'Provide an approved disposable administrator session with organization-read and all three owner-invitation permissions.',
+			);
 		}
 	});
 
-	test('opens, creates, reviews and revokes a fictional invitation without sending live mutations', async ({ page }) => {
+	test('opens, creates, reviews and revokes a fictional invitation without sending live mutations', async ({
+		page,
+	}) => {
 		let row: typeof ownerInvitation | null = null;
 		await page.route('**/api/organizations/*/owner-invitations**', async (route) => {
 			const request = route.request();
@@ -25,7 +29,10 @@ test.describe('owner invitation management with controlled browser responses', (
 				row = { ...row, status: 'REVOKED', revokedAt: '2026-10-16T09:00:00.000Z' };
 				await route.fulfill({ json: row });
 			} else if (request.method() === 'POST') {
-				expect(request.postDataJSON()).toEqual({ displayName: 'Aline Uwase', email: 'aline@example.com' });
+				expect(request.postDataJSON()).toEqual({
+					displayName: 'Aline Uwase',
+					email: 'aline@example.com',
+				});
 				row = { ...ownerInvitation, organizationId };
 				await route.fulfill({ status: 201, json: row });
 			} else {
@@ -44,7 +51,9 @@ test.describe('owner invitation management with controlled browser responses', (
 		await page.getByLabel('Owner full name').fill('Aline Uwase');
 		await page.getByLabel('Owner email address').fill('aline@example.com');
 		await page.getByLabel('Owner email address').press('Enter');
-		await expect(page.getByText('Owner invitation created. Email delivery is not enabled yet.')).toBeVisible();
+		await expect(
+			page.getByText('Owner invitation created. Send it from the invitation list when ready.'),
+		).toBeVisible();
 		await expect(page.getByText('aline@example.com', { exact: true })).toBeVisible();
 		await page.getByRole('button', { name: 'Revoke invitation' }).click();
 		await expect(page.getByRole('button', { name: 'Cancel', exact: true })).toBeFocused();
@@ -61,38 +70,66 @@ test.describe('owner invitation management with controlled browser responses', (
 });
 
 const restrictedProfiles = [
-	{ name: 'create only', state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_CREATE_ONLY_STATE, canRead: false, canCreate: true, canManage: true },
-	{ name: 'read only', state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_READ_ONLY_STATE, canRead: true, canCreate: false, canManage: true },
-	{ name: 'no invitation access', state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_NO_ACCESS_STATE, canRead: false, canCreate: false, canManage: false },
+	{
+		name: 'create only',
+		state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_CREATE_ONLY_STATE,
+		canRead: false,
+		canCreate: true,
+		canManage: true,
+	},
+	{
+		name: 'read only',
+		state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_READ_ONLY_STATE,
+		canRead: true,
+		canCreate: false,
+		canManage: true,
+	},
+	{
+		name: 'no invitation access',
+		state: process.env.PLAYWRIGHT_OWNER_INVITATIONS_NO_ACCESS_STATE,
+		canRead: false,
+		canCreate: false,
+		canManage: false,
+	},
 ] as const;
 
 for (const profile of restrictedProfiles) {
 	test.describe(`owner invitation ${profile.name} permission profile`, () => {
 		test.use({ storageState: profile.state });
 		test('keeps invitation permissions separate', async ({ page }) => {
-			if (!profile.state) throw new Error(`Provide an approved ${profile.name} disposable session file; see README.`);
+			if (!profile.state)
+				throw new Error(`Provide an approved ${profile.name} disposable session file; see README.`);
 			let reads = 0;
 			await page.route('**/api/organizations/*/owner-invitations**', async (route) => {
-				if (!profile.canRead) throw new Error('Invitation history was fetched without read permission.');
+				if (!profile.canRead)
+					throw new Error('Invitation history was fetched without read permission.');
 				reads += 1;
 				const organizationId = new URL(route.request().url()).pathname.split('/')[3];
-				await route.fulfill({ json: { items: [{ ...ownerInvitation, organizationId }], nextCursor: null } });
+				await route.fulfill({
+					json: { items: [{ ...ownerInvitation, organizationId }], nextCursor: null },
+				});
 			});
 			await page.goto('/organizations');
-			await page.getByRole('region', { name: 'Organization registry' }).getByRole('button', { name: gymName, exact: true }).click();
+			await page
+				.getByRole('region', { name: 'Organization registry' })
+				.getByRole('button', { name: gymName, exact: true })
+				.click();
 			if (!profile.canManage) {
 				await expect(page.getByRole('button', { name: 'Manage owner invitations' })).toHaveCount(0);
 				expect(reads).toBe(0);
 				return;
 			}
 			await page.getByRole('button', { name: 'Manage owner invitations' }).click();
-			if (profile.canRead) await expect(page.getByText('aline@example.com', { exact: true })).toBeVisible();
+			if (profile.canRead)
+				await expect(page.getByText('aline@example.com', { exact: true })).toBeVisible();
 			else {
 				await expect(page.getByText('Invitation history needs permission')).toBeVisible();
 				expect(reads).toBe(0);
 				await expect(page.getByText('aline@example.com', { exact: true })).toHaveCount(0);
 			}
-			await expect(page.getByRole('button', { name: 'Create invitation' })).toHaveCount(profile.canCreate ? 1 : 0);
+			await expect(page.getByRole('button', { name: 'Create invitation' })).toHaveCount(
+				profile.canCreate ? 1 : 0,
+			);
 			await expect(page.getByRole('button', { name: 'Revoke invitation' })).toHaveCount(0);
 		});
 	});
