@@ -22,35 +22,64 @@ beforeEach(() => {
 	vi.stubGlobal('fetch', fetchMock);
 	document.cookie = `nexcode-platform-csrf=${csrf}; path=/`;
 	Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-		configurable: true, value: function (this: HTMLDialogElement) { this.open = true; },
+		configurable: true,
+		value: function (this: HTMLDialogElement) {
+			this.open = true;
+		},
 	});
 	Object.defineProperty(HTMLDialogElement.prototype, 'close', {
-		configurable: true, value: function (this: HTMLDialogElement) { this.open = false; },
+		configurable: true,
+		value: function (this: HTMLDialogElement) {
+			this.open = false;
+		},
 	});
 	fetchMock.mockImplementation(async () => Response.json({ items: [], nextCursor: null }));
 });
-afterEach(() => { cleanup(); vi.unstubAllGlobals(); });
+afterEach(() => {
+	cleanup();
+	vi.unstubAllGlobals();
+});
 
 function management(permissions: readonly string[] = all) {
-	return render(<ToastProvider><OwnerInvitationsDialog organization={organization} permissions={permissions} onClose={vi.fn()} /></ToastProvider>);
+	return render(
+		<ToastProvider>
+			<OwnerInvitationsDialog
+				organization={organization}
+				permissions={permissions}
+				onClose={vi.fn()}
+			/>
+		</ToastProvider>,
+	);
 }
 async function openCreation() {
 	fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
 	expect(document.activeElement).toBe(screen.getByLabelText('Owner full name'));
 	fireEvent.change(screen.getByLabelText('Owner full name'), { target: { value: 'Aline Uwase' } });
-	fireEvent.change(screen.getByLabelText('Owner email address'), { target: { value: 'ALINE@EXAMPLE.COM' } });
+	fireEvent.change(screen.getByLabelText('Owner email address'), {
+		target: { value: 'ALINE@EXAMPLE.COM' },
+	});
 }
 
 describe('owner invitation dialogs', () => {
 	it('loads only on explicit management entry and restores focus through gym details', async () => {
-		render(<ToastProvider><OrganizationList data={{ items: [organization], nextCursor: null }} query={{ limit: 20 }} permissions={all} /></ToastProvider>);
+		render(
+			<ToastProvider>
+				<OrganizationList
+					data={{ items: [organization], nextCursor: null }}
+					query={{ limit: 20 }}
+					permissions={all}
+				/>
+			</ToastProvider>,
+		);
 		fireEvent.click(screen.getByRole('button', { name: organization.name }));
 		expect(fetchMock).not.toHaveBeenCalled();
 		fireEvent.click(screen.getByRole('button', { name: 'Manage owner invitations' }));
 		expect(await screen.findByText('No owner invitations yet')).toBeTruthy();
 		expect(screen.getAllByRole('dialog')).toHaveLength(1);
 		fireEvent.click(screen.getByRole('button', { name: 'Back to gym' }));
-		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Manage owner invitations' }));
+		expect(document.activeElement).toBe(
+			screen.getByRole('button', { name: 'Manage owner invitations' }),
+		);
 		fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
 		expect(document.activeElement).toBe(screen.getByRole('button', { name: organization.name }));
 	});
@@ -62,10 +91,17 @@ describe('owner invitation dialogs', () => {
 		await openCreation();
 		fetchMock.mockResolvedValueOnce(Response.json(ownerInvitation, { status: 201 }));
 		fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
-		expect(await screen.findByText('Owner invitation created. Email delivery is not enabled yet.')).toBeTruthy();
+		expect(
+			await screen.findByText(
+				'Owner invitation created. Send it from the invitation list when ready.',
+			),
+		).toBeTruthy();
 		expect(fetchMock).toHaveBeenCalledOnce();
 		expect(fetchMock.mock.calls[0]?.[1]?.method).toBe('POST');
-		expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({ displayName: 'Aline Uwase', email: 'aline@example.com' });
+		expect(JSON.parse(String(fetchMock.mock.calls[0]?.[1]?.body))).toEqual({
+			displayName: 'Aline Uwase',
+			email: 'aline@example.com',
+		});
 	});
 
 	it('hides creation and revocation independently from read permission', async () => {
@@ -83,9 +119,18 @@ describe('owner invitation dialogs', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
 		expect(await screen.findByRole('alert')).toBeTruthy();
 		expect(fetchMock).not.toHaveBeenCalled();
-		fireEvent.change(screen.getByLabelText('Owner full name'), { target: { value: 'Aline Uwase' } });
-		let finish: (response: Response) => void = () => { throw new Error('Submission was not started.'); };
-		fetchMock.mockImplementationOnce(() => new Promise<Response>((resolve) => { finish = resolve; }));
+		fireEvent.change(screen.getByLabelText('Owner full name'), {
+			target: { value: 'Aline Uwase' },
+		});
+		let finish: (response: Response) => void = () => {
+			throw new Error('Submission was not started.');
+		};
+		fetchMock.mockImplementationOnce(
+			() =>
+				new Promise<Response>((resolve) => {
+					finish = resolve;
+				}),
+		);
 		const submit = screen.getByRole('button', { name: 'Create invitation' });
 		fireEvent.click(submit);
 		fireEvent.click(submit);
@@ -94,26 +139,40 @@ describe('owner invitation dialogs', () => {
 		expect(submit.querySelector('[data-loading-indicator]')).toBeTruthy();
 		expect(fetchMock).toHaveBeenCalledOnce();
 		await act(async () => finish(Response.json(ownerInvitation, { status: 201 })));
-		expect(await screen.findByText('Owner invitation created. Email delivery is not enabled yet.')).toBeTruthy();
+		expect(
+			await screen.findByText(
+				'Owner invitation created. Send it from the invitation list when ready.',
+			),
+		).toBeTruthy();
 	});
 
 	it.each([
 		[409, 'OWNER_INVITATION_OUTSTANDING_CONFLICT', 'already exists'],
 		[503, 'OWNER_INVITATION_AUDIT_UNAVAILABLE', 'No success has been confirmed'],
-	] as const)('preserves form values on %s without false success', async (status, code, message) => {
-		management([ownerInvitationPermissions.create]);
-		await openCreation();
-		fetchMock.mockResolvedValueOnce(Response.json({ error: { code } }, { status }));
-		fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
-		expect((await screen.findByRole('alert')).textContent).toContain(message);
-		expect(screen.getByLabelText('Owner full name')).toHaveProperty('value', 'Aline Uwase');
-		expect(screen.queryByText('Owner invitation created. Email delivery is not enabled yet.')).toBeNull();
-	});
+	] as const)(
+		'preserves form values on %s without false success',
+		async (status, code, message) => {
+			management([ownerInvitationPermissions.create]);
+			await openCreation();
+			fetchMock.mockResolvedValueOnce(Response.json({ error: { code } }, { status }));
+			fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
+			expect((await screen.findByRole('alert')).textContent).toContain(message);
+			expect(screen.getByLabelText('Owner full name')).toHaveProperty('value', 'Aline Uwase');
+			expect(
+				screen.queryByText(
+					'Owner invitation created. Send it from the invitation list when ready.',
+				),
+			).toBeNull();
+		},
+	);
 
 	it('keeps status filters when paging and does not invent totals', async () => {
 		fetchMock.mockImplementation(async (path) => {
 			const url = new URL(String(path), 'http://localhost:4000');
-			return Response.json({ items: [ownerInvitation], nextCursor: url.searchParams.has('cursor') ? null : ownerInvitation.id });
+			return Response.json({
+				items: [ownerInvitation],
+				nextCursor: url.searchParams.has('cursor') ? null : ownerInvitation.id,
+			});
 		});
 		management();
 		await screen.findByText(ownerInvitation.email);
@@ -125,22 +184,24 @@ describe('owner invitation dialogs', () => {
 		fireEvent.click(within(filters).getByRole('button', { name: 'Pending delivery' }));
 		await screen.findByText(ownerInvitation.email);
 		expect(
-			within(filters).getByRole('button', { name: 'Pending delivery' }).getAttribute('aria-pressed'),
+			within(filters)
+				.getByRole('button', { name: 'Pending delivery' })
+				.getAttribute('aria-pressed'),
 		).toBe('true');
 		const reads = fetchMock.mock.calls.length;
 		fireEvent.click(within(filters).getByRole('button', { name: 'Pending delivery' }));
 		expect(fetchMock).toHaveBeenCalledTimes(reads);
 		fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
-		await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain(`cursor=${ownerInvitation.id}`));
+		await waitFor(() =>
+			expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain(`cursor=${ownerInvitation.id}`),
+		);
 		expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('status=PENDING_DELIVERY');
 		await screen.findByText(ownerInvitation.email);
 		fireEvent.click(screen.getByRole('button', { name: 'Previous results' }));
 		await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('cursor='));
 		await screen.findByText(ownerInvitation.email);
 		fireEvent.click(within(filters).getByRole('button', { name: 'All' }));
-		await waitFor(() =>
-			expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('status='),
-		);
+		await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('status='));
 		expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('cursor=');
 		expect(within(filters).getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe(
 			'true',
@@ -151,7 +212,9 @@ describe('owner invitation dialogs', () => {
 		let revoked = false;
 		fetchMock.mockImplementation(async (_path, init) => {
 			if (init?.method === 'POST') revoked = true;
-			const row = revoked ? { ...ownerInvitation, status: 'REVOKED', revokedAt: '2026-10-16T09:00:00.000Z' } : ownerInvitation;
+			const row = revoked
+				? { ...ownerInvitation, status: 'REVOKED', revokedAt: '2026-10-16T09:00:00.000Z' }
+				: ownerInvitation;
 			return Response.json(init?.method === 'POST' ? row : { items: [row], nextCursor: null });
 		});
 		management();
@@ -160,7 +223,9 @@ describe('owner invitation dialogs', () => {
 		expect(screen.getAllByRole('dialog')).toHaveLength(1);
 		expect(document.activeElement).toBe(screen.getByRole('button', { name: 'Cancel' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Revoke invitation' }));
-		expect(await screen.findByText('Owner invitation revoked. Existing gym ownership was not changed.')).toBeTruthy();
+		expect(
+			await screen.findByText('Owner invitation revoked. Existing gym ownership was not changed.'),
+		).toBeTruthy();
 		await screen.findByText('This invitation can no longer be used.');
 		expect(screen.queryByRole('button', { name: 'Revoke invitation' })).toBeNull();
 		const mutation = fetchMock.mock.calls.find(([, init]) => init?.method === 'POST');
@@ -177,11 +242,15 @@ describe('owner invitation dialogs', () => {
 		fireEvent.click(screen.getByRole('button', { name: 'Revoke invitation' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Revoke invitation' }));
 		expect(await screen.findByRole('alert')).toBeTruthy();
-		expect(screen.getByRole('button', { name: 'Revoke invitation' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Revoke invitation' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		expect(fetchMock.mock.calls.filter(([, init]) => init?.method === 'POST')).toHaveLength(1);
 		fireEvent.click(screen.getByRole('button', { name: 'Reload invitations' }));
 		await screen.findByText(ownerInvitation.email);
-		expect(screen.getByRole('button', { name: 'Revoke invitation' }).hasAttribute('disabled')).toBe(false);
+		expect(screen.getByRole('button', { name: 'Revoke invitation' }).hasAttribute('disabled')).toBe(
+			false,
+		);
 	});
 
 	it('does not reopen submission after unconfirmed creation without history access', async () => {
@@ -190,9 +259,13 @@ describe('owner invitation dialogs', () => {
 		fetchMock.mockRejectedValueOnce(new TypeError('unconfirmed'));
 		fireEvent.click(screen.getByRole('button', { name: 'Create invitation' }));
 		await screen.findByRole('alert');
-		expect(screen.getByRole('button', { name: 'Create invitation' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Create invitation' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		fireEvent.click(screen.getByRole('button', { name: 'Back' }));
-		expect(screen.getByRole('button', { name: 'Create invitation' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Create invitation' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		expect(fetchMock).toHaveBeenCalledOnce();
 	});
 });
