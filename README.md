@@ -28,10 +28,10 @@ StatePanel and Toast components retain the light design tokens, Albert Sans/DM S
 
 The three verified Nest operations are independently adapted through the BFF:
 
-| Frontend BFF | Nest endpoint, prefixed `/api/v1/platform` | Required permission |
-| --- | --- | --- |
-| GET `/api/organizations/[id]/owner-invitations` | GET `/organizations/:organizationId/owner-invitations` | `platform.organizations.owners.read` |
-| POST `/api/organizations/[id]/owner-invitations` | POST `/organizations/:organizationId/owner-invitations` | `platform.organizations.owners.invite` |
+| Frontend BFF                                                               | Nest endpoint, prefixed `/api/v1/platform`                                       | Required permission                               |
+| -------------------------------------------------------------------------- | -------------------------------------------------------------------------------- | ------------------------------------------------- |
+| GET `/api/organizations/[id]/owner-invitations`                            | GET `/organizations/:organizationId/owner-invitations`                           | `platform.organizations.owners.read`              |
+| POST `/api/organizations/[id]/owner-invitations`                           | POST `/organizations/:organizationId/owner-invitations`                          | `platform.organizations.owners.invite`            |
 | POST `/api/organizations/[id]/owner-invitations/[invitationId]/revocation` | POST `/organizations/:organizationId/owner-invitations/:invitationId/revocation` | `platform.organizations.owners.revoke-invitation` |
 
 Each operation has its own `server-only` adapter. Every call confirms the current session through
