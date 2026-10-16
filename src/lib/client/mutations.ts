@@ -3,7 +3,11 @@ import { organizationFailure } from '@/lib/contracts/organizations';
 import { ownerInvitationFailure } from '@/lib/contracts/owner-invitations';
 
 export class OrganizationRequestError extends Error {
-	constructor(readonly status: number, readonly code: string, message: string) {
+	constructor(
+		readonly status: number,
+		readonly code: string,
+		message: string,
+	) {
 		super(message);
 	}
 }
@@ -25,7 +29,12 @@ export async function browserRequest<T>(
 	body: unknown,
 	schema: z.ZodType<T>,
 	csrf?: string,
-	options?: { readonly domain: 'organizations' | 'owner-invitations'; readonly expectedStatus: 200 | 201; readonly ifMatch?: string; readonly signal?: AbortSignal },
+	options?: {
+		readonly domain: 'organizations' | 'owner-invitations';
+		readonly expectedStatus: 200 | 201 | 202;
+		readonly ifMatch?: string;
+		readonly signal?: AbortSignal;
+	},
 ): Promise<T> {
 	let response: Response;
 	try {
@@ -45,20 +54,42 @@ export async function browserRequest<T>(
 			...(body === undefined ? {} : { body: JSON.stringify(body) }),
 		});
 	} catch {
-		if (options) throw new OrganizationRequestError(503, 'OUTCOME_UNCONFIRMED', 'The result could not be confirmed. Review current records before retrying this change.');
+		if (options)
+			throw new OrganizationRequestError(
+				503,
+				'OUTCOME_UNCONFIRMED',
+				'The result could not be confirmed. Review current records before retrying this change.',
+			);
 		throw new Error('The service could not be reached. Try again.');
 	}
 	if (options && !response.ok) {
 		let code: string | undefined;
 		try {
 			const value: unknown = await response.json();
-			if (typeof value === 'object' && value !== null && 'error' in value &&
-				typeof value.error === 'object' && value.error !== null && 'code' in value.error &&
-				typeof value.error.code === 'string' && ['ORGANIZATION_AUDIT_UNAVAILABLE', 'ORGANIZATION_SLUG_CONFLICT', 'ORGANIZATION_TRANSITION_CONFLICT', 'OWNER_INVITATION_OUTSTANDING_CONFLICT', 'OWNER_INVITATION_AUDIT_UNAVAILABLE'].includes(value.error.code)) code = value.error.code;
-		} catch { /* Display only local allowlisted error messages. */ }
-		const safe = options.domain === 'owner-invitations'
-			? ownerInvitationFailure(response.status, code)
-			: organizationFailure(response.status, code);
+			if (
+				typeof value === 'object' &&
+				value !== null &&
+				'error' in value &&
+				typeof value.error === 'object' &&
+				value.error !== null &&
+				'code' in value.error &&
+				typeof value.error.code === 'string' &&
+				[
+					'ORGANIZATION_AUDIT_UNAVAILABLE',
+					'ORGANIZATION_SLUG_CONFLICT',
+					'ORGANIZATION_TRANSITION_CONFLICT',
+					'OWNER_INVITATION_OUTSTANDING_CONFLICT',
+					'OWNER_INVITATION_AUDIT_UNAVAILABLE',
+				].includes(value.error.code)
+			)
+				code = value.error.code;
+		} catch {
+			/* Display only local allowlisted error messages. */
+		}
+		const safe =
+			options.domain === 'owner-invitations'
+				? ownerInvitationFailure(response.status, code)
+				: organizationFailure(response.status, code);
 		throw new OrganizationRequestError(safe.status, safe.code, safe.message);
 	}
 	if (!response.ok)
@@ -75,17 +106,31 @@ export async function browserRequest<T>(
 		);
 	let value: unknown;
 	if (options && response.status !== options.expectedStatus) {
-		throw new OrganizationRequestError(503, 'OUTCOME_UNCONFIRMED', 'The service did not confirm the expected result. Review current records before retrying.');
+		throw new OrganizationRequestError(
+			503,
+			'OUTCOME_UNCONFIRMED',
+			'The service did not confirm the expected result. Review current records before retrying.',
+		);
 	}
 	try {
 		value = response.status === 204 ? undefined : await response.json();
 	} catch {
-		if (options) throw new OrganizationRequestError(503, 'OUTCOME_UNCONFIRMED', 'The result could not be read. Review current records before retrying.');
+		if (options)
+			throw new OrganizationRequestError(
+				503,
+				'OUTCOME_UNCONFIRMED',
+				'The result could not be read. Review current records before retrying.',
+			);
 		throw new Error('The service returned an unexpected response. Try again.');
 	}
 	const parsed = schema.safeParse(value);
 	if (!parsed.success) {
-		if (options) throw new OrganizationRequestError(503, 'OUTCOME_UNCONFIRMED', 'The result was incompatible. Review current records before retrying.');
+		if (options)
+			throw new OrganizationRequestError(
+				503,
+				'OUTCOME_UNCONFIRMED',
+				'The result was incompatible. Review current records before retrying.',
+			);
 		throw new Error('The service returned an unexpected response. Try again.');
 	}
 	return parsed.data;
