@@ -1,0 +1,109 @@
+.content,
+.form,
+.list {
+	display: grid;
+	gap: var(--space-4);
+	min-inline-size: 0;
+}
+.context,
+.toolbar,
+.actions,
+.heading {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	justify-content: space-between;
+	gap: var(--space-3);
+}
+.context,
+.notice {
+	padding: var(--space-4);
+	border-radius: var(--radius-control);
+	background: var(--surface-raised);
+}
+.context strong,
+.notice strong {
+	min-inline-size: 0;
+	overflow-wrap: anywhere;
+}
+.context p,
+.notice,
+.description,
+.dates dt {
+	color: var(--text-secondary);
+	font-size: var(--text-small);
+}
+.actions {
+	justify-content: flex-end;
+	padding-block-start: var(--space-4);
+	border-block-start: 1px solid var(--border);
+}
+.filter {
+	display: grid;
+	gap: var(--space-1);
+	flex: 1 1 14rem;
+	font-weight: 600;
+}
+.list {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.item {
+	display: grid;
+	gap: var(--space-3);
+	min-inline-size: 0;
+	padding-block: var(--space-4);
+	border-block-start: 1px solid var(--border);
+}
+.heading h3 {
+	font-size: var(--text-body);
+}
+.email {
+	color: var(--text-secondary);
+	overflow-wrap: anywhere;
+}
+.dates {
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+	gap: var(--space-3);
+	margin: 0;
+}
+.dates dd {
+	margin: var(--space-1) 0 0;
+	font-variant-numeric: tabular-nums;
+}
+.badge {
+	display: inline-block;
+	padding: var(--space-1) var(--space-3);
+	border-radius: var(--radius-pill);
+	background: var(--surface-raised);
+	color: var(--text-secondary);
+	font-size: var(--text-caption);
+	font-weight: 600;
+}
+.badge[data-status='PENDING_DELIVERY'] {
+	background: var(--warning-background);
+	color: var(--warning);
+}
+.badge[data-status='ACCEPTED'] {
+	background: var(--success-background);
+	color: var(--success);
+}
+.badge[data-status='REVOKED'] {
+	background: var(--danger-background);
+	color: var(--danger);
+}
+.error {
+	color: var(--danger);
+}
+@media (max-width: 30rem) {
+	.actions > button {
+		inline-size: 100%;
+	}
+}
+@media (forced-colors: active) {
+	.badge {
+		border: 1px solid CanvasText;
+	}
+}
