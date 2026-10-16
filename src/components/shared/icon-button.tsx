@@ -3,8 +3,10 @@ import { HugeiconsIcon, type IconSvgElement } from '@hugeicons/react';
 
 import styles from './icon-button.module.css';
 
-interface IconButtonProps
-	extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children' | 'aria-label' | 'title'> {
+interface IconButtonProps extends Omit<
+	ButtonHTMLAttributes<HTMLButtonElement>,
+	'children' | 'aria-label' | 'title'
+> {
 	/** React 19 passes ref as a prop; callers use it to return focus after closing a popup. */
 	readonly ref?: Ref<HTMLButtonElement>;
 	readonly icon: IconSvgElement;
