@@ -2,7 +2,10 @@ import type { Metadata } from 'next';
 import { AppShell } from '@/components/shared/app-shell';
 import { OrganizationList } from '@/components/organizations/organization-list';
 import { OrganizationProblem } from '@/components/organizations/organization-problem';
-import { organizationPermissions, organizationListQuerySchema } from '@/lib/contracts/organizations';
+import {
+	organizationPermissions,
+	organizationListQuerySchema,
+} from '@/lib/contracts/organizations';
 import { listOrganizations } from '@/lib/server/endpoints/organizations/list';
 import { organizationInput } from '@/lib/server/organizations-access';
 import { organizationPage } from '@/lib/server/organization-pages';
