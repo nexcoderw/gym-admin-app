@@ -35,13 +35,13 @@ export function StatePanel({
 }: {
 	readonly kind: StateKind;
 	readonly layout?: 'page' | 'section' | 'compact';
-	readonly headingLevel?: 1 | 2;
+	readonly headingLevel?: 1 | 2 | 3;
 	readonly title?: string;
 	readonly description?: string;
 	readonly children?: ReactNode;
 }) {
 	const id = useId();
-	const Heading = headingLevel === 1 ? 'h1' : 'h2';
+	const Heading = headingLevel === 1 ? 'h1' : headingLevel === 2 ? 'h2' : 'h3';
 	if (kind === 'loading') {
 		return (
 			<section
