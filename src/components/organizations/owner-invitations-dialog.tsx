@@ -44,7 +44,8 @@ export function OwnerInvitationsDialog({
 	const [trail, setTrail] = useState<readonly (string | undefined)[]>([]);
 	const [revision, setRevision] = useState(0);
 	const [reviewRequired, setReviewRequired] = useState(canRead);
-	const canCreate = permissions.includes(ownerInvitationPermissions.create) &&
+	const canCreate =
+		permissions.includes(ownerInvitationPermissions.create) &&
 		(organization.status === 'PENDING' || organization.status === 'ACTIVE');
 	const canRevoke = permissions.includes(ownerInvitationPermissions.revoke);
 	const onLoaded = useCallback(() => setReviewRequired(false), []);
@@ -72,12 +73,51 @@ export function OwnerInvitationsDialog({
 		<Dialog
 			key={view.kind}
 			size={view.kind === 'list' ? 'large' : 'small'}
-			title={view.kind === 'create' ? 'Create owner invitation' :
-				view.kind === 'revoke' ? 'Revoke this owner invitation?' : 'Owner invitations'}
-			description="Manage pending owner requests. Creating an invitation does not send email or grant gym access."
+			title={
+				view.kind === 'create'
+					? 'Create owner invitation'
+					: view.kind === 'revoke'
+						? 'Revoke this owner invitation?'
+						: 'Owner invitations'
+			}
+			description={
+				view.kind === 'list'
+					? 'Track invitations and manage pending requests.'
+					: view.kind === 'create'
+						? 'Add the owner’s name and email address.'
+						: 'Review the recipient before continuing.'
+			}
 			dismissible={!pending}
 			returnFocus={returnFocus}
-			onClose={() => { if (!pendingRef.current) onClose(); }}
+			onClose={() => {
+				if (!pendingRef.current) onClose();
+			}}
+			footer={
+				view.kind === 'list' ? (
+					<div className={styles.dialogActions}>
+						<Button
+							icon={ArrowLeft01Icon}
+							variant="secondary"
+							size="sm"
+							width="auto"
+							onClick={onClose}
+						>
+							Back to gym
+						</Button>
+						{canRead ? (
+							<Button
+								icon={RefreshIcon}
+								variant="secondary"
+								size="sm"
+								width="auto"
+								onClick={reload}
+							>
+								Reload invitations
+							</Button>
+						) : null}
+					</div>
+				) : undefined
+			}
 		>
 			<div className={styles.content}>
 				<div className={styles.context}>
@@ -107,7 +147,10 @@ export function OwnerInvitationsDialog({
 							{canRead ? (
 								<div className={styles.filter}>
 									<label htmlFor={filterId}>Invitation status</label>
-									<select id={filterId} value={query.status ?? ''} data-autofocus
+									<select
+										id={filterId}
+										value={query.status ?? ''}
+										data-autofocus
 										onChange={(event) => {
 											const status = ownerInvitationStatusSchema.safeParse(event.target.value);
 											setQuery({ limit: 20, status: status.success ? status.data : undefined });
@@ -116,20 +159,30 @@ export function OwnerInvitationsDialog({
 									>
 										<option value="">All statuses</option>
 										{ownerInvitationStatusSchema.options.map((status) => (
-											<option key={status} value={status}>{ownerInvitationStatusContent[status].label}</option>
+											<option key={status} value={status}>
+												{ownerInvitationStatusContent[status].label}
+											</option>
 										))}
 									</select>
 								</div>
 							) : null}
 							{canCreate ? (
-								<Button icon={UserAdd01Icon} disabled={reviewRequired}
-									onClick={() => setView({ kind: 'create' })} aria-haspopup="dialog"
+								<Button
+									icon={UserAdd01Icon}
+									size="sm"
+									width="auto"
+									disabled={reviewRequired}
+									onClick={() => setView({ kind: 'create' })}
+									aria-haspopup="dialog"
 									data-autofocus={!canRead || undefined}
 								>
 									Create invitation
 								</Button>
 							) : null}
 						</div>
+						<p className={styles.description}>
+							Creating an invitation does not send email or grant gym access.
+						</p>
 						{canRead ? (
 							<OwnerInvitationList
 								key={`${query.status ?? ''}:${query.cursor ?? ''}:${revision}`}
@@ -150,19 +203,14 @@ export function OwnerInvitationsDialog({
 								}}
 							/>
 						) : (
-							<StatePanel kind="403" layout="compact" headingLevel={2}
+							<StatePanel
+								kind="403"
+								layout="compact"
+								headingLevel={3}
 								title="Invitation history needs permission"
 								description="Your account cannot view invitation records or recipient email addresses. Creation permission is separate from history access."
 							/>
 						)}
-						<div className={styles.actions}>
-							<Button icon={ArrowLeft01Icon} variant="secondary" onClick={onClose}>Back to gym</Button>
-							{canRead ? (
-								<Button icon={RefreshIcon} variant="secondary" onClick={reload}>
-									Reload invitations
-								</Button>
-							) : null}
-						</div>
 					</>
 				)}
 			</div>
