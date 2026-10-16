@@ -26,7 +26,9 @@ test.describe('approved organization test administrator', () => {
 		}
 		const target = new URL(process.env.PLAYWRIGHT_BASE_URL ?? 'http://localhost:4000');
 		if (!['localhost', '127.0.0.1'].includes(target.hostname)) {
-			throw new Error('Organization mutation browser tests are restricted to a local admin origin.');
+			throw new Error(
+				'Organization mutation browser tests are restricted to a local admin origin.',
+			);
 		}
 		const suffix = `${Date.now().toString(36)}-${testInfo.project.name.replace(/[^a-z0-9]+/giu, '-')}`;
 		const name = `Step Fourteen ${suffix}`;
