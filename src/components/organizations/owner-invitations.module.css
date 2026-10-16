@@ -38,7 +38,7 @@
 	font-size: var(--text-small);
 }
 .toolbar {
-	align-items: flex-end;
+	align-items: center;
 }
 .dialogActions {
 	min-inline-size: 0;
@@ -60,19 +60,16 @@
 	padding-block-start: var(--space-3);
 	border-block-start: 1px solid var(--border);
 }
-.filter {
-	display: grid;
-	gap: var(--space-1);
-	flex: 0 1 12rem;
-	min-inline-size: 0;
-	max-inline-size: 100%;
+.filterLabel {
+	color: var(--text-secondary);
 	font-size: var(--text-small);
 	font-weight: 600;
 }
-.filter select {
-	min-height: 2.75rem;
-	padding-block: var(--space-2);
-	font-weight: 400;
+.filters {
+	display: flex;
+	flex-wrap: wrap;
+	gap: var(--space-2);
+	min-inline-size: 0;
 }
 .list {
 	display: grid;
@@ -133,6 +130,21 @@
 	background: var(--danger-background);
 	color: var(--danger);
 }
+.filterBadge {
+	min-inline-size: 2.75rem;
+	min-block-size: 2.75rem;
+	max-inline-size: 100%;
+	border: 1px solid transparent;
+	white-space: normal;
+	transition: border-color var(--motion-fast) var(--motion-ease);
+}
+.filterBadge:hover {
+	border-color: currentColor;
+}
+.filterBadge[aria-pressed='true'] {
+	border-color: currentColor;
+	box-shadow: inset 0 0 0 1px currentColor;
+}
 .error {
 	color: var(--danger);
 }
@@ -141,9 +153,6 @@
 		display: grid;
 		grid-template-columns: repeat(2, minmax(0, 1fr));
 	}
-	.filter {
-		flex-basis: 100%;
-	}
 	.actions > button {
 		inline-size: 100%;
 	}
@@ -151,5 +160,9 @@
 @media (forced-colors: active) {
 	.badge {
 		border: 1px solid CanvasText;
+	}
+	.filterBadge[aria-pressed='true'] {
+		outline: 2px solid Highlight;
+		outline-offset: -3px;
 	}
 }
