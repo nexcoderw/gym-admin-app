@@ -189,19 +189,22 @@ describe('shared organization form dialog', () => {
 	it.each([
 		[409, 'ORGANIZATION_SLUG_CONFLICT', 'already registered'],
 		[503, 'ORGANIZATION_AUDIT_UNAVAILABLE', 'audit setup'],
-	] as const)('shows safe registration failure %s without success', async (status, code, message) => {
-		fetchMock.mockResolvedValueOnce(
-			Response.json({ error: { code, message: 'secret provider text' } }, { status }),
-		);
-		const callbacks = formCallbacks();
-		const view = render(<OrganizationForm mode="create" {...callbacks} />);
-		fillRegistration();
-		submitForm(view.container);
-		await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(message));
-		expect(screen.queryByText(/secret provider text/u)).toBeNull();
-		expect(callbacks.onSaved).not.toHaveBeenCalled();
-		expect(screen.getByLabelText('Gym name').getAttribute('disabled')).toBeNull();
-	});
+	] as const)(
+		'shows safe registration failure %s without success',
+		async (status, code, message) => {
+			fetchMock.mockResolvedValueOnce(
+				Response.json({ error: { code, message: 'secret provider text' } }, { status }),
+			);
+			const callbacks = formCallbacks();
+			const view = render(<OrganizationForm mode="create" {...callbacks} />);
+			fillRegistration();
+			submitForm(view.container);
+			await waitFor(() => expect(screen.getByRole('alert').textContent).toContain(message));
+			expect(screen.queryByText(/secret provider text/u)).toBeNull();
+			expect(callbacks.onSaved).not.toHaveBeenCalled();
+			expect(screen.getByLabelText('Gym name').getAttribute('disabled')).toBeNull();
+		},
+	);
 
 	it('blocks an ambiguous creation until the administrator reviews the registry', async () => {
 		fetchMock.mockRejectedValueOnce(new Error('Private network diagnostics'));
@@ -226,7 +229,9 @@ describe('shared organization form dialog', () => {
 			Response.json({ error: { code: 'ORGANIZATION_STALE' } }, { status: 412 }),
 		);
 		const callbacks = formCallbacks();
-		const view = render(<OrganizationForm mode="edit" organization={organization} {...callbacks} />);
+		const view = render(
+			<OrganizationForm mode="edit" organization={organization} {...callbacks} />,
+		);
 		fireEvent.change(screen.getByLabelText('Gym name'), { target: { value: 'Power Gym' } });
 		submitForm(view.container);
 		await waitFor(() => expect(screen.getByRole('alert').textContent).toContain('Reload'));
@@ -520,20 +525,24 @@ describe('organization lifecycle confirmation', () => {
 			archivedAt: '2026-10-13T13:00:00.000Z',
 			updatedAt: '2026-10-13T13:00:00.000Z',
 		} as const;
-		fetchMock.mockResolvedValueOnce(Response.json(organization)).mockResolvedValueOnce(
-			Response.json(archived),
-		);
+		fetchMock
+			.mockResolvedValueOnce(Response.json(organization))
+			.mockResolvedValueOnce(Response.json(archived));
 		renderList();
 		fireEvent.click(screen.getByRole('button', { name: 'Soho Gym' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Archive gym' }));
 		const confirm = screen.getByRole('dialog', { name: 'Archive Soho Gym?' });
-		expect(within(confirm).getByText(/retaining its registry record and audit history/u)).toBeDefined();
+		expect(
+			within(confirm).getByText(/retaining its registry record and audit history/u),
+		).toBeDefined();
 		expect(within(confirm).getByText(/slug remains reserved/u)).toBeDefined();
 		expect(within(confirm).getByText(/cannot restore/u)).toBeDefined();
 		expect(document.activeElement).toBe(within(confirm).getByRole('button', { name: 'Cancel' }));
 		fireEvent.click(within(confirm).getByRole('button', { name: 'Confirm archival' }));
 		await waitFor(() =>
-			expect(screen.getByText('Soho Gym has been archived and retained for audit history.')).toBeDefined(),
+			expect(
+				screen.getByText('Soho Gym has been archived and retained for audit history.'),
+			).toBeDefined(),
 		);
 		expect(fetchMock.mock.calls[1]?.[0]).toBe(`/api/organizations/${organization.id}/archival`);
 		expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
@@ -625,10 +634,7 @@ describe('organization lifecycle confirmation', () => {
 		fetchMock
 			.mockResolvedValueOnce(Response.json(organization))
 			.mockResolvedValueOnce(
-				Response.json(
-					{ error: { code: 'ORGANIZATION_AUDIT_UNAVAILABLE' } },
-					{ status: 503 },
-				),
+				Response.json({ error: { code: 'ORGANIZATION_AUDIT_UNAVAILABLE' } }, { status: 503 }),
 			);
 		renderList();
 		fireEvent.click(screen.getByRole('button', { name: 'Soho Gym' }));
