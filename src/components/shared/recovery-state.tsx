@@ -76,9 +76,5 @@ export function RecoveryState({
 			) : null}
 		</StatePanel>
 	);
-	return layout === 'page' ? (
-		<RecoveryLayout>{panel}</RecoveryLayout>
-	) : (
-		panel
-	);
+	return layout === 'page' ? <RecoveryLayout>{panel}</RecoveryLayout> : panel;
 }
