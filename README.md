@@ -15,7 +15,120 @@ activation, suspension and archival require an explicit confirmation. Confirmed 
 refresh the server-rendered list and show a top-center toast; failures stay inline in the dialog.
 Archival retains the registry record, slug and audit history and has no restoration path in this
 interface. No permanent delete, existing-slug editing, tenant login, owner/subscription data,
-permission provisioning or audit-history UI is included.
+permission provisioning or audit-history UI is included. Owner invitation management is described below.
+
+## Owner invitation management — Step 20
+
+Open `/organizations`, open a gym's details and choose **Manage owner invitations**. The interface
+keeps the existing gym-card and modal architecture. One invitation dialog is active at a time:
+creation and revocation confirmation replace its content, then return to the invitation list.
+Returning to gym details focuses **Manage owner invitations**; closing gym details restores focus to
+the gym card. Pending mutations prevent dismissal and duplicate submission. Shared Button, Input,
+StatePanel and Toast components retain the light design tokens, Albert Sans/DM Sans and Hugeicons.
+
+The three verified Nest operations are independently adapted through the BFF:
+
+| Frontend BFF | Nest endpoint, prefixed `/api/v1/platform` | Required permission |
+| --- | --- | --- |
+| GET `/api/organizations/[id]/owner-invitations` | GET `/organizations/:organizationId/owner-invitations` | `platform.organizations.owners.read` |
+| POST `/api/organizations/[id]/owner-invitations` | POST `/organizations/:organizationId/owner-invitations` | `platform.organizations.owners.invite` |
+| POST `/api/organizations/[id]/owner-invitations/[invitationId]/revocation` | POST `/organizations/:organizationId/owner-invitations/:invitationId/revocation` | `platform.organizations.owners.revoke-invitation` |
+
+Each operation has its own `server-only` adapter. Every call confirms the current session through
+Nest and enforces the exact operation permission. Browser role strings, email addresses, gym slugs
+and UI visibility do not authorize access. An operator with create permission alone can create a
+pending invitation without fetching any invitation history. Recipient records and email addresses
+are loaded lazily for the selected gym only when invitation-read permission is present.
+
+Creation accepts only `displayName` and `email`: meaningful trimmed name up to 160 characters,
+normalized lowercase email of 3–254 characters, and no unknown fields. Confirmed success requires
+HTTP 201 and a strict, organization-matched `PENDING_DELIVERY` response. The form explains that no
+email is sent. The success toast reads **Owner invitation created. Email delivery is not enabled
+yet.** No User, OWNER assignment or tenant session is created by this interface.
+
+The list uses one bounded page (default 20, maximum 50), an optional status filter and Nest's last
+emitted UUID cursor. Previous results replay only visited cursors; no totals, offset page numbers,
+server-side search or download-all operation is invented. Changing status resets pagination.
+Filters persist when moving between results. Dates use Africa/Kigali. Empty, filtered-empty,
+loading, unavailable and permission-denied responses remain distinct. Stale reads are aborted and
+ignored; private recipient data is discarded when the dialog or result set unmounts.
+
+Status copy follows the backend:
+
+- **Pending delivery:** the invitation is recorded, but no email has been sent.
+- **Sent:** the email provider accepted the request; recipient receipt is unconfirmed.
+- **Accepted:** acceptance is recorded by the backend; this UI makes no claim about tenant login.
+- **Revoked:** the invitation is no longer usable.
+
+Revocation is offered only for PENDING_DELIVERY/SENT and requires a confirmation identifying the
+recipient. It sends a bodyless POST, with no invented updatedAt precondition, role ID or User ID.
+HTTP 200 plus a matching REVOKED record confirms success; the list then reloads. It does not remove
+existing ownership. Conflict or unconfirmed outcomes require a new read before another action.
+There is no automatic POST replay. Duplicate outstanding invitations produce a specific 409
+message; audit unavailability produces a safe 503 message. Recoverable form errors preserve values.
+An operator without read permission must ask an authorized operator to reconcile an uncertain result.
+
+Mutation handlers verify the exact approved Origin and established timing-safe CSRF proof before
+forwarding. IDs, query keys, request bodies and response DTOs are validated. The shared transport
+retains timeouts, request/response bounds, redirect rejection, no-store and cookie/header allowlists.
+These operations reject upstream Set-Cookie; expired sessions use the existing controlled cookie
+clearing behavior. Invitation errors use their own mapping; HTTP 412 never produces an invitation
+MFA-enrollment message. Authentication and organization-lifecycle mappings remain independent.
+
+Recipient names/emails stay in current component memory and no-store responses. They are not stored
+in URLs, persistent browser storage, analytics or console logs. UUIDs appear only in fixed scoped
+paths. Response schemas reject extra secret-bearing fields. No invitation token, encrypted delivery
+payload, private audit record, acceptance link, resend button or public owner-facing route is exposed.
+
+### Verification and release prerequisites
+
+Authored Vitest coverage exercises normalized/strict contracts, canonical timestamps, lifecycle
+labels, response allowlists, per-operation permissions, missing/expired/revoked sessions,
+Origin/CSRF, invalid IDs/body/query, safe domain errors, Set-Cookie rejection and ambiguous outcomes.
+Component tests cover lazy loading, create-only/read-only access, validation, pending state, confirmed
+creation, conflicts/audit failure, cursor/filter preservation, bodyless revocation and focus return.
+These mocked tests do not prove real PostgreSQL isolation, runtime grants or audit persistence.
+
+From this folder, the human formats the change and runs the checks; none were executed by the agent:
+
+```bash
+cd /Users/dvniels/Desktop/projects/gym/app/admin
+npm run format
+npm run format:check
+npm run lint
+npm run typecheck
+npm test
+npm run build
+```
+
+Review the formatting diff for unrelated changes before staging. The browser scenarios require a
+human-started local admin/API test environment, a fictional PENDING/ACTIVE gym named **Soho Gym**
+(or `PLAYWRIGHT_OWNER_INVITATIONS_GYM_NAME`), and private human-recorded disposable session files.
+Every profile needs organization-read access so the registry is reachable:
+
+- `PLAYWRIGHT_ORGANIZATIONS_STORAGE_STATE`: invitation read/create/revoke permissions.
+- `PLAYWRIGHT_OWNER_INVITATIONS_CREATE_ONLY_STATE`: invitation-create only.
+- `PLAYWRIGHT_OWNER_INVITATIONS_READ_ONLY_STATE`: invitation-read only.
+- `PLAYWRIGHT_OWNER_INVITATIONS_NO_ACCESS_STATE`: no invitation permissions.
+
+Keep these session files outside Git and use approved test accounts. Missing profiles deliberately
+fail the corresponding scenario rather than claiming success. Playwright intercepts only the new
+browser invitation requests with fictional responses: it never forwards an invitation creation or
+revocation in these scenarios. Page rendering still requires a real approved session and gym read.
+After exporting those file paths and starting the servers yourself:
+
+```bash
+npm run test:e2e -- test/e2e/owner-invitations.spec.ts
+```
+
+The existing full `npm run test:e2e` suite has separate live organization-mutation prerequisites;
+consult its earlier setup before running it. Manually verify keyboard trapping/Escape, focus return,
+320px reflow, long names/emails and truthful error recovery. No browser verification was executed.
+
+Live use requires the existing API invitation module and its audited create/revoke database
+migrations/grants to be verified. Step 18 delivery/worker and Step 19 owner enrollment/acceptance
+remain separate deployment blockers for sending invitations and owner activation. They are not
+implemented or enabled by this frontend task. No backend/database files or dependencies were changed.
 
 ### Backend prerequisites for live mutations
 
