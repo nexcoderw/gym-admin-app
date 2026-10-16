@@ -139,7 +139,10 @@ describe('accessible UI foundation', () => {
 		expect(routes.dashboard).toBe('/dashboard');
 		expect(
 			Object.values(browserApi).every((value) => {
-				const path = typeof value === 'function' ? value('2f5298af-cf42-4e66-8968-a42be74cb34b') : value;
+				const path =
+					typeof value === 'function'
+						? value('2f5298af-cf42-4e66-8968-a42be74cb34b', '4e8d23f8-0274-4802-b85c-35c87c53e25b')
+						: value;
 				return path.startsWith('/api/') && !path.includes('/v1/');
 			}),
 		).toBe(true);
