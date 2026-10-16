@@ -117,14 +117,34 @@ describe('owner invitation dialogs', () => {
 		});
 		management();
 		await screen.findByText(ownerInvitation.email);
-		fireEvent.change(screen.getByLabelText('Invitation status'), { target: { value: 'PENDING_DELIVERY' } });
+		const filters = screen.getByRole('group', { name: 'Invitation status' });
+		expect(within(filters).getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe(
+			'true',
+		);
+		expect(within(filters).getAllByRole('button')).toHaveLength(5);
+		fireEvent.click(within(filters).getByRole('button', { name: 'Pending delivery' }));
 		await screen.findByText(ownerInvitation.email);
+		expect(
+			within(filters).getByRole('button', { name: 'Pending delivery' }).getAttribute('aria-pressed'),
+		).toBe('true');
+		const reads = fetchMock.mock.calls.length;
+		fireEvent.click(within(filters).getByRole('button', { name: 'Pending delivery' }));
+		expect(fetchMock).toHaveBeenCalledTimes(reads);
 		fireEvent.click(screen.getByRole('button', { name: 'Next results' }));
 		await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain(`cursor=${ownerInvitation.id}`));
 		expect(String(fetchMock.mock.calls.at(-1)?.[0])).toContain('status=PENDING_DELIVERY');
 		await screen.findByText(ownerInvitation.email);
 		fireEvent.click(screen.getByRole('button', { name: 'Previous results' }));
 		await waitFor(() => expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('cursor='));
+		await screen.findByText(ownerInvitation.email);
+		fireEvent.click(within(filters).getByRole('button', { name: 'All' }));
+		await waitFor(() =>
+			expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('status='),
+		);
+		expect(String(fetchMock.mock.calls.at(-1)?.[0])).not.toContain('cursor=');
+		expect(within(filters).getByRole('button', { name: 'All' }).getAttribute('aria-pressed')).toBe(
+			'true',
+		);
 	});
 
 	it('confirms bodyless revocation and removes the action from revoked records', async () => {
