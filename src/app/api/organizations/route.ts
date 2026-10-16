@@ -12,7 +12,9 @@ export const runtime = 'nodejs';
 export async function GET(request: Request) {
 	try {
 		const context = readContext(request);
-		return NextResponse.json(await listOrganizations(organizationQuery(request), context), { headers: privateHeaders });
+		return NextResponse.json(await listOrganizations(organizationQuery(request), context), {
+			headers: privateHeaders,
+		});
 	} catch (error) {
 		return organizationRouteError(request, error);
 	}
@@ -22,7 +24,10 @@ export async function POST(request: Request) {
 	try {
 		const context = mutationContext(request, true);
 		const body = await requestBody(request, createOrganizationSchema);
-		return NextResponse.json(await createOrganization(body, context), { status: 201, headers: privateHeaders });
+		return NextResponse.json(await createOrganization(body, context), {
+			status: 201,
+			headers: privateHeaders,
+		});
 	} catch (error) {
 		return organizationRouteError(request, error);
 	}
