@@ -40,7 +40,9 @@ export function OrganizationDetails({
 		organization.status !== 'ARCHIVED' && permissions.includes(organizationPermissions.update);
 	const canManageInvitations =
 		onManageOwnerInvitations !== undefined &&
-		Object.values(ownerInvitationPermissions).some((permission) => permissions.includes(permission));
+		Object.values(ownerInvitationPermissions).some((permission) =>
+			permissions.includes(permission),
+		);
 	const hasActions =
 		canUpdate ||
 		canManageInvitations ||
