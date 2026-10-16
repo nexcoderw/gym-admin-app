@@ -39,10 +39,20 @@ describe('MFA to live session integration', () => {
 	it('defaults to authenticator and sends email only after an explicit method choice and request', async () => {
 		const onAuthenticated = vi.fn<() => void>();
 		fetchMock
-			.mockResolvedValueOnce(Response.json({ status: 'sent', expiresAt: expiration, retryAfterSeconds: 60 }))
-			.mockResolvedValueOnce(Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }))
+			.mockResolvedValueOnce(
+				Response.json({ status: 'sent', expiresAt: expiration, retryAfterSeconds: 60 }),
+			)
+			.mockResolvedValueOnce(
+				Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
+			)
 			.mockResolvedValueOnce(Response.json(session));
-		render(<MfaForm challenge={{ ...challenge, methods: ['totp', 'recovery_code', 'email_otp'] }} onRestart={vi.fn<() => void>()} onAuthenticated={onAuthenticated} />);
+		render(
+			<MfaForm
+				challenge={{ ...challenge, methods: ['totp', 'recovery_code', 'email_otp'] }}
+				onRestart={vi.fn<() => void>()}
+				onAuthenticated={onAuthenticated}
+			/>,
+		);
 		expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
 			'totp',
 			'recovery_code',
@@ -53,15 +63,25 @@ describe('MFA to live session integration', () => {
 		);
 		expect(fetchMock).not.toHaveBeenCalled();
 		fireEvent.click(screen.getByRole('radio', { name: 'Email code' }));
-		expect(screen.getByRole('button', { name: 'Open platform' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Open platform' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		fireEvent.click(screen.getByRole('button', { name: 'Send email code' }));
 		await waitFor(() => expect(screen.getByRole('status').textContent).toContain('Code sent'));
 		expect(onAuthenticated).not.toHaveBeenCalled();
-		fireEvent.change(screen.getByLabelText('Email verification code'), { target: { value: '012345' } });
+		fireEvent.change(screen.getByLabelText('Email verification code'), {
+			target: { value: '012345' },
+		});
 		fireEvent.click(screen.getByRole('button', { name: 'Open platform' }));
 		await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce());
-		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual(['/api/auth/mfa/email', '/api/auth/mfa/verify', '/api/auth/session']);
-		expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ challengeToken: token, method: 'email_otp', emailOtpCode: '012345' }));
+		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+			'/api/auth/mfa/email',
+			'/api/auth/mfa/verify',
+			'/api/auth/session',
+		]);
+		expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
+			JSON.stringify({ challengeToken: token, method: 'email_otp', emailOtpCode: '012345' }),
+		);
 	});
 
 	it('offers only advertised methods and preserves recovery selection after a rejected code', async () => {
@@ -83,18 +103,30 @@ describe('MFA to live session integration', () => {
 			true,
 		);
 		expect(fetchMock.mock.calls[0]?.[1]?.body).toBe(
-			JSON.stringify({ challengeToken: token, method: 'recovery_code', recoveryCode: 'fictional-recovery-code' }),
+			JSON.stringify({
+				challengeToken: token,
+				method: 'recovery_code',
+				recoveryCode: 'fictional-recovery-code',
+			}),
 		);
 	});
 
 	it('keeps email delivery failures safe and blocks verification before a confirmed send', async () => {
 		fetchMock.mockResolvedValueOnce(Response.json({ private: 'provider-secret' }, { status: 503 }));
-		render(<MfaForm challenge={{ ...challenge, methods: ['email_otp', 'totp'] }} onRestart={vi.fn<() => void>()} onAuthenticated={vi.fn<() => void>()} />);
+		render(
+			<MfaForm
+				challenge={{ ...challenge, methods: ['email_otp', 'totp'] }}
+				onRestart={vi.fn<() => void>()}
+				onAuthenticated={vi.fn<() => void>()}
+			/>,
+		);
 		fireEvent.click(screen.getByRole('radio', { name: 'Email code' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Send email code' }));
 		await screen.findByRole('alert');
 		expect(screen.getByRole('alert').textContent).not.toContain('provider-secret');
-		expect(screen.getByRole('button', { name: 'Open platform' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Open platform' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		expect(fetchMock).toHaveBeenCalledOnce();
 	});
 	it('rejects an expired MFA challenge before any network request', async () => {
