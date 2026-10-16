@@ -31,8 +31,17 @@ import styles from './organization-list.module.css';
 type ActiveDialog =
 	| { readonly kind: 'none' }
 	| { readonly kind: 'create'; readonly trigger: HTMLElement }
-	| { readonly kind: 'details'; readonly organization: Organization; readonly trigger: HTMLElement; readonly focusInvitations?: boolean }
-	| { readonly kind: 'invitations'; readonly organization: Organization; readonly trigger: HTMLElement }
+	| {
+			readonly kind: 'details';
+			readonly organization: Organization;
+			readonly trigger: HTMLElement;
+			readonly focusInvitations?: boolean;
+	  }
+	| {
+			readonly kind: 'invitations';
+			readonly organization: Organization;
+			readonly trigger: HTMLElement;
+	  }
 	| { readonly kind: 'edit'; readonly organization: Organization; readonly trigger: HTMLElement };
 
 const lifecycleMessages: Record<LifecycleAction, (name: string) => string> = {
@@ -68,8 +77,7 @@ export function OrganizationList({
 	const needle = term.trim().toLocaleLowerCase('en');
 	const visible = needle
 		? data.items.filter(
-				(item) =>
-					item.name.toLocaleLowerCase('en').includes(needle) || item.slug.includes(needle),
+				(item) => item.name.toLocaleLowerCase('en').includes(needle) || item.slug.includes(needle),
 			)
 		: data.items;
 	const scope = query.status ? `${query.status.toLowerCase()} ` : '';
@@ -136,7 +144,11 @@ export function OrganizationList({
 					) : null
 				}
 			/>
-			<section className={styles.registry} aria-label="Organization registry" aria-busy={refreshing}>
+			<section
+				className={styles.registry}
+				aria-label="Organization registry"
+				aria-busy={refreshing}
+			>
 				<div className={styles.toolbar}>
 					<p className={styles.summary} role="status">
 						{refreshing ? 'Loading current organizations…' : summary}
@@ -241,7 +253,13 @@ export function OrganizationList({
 					onClose={close}
 					onReload={reload}
 					focusInvitations={dialog.focusInvitations}
-					onManageOwnerInvitations={() => setDialog({ kind: 'invitations', organization: dialog.organization, trigger: dialog.trigger })}
+					onManageOwnerInvitations={() =>
+						setDialog({
+							kind: 'invitations',
+							organization: dialog.organization,
+							trigger: dialog.trigger,
+						})
+					}
 					onEdit={() =>
 						setDialog({ kind: 'edit', organization: dialog.organization, trigger: dialog.trigger })
 					}
@@ -249,8 +267,19 @@ export function OrganizationList({
 				/>
 			) : null}
 			{dialog.kind === 'invitations' ? (
-				<OwnerInvitationsDialog organization={dialog.organization} permissions={permissions} returnFocus={dialog.trigger}
-					onClose={() => setDialog({ kind: 'details', organization: dialog.organization, trigger: dialog.trigger, focusInvitations: true })} />
+				<OwnerInvitationsDialog
+					organization={dialog.organization}
+					permissions={permissions}
+					returnFocus={dialog.trigger}
+					onClose={() =>
+						setDialog({
+							kind: 'details',
+							organization: dialog.organization,
+							trigger: dialog.trigger,
+							focusInvitations: true,
+						})
+					}
+				/>
 			) : null}
 		</>
 	);
