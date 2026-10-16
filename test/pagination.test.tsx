@@ -7,7 +7,12 @@ import { Pagination } from '@/components/shared/pagination';
 afterEach(cleanup);
 
 function renderPagination(
-	overrides: Partial<{ page: number; pageCount: number; totalItems: number; pending: boolean }> = {},
+	overrides: Partial<{
+		page: number;
+		pageCount: number;
+		totalItems: number;
+		pending: boolean;
+	}> = {},
 ) {
 	const onPageChange = vi.fn<(page: number) => void>();
 	render(
@@ -45,7 +50,8 @@ describe('shared pagination', () => {
 		const current = screen.getByRole('button', { name: 'Page 5' });
 		expect(current.getAttribute('aria-current')).toBe('page');
 		expect(screen.getByText('81–100').parentElement?.textContent).toBe('Showing 81–100 of 170');
-		for (const gap of screen.getAllByText('…')) expect(gap.getAttribute('aria-hidden')).toBe('true');
+		for (const gap of screen.getAllByText('…'))
+			expect(gap.getAttribute('aria-hidden')).toBe('true');
 	});
 
 	it('shows a single skipped page as a number instead of a gap', () => {
@@ -55,7 +61,9 @@ describe('shared pagination', () => {
 
 	it('moves with arrows and numbers, disabling only the arrows at the ends', () => {
 		const onPageChange = renderPagination({ page: 1, pageCount: 3 });
-		expect(screen.getByRole('button', { name: 'Previous page' }).hasAttribute('disabled')).toBe(true);
+		expect(screen.getByRole('button', { name: 'Previous page' }).hasAttribute('disabled')).toBe(
+			true,
+		);
 		fireEvent.click(screen.getByRole('button', { name: 'Next page' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Page 3' }));
 		fireEvent.click(screen.getByRole('button', { name: 'Page 1' }));
