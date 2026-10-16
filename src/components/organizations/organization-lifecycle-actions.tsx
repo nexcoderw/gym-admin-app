@@ -72,10 +72,7 @@ export function availableLifecycleActions(
 	if (permissions.includes(organizationPermissions.suspend) && organization.status === 'ACTIVE') {
 		available.push('suspension');
 	}
-	if (
-		permissions.includes(organizationPermissions.archive) &&
-		organization.status !== 'ARCHIVED'
-	) {
+	if (permissions.includes(organizationPermissions.archive) && organization.status !== 'ARCHIVED') {
 		available.push('archival');
 	}
 	return available;
@@ -182,6 +179,7 @@ export function OrganizationLifecycleActions({
 					size="sm"
 					width="auto"
 					aria-haspopup="dialog"
+					aria-label={`${actions[action].trigger} gym`}
 					onClick={(event) => open(action, event.currentTarget)}
 				>
 					{actions[action].trigger}
@@ -218,6 +216,7 @@ export function OrganizationLifecycleActions({
 								width="full"
 								pending={pending}
 								disabled={blocked}
+								aria-label={`Confirm ${confirming.action}`}
 								onClick={confirm}
 							>
 								{active.confirm}
