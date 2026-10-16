@@ -50,7 +50,11 @@ export function upstreamFailure(status: number): BffError {
 		case 429:
 			return new BffError(429, 'RATE_LIMITED', 'Too many attempts. Wait before trying again.');
 		case 503:
-			return new BffError(503, 'SERVICE_UNAVAILABLE', 'The service is temporarily unavailable. Try again.');
+			return new BffError(
+				503,
+				'SERVICE_UNAVAILABLE',
+				'The service is temporarily unavailable. Try again.',
+			);
 		default:
 			return new BffError(
 				502,
