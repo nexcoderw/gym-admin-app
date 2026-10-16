@@ -24,7 +24,7 @@ export async function upstream<T>(
 	schema: z.ZodType<T>,
 	context: ForwardContext,
 	body?: unknown,
-	expectedStatus: 200 | 201 | 204 = 200,
+	expectedStatus: 200 | 201 | 202 | 204 = 200,
 	options?: {
 		readonly domain: 'organizations' | 'owner-invitations';
 		readonly query?: URLSearchParams;
@@ -84,9 +84,10 @@ export async function upstream<T>(
 						/* Only an allowlisted code is useful; never expose malformed provider errors. */
 					}
 				} else await response.body?.cancel();
-				const safe = options.domain === 'owner-invitations'
-					? ownerInvitationFailure(response.status, code)
-					: organizationFailure(response.status, code);
+				const safe =
+					options.domain === 'owner-invitations'
+						? ownerInvitationFailure(response.status, code)
+						: organizationFailure(response.status, code);
 				throw new BffError(safe.status, safe.code, safe.message);
 			}
 			await response.body?.cancel();
