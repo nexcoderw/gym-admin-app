@@ -1,7 +1,13 @@
 'use client';
 
 import { useCallback, useId, useRef, useState } from 'react';
-import { ArrowLeft01Icon, RefreshIcon, UserAdd01Icon } from '@hugeicons/core-free-icons';
+import {
+	ArrowLeft01Icon,
+	RefreshIcon,
+	UserAdd01Icon,
+	UserMultiple02Icon,
+} from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/shared/button';
 import { Dialog } from '@/components/shared/dialog';
@@ -72,20 +78,24 @@ export function OwnerInvitationsDialog({
 	return (
 		<Dialog
 			key={view.kind}
-			size={view.kind === 'list' ? 'large' : 'small'}
+			size={view.kind === 'list' ? 'medium' : 'small'}
 			title={
-				view.kind === 'create'
-					? 'Create owner invitation'
-					: view.kind === 'revoke'
-						? 'Revoke this owner invitation?'
-						: 'Owner invitations'
+				<span className={styles.dialogTitle}>
+					<HugeiconsIcon icon={UserMultiple02Icon} size={20} aria-hidden="true" />
+					<span>
+						{view.kind === 'create'
+							? 'Create owner invitation'
+							: view.kind === 'revoke'
+								? 'Revoke this owner invitation?'
+								: 'Owner invitations'}
+					</span>
+				</span>
 			}
 			description={
-				view.kind === 'list'
-					? 'Track invitations and manage pending requests.'
-					: view.kind === 'create'
-						? 'Add the owner’s name and email address.'
-						: 'Review the recipient before continuing.'
+				<span className={styles.context}>
+					<span>{organization.name}</span>
+					<OrganizationStatusBadge status={organization.status} />
+				</span>
 			}
 			dismissible={!pending}
 			returnFocus={returnFocus}
@@ -120,10 +130,6 @@ export function OwnerInvitationsDialog({
 			}
 		>
 			<div className={styles.content}>
-				<div className={styles.context}>
-					<strong>{organization.name}</strong>
-					<OrganizationStatusBadge status={organization.status} />
-				</div>
 				{view.kind === 'create' && canCreate ? (
 					<OwnerInvitationForm
 						organizationId={organization.id}
@@ -180,9 +186,11 @@ export function OwnerInvitationsDialog({
 								</Button>
 							) : null}
 						</div>
-						<p className={styles.description}>
-							Creating an invitation does not send email or grant gym access.
-						</p>
+						{canCreate ? (
+							<p className={styles.description}>
+								Creating an invitation does not send email or grant gym access.
+							</p>
+						) : null}
 						{canRead ? (
 							<OwnerInvitationList
 								key={`${query.status ?? ''}:${query.cursor ?? ''}:${revision}`}
