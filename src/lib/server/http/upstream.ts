@@ -3,6 +3,7 @@ import 'server-only';
 import type { z } from 'zod';
 
 import { organizationFailure } from '@/lib/contracts/organizations';
+import { ownerInvitationFailure } from '@/lib/contracts/owner-invitations';
 
 import { serverEnvironment } from '../environment';
 import { BffError, upstreamFailure } from './errors';
@@ -25,7 +26,7 @@ export async function upstream<T>(
 	body?: unknown,
 	expectedStatus: 200 | 201 | 204 = 200,
 	options?: {
-		readonly domain: 'organizations';
+		readonly domain: 'organizations' | 'owner-invitations';
 		readonly query?: URLSearchParams;
 		readonly ifMatch?: string;
 	},
@@ -54,7 +55,9 @@ export async function upstream<T>(
 			throw new BffError(
 				502,
 				'INVALID_SERVICE_RESPONSE',
-				'Organization management returned an incompatible response.',
+				options.domain === 'owner-invitations'
+					? 'Owner invitation management returned an incompatible response.'
+					: 'Organization management returned an incompatible response.',
 			);
 		}
 		if (!response.ok) {
@@ -72,6 +75,8 @@ export async function upstream<T>(
 								'ORGANIZATION_AUDIT_UNAVAILABLE',
 								'ORGANIZATION_SLUG_CONFLICT',
 								'ORGANIZATION_TRANSITION_CONFLICT',
+								'OWNER_INVITATION_OUTSTANDING_CONFLICT',
+								'OWNER_INVITATION_AUDIT_UNAVAILABLE',
 							].includes(error.code)
 						)
 							code = error.code;
@@ -79,7 +84,9 @@ export async function upstream<T>(
 						/* Only an allowlisted code is useful; never expose malformed provider errors. */
 					}
 				} else await response.body?.cancel();
-				const safe = organizationFailure(response.status, code);
+				const safe = options.domain === 'owner-invitations'
+					? ownerInvitationFailure(response.status, code)
+					: organizationFailure(response.status, code);
 				throw new BffError(safe.status, safe.code, safe.message);
 			}
 			await response.body?.cancel();
