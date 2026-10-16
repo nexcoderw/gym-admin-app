@@ -179,7 +179,8 @@ export function OrganizationLifecycleActions({
 					key={action}
 					icon={actions[action].icon}
 					variant={action === 'activation' ? 'primary' : 'secondary'}
-					width="full"
+					size="sm"
+					width="auto"
 					aria-haspopup="dialog"
 					onClick={(event) => open(action, event.currentTarget)}
 				>
