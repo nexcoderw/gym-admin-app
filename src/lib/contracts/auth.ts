@@ -29,11 +29,13 @@ export const emailOtpSentSchema = z.object({
 });
 
 export const verifyMfaRequestSchema = z.discriminatedUnion('method', [
-	z.object({
-		challengeToken: opaqueToken,
-		method: z.literal('email_otp'),
-		emailOtpCode: z.string().regex(/^\d{6}$/u),
-	}).strict(),
+	z
+		.object({
+			challengeToken: opaqueToken,
+			method: z.literal('email_otp'),
+			emailOtpCode: z.string().regex(/^\d{6}$/u),
+		})
+		.strict(),
 	z
 		.object({
 			challengeToken: opaqueToken,
