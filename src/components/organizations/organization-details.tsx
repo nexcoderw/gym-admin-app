@@ -1,4 +1,5 @@
-import { PencilEdit01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons';
+import { Building03Icon, PencilEdit01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons';
+import { HugeiconsIcon } from '@hugeicons/react';
 
 import { Button } from '@/components/shared/button';
 import { Dialog } from '@/components/shared/dialog';
@@ -37,8 +38,13 @@ export function OrganizationDetails({
 }) {
 	const canUpdate =
 		organization.status !== 'ARCHIVED' && permissions.includes(organizationPermissions.update);
-	const canManageInvitations = onManageOwnerInvitations !== undefined && Object.values(ownerInvitationPermissions).some((permission) => permissions.includes(permission));
-	const hasActions = canUpdate || canManageInvitations || availableLifecycleActions(organization, permissions).length > 0;
+	const canManageInvitations =
+		onManageOwnerInvitations !== undefined &&
+		Object.values(ownerInvitationPermissions).some((permission) => permissions.includes(permission));
+	const hasActions =
+		canUpdate ||
+		canManageInvitations ||
+		availableLifecycleActions(organization, permissions).length > 0;
 	const timeline = [
 		['Registered', organization.createdAt],
 		['Last updated', organization.updatedAt],
@@ -50,14 +56,22 @@ export function OrganizationDetails({
 		<Dialog
 			size="large"
 			title={organization.name}
-			description="The current registry record and platform lifecycle."
+			description="Gym details, owner invitations and lifecycle."
 			returnFocus={returnFocus}
 			onClose={onClose}
 			footer={
 				hasActions ? (
-					<>
+					<div className={styles.actions}>
 						{canManageInvitations ? (
-							<Button icon={UserMultiple02Icon} variant="secondary" width="full" aria-haspopup="dialog" data-autofocus={focusInvitations || undefined} onClick={onManageOwnerInvitations}>
+							<Button
+								icon={UserMultiple02Icon}
+								variant="secondary"
+								size="sm"
+								width="auto"
+								aria-haspopup="dialog"
+								data-autofocus={focusInvitations || undefined}
+								onClick={onManageOwnerInvitations}
+							>
 								Manage owner invitations
 							</Button>
 						) : null}
@@ -65,7 +79,8 @@ export function OrganizationDetails({
 							<Button
 								icon={PencilEdit01Icon}
 								variant="secondary"
-								width="full"
+								size="sm"
+								width="auto"
 								aria-haspopup="dialog"
 								onClick={onEdit}
 							>
@@ -78,14 +93,22 @@ export function OrganizationDetails({
 							onComplete={onLifecycleChange}
 							onReload={onReload}
 						/>
-					</>
+					</div>
 				) : undefined
 			}
 		>
 			<div className={styles.details}>
 				<section className={styles.section}>
 					<div className={styles.sectionHeading}>
-						<h3>Registry record</h3>
+						<div className={styles.recordHeading}>
+							<span className={styles.mark}>
+								<HugeiconsIcon icon={Building03Icon} size={24} aria-hidden="true" />
+							</span>
+							<div>
+								<h3>Registry record</h3>
+								<p className={styles.note}>Organization details</p>
+							</div>
+						</div>
 						<OrganizationStatusBadge status={organization.status} />
 					</div>
 					<dl className={styles.fields}>
@@ -104,7 +127,10 @@ export function OrganizationDetails({
 					</dl>
 				</section>
 				<section className={styles.section}>
-					<h3>Lifecycle timeline (Kigali time)</h3>
+					<div className={styles.sectionHeading}>
+						<h3>Lifecycle dates</h3>
+						<span className={styles.note}>Kigali time · UTC+2</span>
+					</div>
 					<dl className={styles.timeline}>
 						{timeline.map(([label, value]) =>
 							value ? (
@@ -119,10 +145,13 @@ export function OrganizationDetails({
 					</dl>
 				</section>
 				<section className={styles.preview}>
-					<h3>Future address preview</h3>
+					<div className={styles.sectionHeading}>
+						<h3>Future address</h3>
+						<span className={styles.previewLabel}>Preview only</span>
+					</div>
 					<p className={styles.address}>{organization.slug}.gym.rw</p>
 					<p className={styles.note}>
-						Preview only. This subdomain has not been provisioned by this interface.
+						This address has not been provisioned by this interface.
 					</p>
 				</section>
 			</div>
