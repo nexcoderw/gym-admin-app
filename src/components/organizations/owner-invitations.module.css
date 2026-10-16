@@ -6,6 +6,7 @@
 	min-inline-size: 0;
 }
 .context,
+.dialogActions,
 .toolbar,
 .actions,
 .heading {
@@ -15,11 +16,25 @@
 	justify-content: space-between;
 	gap: var(--space-3);
 }
-.context,
 .notice {
 	padding: var(--space-4);
 	border-radius: var(--radius-control);
 	background: var(--surface-raised);
+}
+.context {
+	padding-block-end: var(--space-4);
+	border-block-end: 1px solid var(--border);
+}
+.context strong {
+	font-family: var(--font-heading);
+	font-size: var(--text-body);
+}
+.toolbar {
+	align-items: flex-end;
+}
+.dialogActions {
+	min-inline-size: 0;
+	gap: var(--space-2);
 }
 .context strong,
 .notice strong {
@@ -41,8 +56,16 @@
 .filter {
 	display: grid;
 	gap: var(--space-1);
-	flex: 1 1 14rem;
+	flex: 0 1 14rem;
+	min-inline-size: 0;
+	max-inline-size: 100%;
+	font-size: var(--text-small);
 	font-weight: 600;
+}
+.filter select {
+	min-height: 2.75rem;
+	padding-block: var(--space-2);
+	font-weight: 400;
 }
 .list {
 	list-style: none;
@@ -59,6 +82,9 @@
 .heading h3 {
 	font-size: var(--text-body);
 }
+.revokeAction {
+	justify-self: start;
+}
 .email {
 	color: var(--text-secondary);
 	overflow-wrap: anywhere;
@@ -71,6 +97,7 @@
 }
 .dates dd {
 	margin: var(--space-1) 0 0;
+	font-size: var(--text-small);
 	font-variant-numeric: tabular-nums;
 }
 .badge {
@@ -98,6 +125,9 @@
 	color: var(--danger);
 }
 @media (max-width: 30rem) {
+	.filter {
+		flex-basis: 100%;
+	}
 	.actions > button {
 		inline-size: 100%;
 	}
