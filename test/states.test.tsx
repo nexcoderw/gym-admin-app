@@ -81,7 +81,9 @@ describe('workspace recovery and empty states', () => {
 	it.each([401, 403, 404, 429, 500, 503])(
 		'groups organization recovery actions inside its standalone %s canvas',
 		(status) => {
-			const view = render(<OrganizationProblem status={status} message="Safe recovery guidance." />);
+			const view = render(
+				<OrganizationProblem status={status} message="Safe recovery guidance." />,
+			);
 			const main = screen.getByRole('main');
 			expect(view.container.children).toHaveLength(1);
 			expect(main.querySelector('[data-layout="page"]')).not.toBeNull();
@@ -90,7 +92,9 @@ describe('workspace recovery and empty states', () => {
 			const actionGroup = back.parentElement;
 			expect(actionGroup?.children).toHaveLength(2);
 			if (status === 403) {
-				expect(actionGroup).toBe(screen.getByRole('button', { name: 'Check access' }).parentElement);
+				expect(actionGroup).toBe(
+					screen.getByRole('button', { name: 'Check access' }).parentElement,
+				);
 			}
 			expect(screen.queryByRole('complementary')).toBeNull();
 			expect(screen.queryByText('Restart organization list')).toBeNull();
