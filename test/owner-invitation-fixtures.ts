@@ -7,6 +7,7 @@ export const ownerInvitation: OwnerInvitation = {
 	displayName: 'Aline Uwase',
 	email: 'aline@example.com',
 	status: 'PENDING_DELIVERY',
+	deliveryStatus: null,
 	createdAt: '2026-10-16T08:00:00.000Z',
 	updatedAt: '2026-10-16T08:00:00.000Z',
 	sentAt: null,
