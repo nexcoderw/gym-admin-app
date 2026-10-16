@@ -29,7 +29,7 @@ type Confirmation = { readonly action: LifecycleAction; readonly trigger: HTMLEl
 
 const actions = {
 	activation: {
-		trigger: 'Activate gym',
+		trigger: 'Activate',
 		verb: 'Activate',
 		confirm: 'Confirm',
 		icon: CheckmarkCircle01Icon,
@@ -38,7 +38,7 @@ const actions = {
 			'This records platform approval. It does not activate a subscription or provision a subdomain.',
 	},
 	suspension: {
-		trigger: 'Suspend gym',
+		trigger: 'Suspend',
 		verb: 'Suspend',
 		confirm: 'Confirm',
 		icon: PauseIcon,
@@ -47,7 +47,7 @@ const actions = {
 			'This changes the gym lifecycle to suspended. It does not delete members or cancel subscription billing.',
 	},
 	archival: {
-		trigger: 'Archive gym',
+		trigger: 'Archive',
 		verb: 'Archive',
 		confirm: 'Confirm',
 		icon: Archive03Icon,
