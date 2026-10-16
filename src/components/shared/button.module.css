@@ -27,6 +27,14 @@
 	inline-size: 8rem;
 	padding-inline: var(--space-4);
 }
+.button[data-width='auto'] {
+	inline-size: auto;
+}
+.button[data-size='sm'] {
+	min-height: 2.75rem;
+	padding: var(--space-2) var(--space-3);
+	font-size: var(--text-small);
+}
 .icon {
 	display: inline-flex;
 	align-items: center;
