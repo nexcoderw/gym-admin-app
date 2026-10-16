@@ -22,7 +22,10 @@ test('verification has its own route with horizontal choices and actions', async
 	await expect(page.getByRole('radio', { name: 'Authenticator' })).toBeChecked();
 	for (const width of [320, 375, 768, 1440]) {
 		await page.setViewportSize({ width, height: 900 });
-		const choices = await page.getByRole('group', { name: 'Verification method' }).locator('label').all();
+		const choices = await page
+			.getByRole('group', { name: 'Verification method' })
+			.locator('label')
+			.all();
 		const choiceBoxes = await Promise.all(choices.map((choice) => choice.boundingBox()));
 		const open = await page.getByRole('button', { name: 'Open platform' }).boundingBox();
 		const restart = await page.getByRole('button', { name: 'Start sign-in again' }).boundingBox();
@@ -33,7 +36,9 @@ test('verification has its own route with horizontal choices and actions', async
 			expect(Math.abs(box.y - choiceBoxes[0].y)).toBeLessThanOrEqual(1);
 			expect(box.height).toBeGreaterThanOrEqual(44);
 		}
-		expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+		expect(
+			await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+		).toBe(true);
 	}
 	await page.reload();
 	await expect(page).toHaveURL(/\/login$/u);
