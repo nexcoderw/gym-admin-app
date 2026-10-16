@@ -15,7 +15,9 @@ export async function GET(request: Request, { params }: Context) {
 		const context = readContext(request);
 		const { id } = await params;
 		const result = await getOrganization(id, context);
-		return NextResponse.json(result.organization, { headers: { ...privateHeaders, ETag: result.etag } });
+		return NextResponse.json(result.organization, {
+			headers: { ...privateHeaders, ETag: result.etag },
+		});
 	} catch (error) {
 		return organizationRouteError(request, error);
 	}
@@ -27,7 +29,9 @@ export async function PATCH(request: Request, { params }: Context) {
 		const { id } = await params;
 		const body = await requestBody(request, updateOrganizationSchema);
 		const result = await updateOrganization(id, body, request.headers.get('if-match'), context);
-		return NextResponse.json(result, { headers: { ...privateHeaders, ETag: `"${result.updatedAt}"` } });
+		return NextResponse.json(result, {
+			headers: { ...privateHeaders, ETag: `"${result.updatedAt}"` },
+		});
 	} catch (error) {
 		return organizationRouteError(request, error);
 	}
