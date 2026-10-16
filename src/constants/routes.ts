@@ -22,10 +22,16 @@ export const browserApi = {
 	summary: '/api/dashboard/summary',
 	organizations: '/api/organizations',
 	organization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}`,
-	activateOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/activation`,
-	suspendOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/suspension`,
-	archiveOrganization: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/archival`,
-	ownerInvitations: (id: string): `/api/${string}` => `/api/organizations/${encodeURIComponent(id)}/owner-invitations`,
+	activateOrganization: (id: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/activation`,
+	suspendOrganization: (id: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/suspension`,
+	archiveOrganization: (id: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/archival`,
+	ownerInvitations: (id: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/owner-invitations`,
 	revokeOwnerInvitation: (id: string, invitationId: string): `/api/${string}` =>
 		`/api/organizations/${encodeURIComponent(id)}/owner-invitations/${encodeURIComponent(invitationId)}/revocation`,
+	sendOwnerInvitation: (id: string, invitationId: string): `/api/${string}` =>
+		`/api/organizations/${encodeURIComponent(id)}/owner-invitations/${encodeURIComponent(invitationId)}/delivery`,
 } as const;
