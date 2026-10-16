@@ -1,8 +1,9 @@
-import { PencilEdit01Icon } from '@hugeicons/core-free-icons';
+import { PencilEdit01Icon, UserMultiple02Icon } from '@hugeicons/core-free-icons';
 
 import { Button } from '@/components/shared/button';
 import { Dialog } from '@/components/shared/dialog';
 import { organizationPermissions, type Organization } from '@/lib/contracts/organizations';
+import { ownerInvitationPermissions } from '@/lib/contracts/owner-invitations';
 import { formatOrganizationDateTime } from './organization-dates';
 import {
 	availableLifecycleActions,
@@ -21,6 +22,8 @@ export function OrganizationDetails({
 	onEdit,
 	onLifecycleChange,
 	onReload,
+	onManageOwnerInvitations,
+	focusInvitations = false,
 }: {
 	readonly organization: Organization;
 	readonly permissions: readonly string[];
@@ -29,10 +32,13 @@ export function OrganizationDetails({
 	readonly onEdit: () => void;
 	readonly onLifecycleChange: (organization: Organization, action: LifecycleAction) => void;
 	readonly onReload: () => void;
+	readonly onManageOwnerInvitations?: () => void;
+	readonly focusInvitations?: boolean;
 }) {
 	const canUpdate =
 		organization.status !== 'ARCHIVED' && permissions.includes(organizationPermissions.update);
-	const hasActions = canUpdate || availableLifecycleActions(organization, permissions).length > 0;
+	const canManageInvitations = onManageOwnerInvitations !== undefined && Object.values(ownerInvitationPermissions).some((permission) => permissions.includes(permission));
+	const hasActions = canUpdate || canManageInvitations || availableLifecycleActions(organization, permissions).length > 0;
 	const timeline = [
 		['Registered', organization.createdAt],
 		['Last updated', organization.updatedAt],
@@ -50,6 +56,11 @@ export function OrganizationDetails({
 			footer={
 				hasActions ? (
 					<>
+						{canManageInvitations ? (
+							<Button icon={UserMultiple02Icon} variant="secondary" width="full" aria-haspopup="dialog" data-autofocus={focusInvitations || undefined} onClick={onManageOwnerInvitations}>
+								Manage owner invitations
+							</Button>
+						) : null}
 						{canUpdate ? (
 							<Button
 								icon={PencilEdit01Icon}
