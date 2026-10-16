@@ -14,7 +14,11 @@ export async function POST(
 	try {
 		const context = mutationContext(request, true);
 		if (request.body !== null) {
-			throw new BffError(400, 'OWNER_INVITATION_INVALID_INPUT', 'Revocation does not accept a request body.');
+			throw new BffError(
+				400,
+				'OWNER_INVITATION_INVALID_INPUT',
+				'Revocation does not accept a request body.',
+			);
 		}
 		const { id, invitationId } = await params;
 		const data = await revokeOwnerInvitation(id, invitationId, context);
