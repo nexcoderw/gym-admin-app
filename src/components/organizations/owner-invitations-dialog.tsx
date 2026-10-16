@@ -54,6 +54,7 @@ export function OwnerInvitationsDialog({
 		permissions.includes(ownerInvitationPermissions.create) &&
 		(organization.status === 'PENDING' || organization.status === 'ACTIVE');
 	const canRevoke = permissions.includes(ownerInvitationPermissions.revoke);
+	const canSend = permissions.includes(ownerInvitationPermissions.send);
 	const onLoaded = useCallback(() => setReviewRequired(false), []);
 	const busy = useCallback((value: boolean) => {
 		pendingRef.current = value;
@@ -137,7 +138,9 @@ export function OwnerInvitationsDialog({
 						onBack={back}
 						onBusyChange={busy}
 						onUnconfirmed={() => setReviewRequired(true)}
-						onSaved={() => saved('Owner invitation created. Email delivery is not enabled yet.')}
+						onSaved={() =>
+							saved('Owner invitation created. Send it from the invitation list when ready.')
+						}
 					/>
 				) : view.kind === 'revoke' && canRead && canRevoke ? (
 					<OwnerInvitationRevokeDialog
@@ -145,7 +148,9 @@ export function OwnerInvitationsDialog({
 						onBack={back}
 						onBusyChange={busy}
 						onUnconfirmed={() => setReviewRequired(true)}
-						onSaved={() => saved('Owner invitation revoked. Existing gym ownership was not changed.')}
+						onSaved={() =>
+							saved('Owner invitation revoked. Existing gym ownership was not changed.')
+						}
 					/>
 				) : (
 					<>
@@ -192,7 +197,8 @@ export function OwnerInvitationsDialog({
 						) : null}
 						{canCreate ? (
 							<p className={styles.description}>
-								Creating an invitation does not send email or grant gym access.
+								Creating records the invitation. Sending email is a separate, permission-checked
+								action.
 							</p>
 						) : null}
 						{canRead ? (
@@ -201,8 +207,13 @@ export function OwnerInvitationsDialog({
 								organizationId={organization.id}
 								query={query}
 								canRevoke={canRevoke && !reviewRequired}
+								canSend={canSend && !reviewRequired}
 								hasPrevious={trail.length > 0}
 								onLoaded={onLoaded}
+								onDeliveryQueued={(message) => {
+									toast.success(message);
+									reload();
+								}}
 								onRevoke={(invitation) => setView({ kind: 'revoke', invitation })}
 								onNext={(cursor) => {
 									setTrail((current) => [...current, query.cursor]);
