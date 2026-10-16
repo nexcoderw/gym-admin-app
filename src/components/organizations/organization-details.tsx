@@ -54,9 +54,12 @@ export function OrganizationDetails({
 	] as const;
 	return (
 		<Dialog
-			size="large"
-			title={organization.name}
-			description="Gym details, owner invitations and lifecycle."
+			title={
+				<span className={styles.title}>
+					<HugeiconsIcon icon={Building03Icon} size={20} aria-hidden="true" />
+					<span>{organization.name}</span>
+				</span>
+			}
 			returnFocus={returnFocus}
 			onClose={onClose}
 			footer={
@@ -69,10 +72,11 @@ export function OrganizationDetails({
 								size="sm"
 								width="auto"
 								aria-haspopup="dialog"
+								aria-label="Manage owner invitations"
 								data-autofocus={focusInvitations || undefined}
 								onClick={onManageOwnerInvitations}
 							>
-								Manage owner invitations
+								invitations
 							</Button>
 						) : null}
 						{canUpdate ? (
@@ -82,9 +86,10 @@ export function OrganizationDetails({
 								size="sm"
 								width="auto"
 								aria-haspopup="dialog"
+								aria-label="Edit gym name"
 								onClick={onEdit}
 							>
-								Edit gym name
+								Edit
 							</Button>
 						) : null}
 						<OrganizationLifecycleActions
@@ -100,27 +105,15 @@ export function OrganizationDetails({
 			<div className={styles.details}>
 				<section className={styles.section}>
 					<div className={styles.sectionHeading}>
-						<div className={styles.recordHeading}>
-							<span className={styles.mark}>
-								<HugeiconsIcon icon={Building03Icon} size={24} aria-hidden="true" />
-							</span>
-							<div>
-								<h3>Registry record</h3>
-								<p className={styles.note}>Organization details</p>
-							</div>
-						</div>
+						<h3>Registry record</h3>
 						<OrganizationStatusBadge status={organization.status} />
 					</div>
 					<dl className={styles.fields}>
 						<div>
-							<dt>Gym name</dt>
-							<dd>{organization.name}</dd>
-						</div>
-						<div>
 							<dt>Slug</dt>
 							<dd>{organization.slug}</dd>
 						</div>
-						<div className={styles.wide}>
+						<div>
 							<dt>Organization UUID</dt>
 							<dd className={styles.identifier}>{organization.id}</dd>
 						</div>
@@ -129,7 +122,7 @@ export function OrganizationDetails({
 				<section className={styles.section}>
 					<div className={styles.sectionHeading}>
 						<h3>Lifecycle dates</h3>
-						<span className={styles.note}>Kigali time · UTC+2</span>
+						<span className={styles.note}>Kigali time (UTC+2)</span>
 					</div>
 					<dl className={styles.timeline}>
 						{timeline.map(([label, value]) =>
@@ -144,16 +137,14 @@ export function OrganizationDetails({
 						)}
 					</dl>
 				</section>
-				<section className={styles.preview}>
-					<div className={styles.sectionHeading}>
-						<h3>Future address</h3>
-						<span className={styles.previewLabel}>Preview only</span>
-					</div>
+				<details className={styles.preview}>
+					<summary className={styles.previewToggle}>
+						<span>Address preview</span>
+						<span className={styles.note}>Preview only</span>
+					</summary>
 					<p className={styles.address}>{organization.slug}.gym.rw</p>
-					<p className={styles.note}>
-						This address has not been provisioned by this interface.
-					</p>
-				</section>
+					<p className={styles.note}>Not provisioned.</p>
+				</details>
 			</div>
 		</Dialog>
 	);
