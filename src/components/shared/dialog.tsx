@@ -93,12 +93,7 @@ export function Dialog({
 							</p>
 						) : null}
 					</div>
-					<IconButton
-						icon={Cancel01Icon}
-						label="Close"
-						onClick={onClose}
-						disabled={!dismissible}
-					/>
+					<IconButton icon={Cancel01Icon} label="Close" onClick={onClose} disabled={!dismissible} />
 				</div>
 				<div className={styles.body}>{children}</div>
 				{footer ? <div className={styles.footer}>{footer}</div> : null}
