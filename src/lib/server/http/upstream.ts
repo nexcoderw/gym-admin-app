@@ -131,7 +131,7 @@ export async function upstream<T>(
 		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT')
 			throw error;
 		throw new BffError(
-			options ? 503 : 502,
+			503,
 			'SERVICE_UNAVAILABLE',
 			options
 				? 'The result could not be confirmed. Reload current records before retrying a change.'
