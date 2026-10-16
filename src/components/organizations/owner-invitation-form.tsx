@@ -76,9 +76,27 @@ export function OwnerInvitationForm({ organizationId, canRead, onBack, onSaved, 
 			<Input id={`${id}-email`} name="email" label="Owner email address" icon={Mail01Icon} type="email" autoComplete="email" maxLength={254} required disabled={pending || blocked} error={fields.email} />
 			{error ? <p role="alert" className={styles.error}>{error}</p> : null}
 			{blocked && !canRead ? <p className={styles.notice}>Ask an operator with invitation-read permission to review the result before creating another invitation.</p> : null}
-			<div className={styles.actions}>
-				<Button icon={blocked ? RefreshIcon : ArrowLeft01Icon} variant="secondary" disabled={pending} onClick={onBack}>{blocked && canRead ? 'Review invitations' : 'Back'}</Button>
-				<Button icon={UserAdd01Icon} type="submit" width="full" pending={pending} disabled={blocked}>Create invitation</Button>
+			<div className={`${styles.actions} ${styles.formActions}`}>
+				<Button
+					icon={blocked ? RefreshIcon : ArrowLeft01Icon}
+					variant="secondary"
+					size="sm"
+					width="full"
+					disabled={pending}
+					onClick={onBack}
+				>
+					{blocked && canRead ? 'Review invitations' : 'Back'}
+				</Button>
+				<Button
+					icon={UserAdd01Icon}
+					type="submit"
+					size="sm"
+					width="full"
+					pending={pending}
+					disabled={blocked}
+				>
+					Create invitation
+				</Button>
 			</div>
 		</form>
 	);
