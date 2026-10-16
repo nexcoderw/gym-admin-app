@@ -151,26 +151,9 @@ export function OwnerInvitationsDialog({
 					<>
 						<div className={styles.toolbar}>
 							{canRead ? (
-								<div className={styles.filter}>
-									<label htmlFor={filterId}>Invitation status</label>
-									<select
-										id={filterId}
-										value={query.status ?? ''}
-										data-autofocus
-										onChange={(event) => {
-											const status = ownerInvitationStatusSchema.safeParse(event.target.value);
-											setQuery({ limit: 20, status: status.success ? status.data : undefined });
-											setTrail([]);
-										}}
-									>
-										<option value="">All statuses</option>
-										{ownerInvitationStatusSchema.options.map((status) => (
-											<option key={status} value={status}>
-												{ownerInvitationStatusContent[status].label}
-											</option>
-										))}
-									</select>
-								</div>
+								<p id={filterId} className={styles.filterLabel}>
+									Invitation status
+								</p>
 							) : null}
 							{canCreate ? (
 								<Button
@@ -186,6 +169,27 @@ export function OwnerInvitationsDialog({
 								</Button>
 							) : null}
 						</div>
+						{canRead ? (
+							<div className={styles.filters} role="group" aria-labelledby={filterId}>
+								{[undefined, ...ownerInvitationStatusSchema.options].map((status) => (
+									<button
+										key={status ?? 'all'}
+										type="button"
+										className={`${styles.badge} ${styles.filterBadge}`}
+										data-status={status}
+										aria-pressed={query.status === status}
+										data-autofocus={query.status === status || undefined}
+										onClick={() => {
+											if (query.status === status) return;
+											setQuery({ limit: query.limit, status });
+											setTrail([]);
+										}}
+									>
+										{status ? ownerInvitationStatusContent[status].label : 'All'}
+									</button>
+								))}
+							</div>
+						) : null}
 						{canCreate ? (
 							<p className={styles.description}>
 								Creating an invitation does not send email or grant gym access.
