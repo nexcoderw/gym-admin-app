@@ -103,7 +103,12 @@ export function OrganizationStatusFilter({
 			/>
 			{status ? <span className={styles.indicator} aria-hidden="true" /> : null}
 			{open ? (
-				<div id={menuId} className={styles.menu} role="group" aria-label="Filter by lifecycle status">
+				<div
+					id={menuId}
+					className={styles.menu}
+					role="group"
+					aria-label="Filter by lifecycle status"
+				>
 					<p className={styles.heading} aria-hidden="true">
 						Status
 					</p>
