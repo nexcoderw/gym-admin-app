@@ -79,16 +79,48 @@ export function OwnerInvitationList({ organizationId, query, canRevoke, hasPrevi
 								] as const).map(([label, value]) => value ? <div key={label}><dt>{label} (Kigali time)</dt><dd><time dateTime={value}>{formatOrganizationDateTime(value)}</time></dd></div> : null)}
 							</dl>
 							{canRevoke && (invitation.status === 'PENDING_DELIVERY' || invitation.status === 'SENT') ? (
-								<Button icon={Cancel01Icon} variant="secondary" aria-haspopup="dialog" onClick={() => onRevoke(invitation)}>Revoke invitation</Button>
+								<Button
+									icon={Cancel01Icon}
+									variant="secondary"
+									size="sm"
+									width="auto"
+									className={styles.revokeAction}
+									aria-haspopup="dialog"
+									onClick={() => onRevoke(invitation)}
+								>
+									Revoke invitation
+								</Button>
 							) : null}
 						</li>
 					))}
 				</ul>
 			)}
-			<div className={styles.actions} aria-label="Invitation pagination">
-				<Button icon={ArrowLeft01Icon} variant="secondary" disabled={!hasPrevious} onClick={onPrevious}>Previous results</Button>
-				<Button icon={ArrowRight01Icon} variant="secondary" disabled={state.data.nextCursor === null} onClick={() => { if (state.data.nextCursor) onNext(state.data.nextCursor); }}>Next results</Button>
-			</div>
+			{hasPrevious || state.data.nextCursor !== null ? (
+				<div className={styles.actions} aria-label="Invitation pagination">
+					<Button
+						icon={ArrowLeft01Icon}
+						variant="secondary"
+						size="sm"
+						width="auto"
+						disabled={!hasPrevious}
+						onClick={onPrevious}
+					>
+						Previous results
+					</Button>
+					<Button
+						icon={ArrowRight01Icon}
+						variant="secondary"
+						size="sm"
+						width="auto"
+						disabled={state.data.nextCursor === null}
+						onClick={() => {
+							if (state.data.nextCursor) onNext(state.data.nextCursor);
+						}}
+					>
+						Next results
+					</Button>
+				</div>
+			) : null}
 		</div>
 	);
 }
