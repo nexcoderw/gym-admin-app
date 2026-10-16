@@ -68,7 +68,7 @@ describe('verified fixed upstream operations', () => {
 			new DOMException('fictional private provider detail', 'TimeoutError'),
 		);
 		await expect(getSession(context)).rejects.toMatchObject({
-			status: 502,
+			status: 503,
 			code: 'SERVICE_UNAVAILABLE',
 			message: 'The service is unavailable. Try again.',
 		});
