@@ -1,5 +1,6 @@
 import type { z } from 'zod';
 import { organizationFailure } from '@/lib/contracts/organizations';
+import { ownerInvitationFailure } from '@/lib/contracts/owner-invitations';
 
 export class OrganizationRequestError extends Error {
 	constructor(readonly status: number, readonly code: string, message: string) {
@@ -17,14 +18,14 @@ export async function post<T>(
 	return browserRequest(path, 'POST', body, schema, csrf);
 }
 
-/** Organization options are explicit; auth callers retain their established error semantics. */
+/** Private-domain options are explicit; auth callers retain their established error semantics. */
 export async function browserRequest<T>(
 	path: `/api/${string}`,
 	method: 'GET' | 'POST' | 'PATCH',
 	body: unknown,
 	schema: z.ZodType<T>,
 	csrf?: string,
-	options?: { readonly domain: 'organizations'; readonly expectedStatus: 200 | 201; readonly ifMatch?: string },
+	options?: { readonly domain: 'organizations' | 'owner-invitations'; readonly expectedStatus: 200 | 201; readonly ifMatch?: string; readonly signal?: AbortSignal },
 ): Promise<T> {
 	let response: Response;
 	try {
@@ -33,7 +34,9 @@ export async function browserRequest<T>(
 			credentials: 'same-origin',
 			cache: 'no-store',
 			redirect: 'error',
-			signal: AbortSignal.timeout(25_000),
+			signal: options?.signal
+				? AbortSignal.any([AbortSignal.timeout(25_000), options.signal])
+				: AbortSignal.timeout(25_000),
 			headers: {
 				...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
 				...(csrf ? { 'x-platform-csrf-token': csrf } : {}),
@@ -51,9 +54,11 @@ export async function browserRequest<T>(
 			const value: unknown = await response.json();
 			if (typeof value === 'object' && value !== null && 'error' in value &&
 				typeof value.error === 'object' && value.error !== null && 'code' in value.error &&
-				typeof value.error.code === 'string' && ['ORGANIZATION_AUDIT_UNAVAILABLE', 'ORGANIZATION_SLUG_CONFLICT', 'ORGANIZATION_TRANSITION_CONFLICT'].includes(value.error.code)) code = value.error.code;
+				typeof value.error.code === 'string' && ['ORGANIZATION_AUDIT_UNAVAILABLE', 'ORGANIZATION_SLUG_CONFLICT', 'ORGANIZATION_TRANSITION_CONFLICT', 'OWNER_INVITATION_OUTSTANDING_CONFLICT', 'OWNER_INVITATION_AUDIT_UNAVAILABLE'].includes(value.error.code)) code = value.error.code;
 		} catch { /* Display only local allowlisted error messages. */ }
-		const safe = organizationFailure(response.status, code);
+		const safe = options.domain === 'owner-invitations'
+			? ownerInvitationFailure(response.status, code)
+			: organizationFailure(response.status, code);
 		throw new OrganizationRequestError(safe.status, safe.code, safe.message);
 	}
 	if (!response.ok)
