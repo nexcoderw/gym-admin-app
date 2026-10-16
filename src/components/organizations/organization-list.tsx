@@ -20,6 +20,7 @@ import {
 } from '@/lib/contracts/organizations';
 import { OrganizationCard } from './organization-card';
 import { OrganizationDetails } from './organization-details';
+import { OwnerInvitationsDialog } from './owner-invitations-dialog';
 import { OrganizationForm } from './organization-form';
 import type { LifecycleAction } from './organization-lifecycle-actions';
 import { OrganizationSearch } from './organization-search';
@@ -30,7 +31,8 @@ import styles from './organization-list.module.css';
 type ActiveDialog =
 	| { readonly kind: 'none' }
 	| { readonly kind: 'create'; readonly trigger: HTMLElement }
-	| { readonly kind: 'details'; readonly organization: Organization; readonly trigger: HTMLElement }
+	| { readonly kind: 'details'; readonly organization: Organization; readonly trigger: HTMLElement; readonly focusInvitations?: boolean }
+	| { readonly kind: 'invitations'; readonly organization: Organization; readonly trigger: HTMLElement }
 	| { readonly kind: 'edit'; readonly organization: Organization; readonly trigger: HTMLElement };
 
 const lifecycleMessages: Record<LifecycleAction, (name: string) => string> = {
@@ -238,11 +240,17 @@ export function OrganizationList({
 					returnFocus={dialog.trigger}
 					onClose={close}
 					onReload={reload}
+					focusInvitations={dialog.focusInvitations}
+					onManageOwnerInvitations={() => setDialog({ kind: 'invitations', organization: dialog.organization, trigger: dialog.trigger })}
 					onEdit={() =>
 						setDialog({ kind: 'edit', organization: dialog.organization, trigger: dialog.trigger })
 					}
 					onLifecycleChange={(row, action) => confirmed(lifecycleMessages[action](row.name))}
 				/>
+			) : null}
+			{dialog.kind === 'invitations' ? (
+				<OwnerInvitationsDialog organization={dialog.organization} permissions={permissions} returnFocus={dialog.trigger}
+					onClose={() => setDialog({ kind: 'details', organization: dialog.organization, trigger: dialog.trigger, focusInvitations: true })} />
 			) : null}
 		</>
 	);
