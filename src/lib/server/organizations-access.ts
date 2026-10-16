@@ -8,17 +8,29 @@ import { clearPlatformCookies } from './http/cookies';
 import { serverEnvironment } from './environment';
 import type { ForwardContext } from './http/upstream';
 
-export async function authorizeOrganization(context: ForwardContext, permission: OrganizationPermission) {
+export async function authorizeOrganization(
+	context: ForwardContext,
+	permission: OrganizationPermission,
+) {
 	const session = await getSession(context);
 	if (!session.permissions.includes(permission)) {
-		throw new BffError(403, 'ACCESS_DENIED', 'Your account does not have the required organization permission.');
+		throw new BffError(
+			403,
+			'ACCESS_DENIED',
+			'Your account does not have the required organization permission.',
+		);
 	}
 	return session;
 }
 
 export function organizationInput<T>(schema: z.ZodType<T>, input: unknown): T {
 	const result = schema.safeParse(input);
-	if (!result.success) throw new BffError(400, 'INVALID_INPUT', 'Check the organization details and reload the latest records.');
+	if (!result.success)
+		throw new BffError(
+			400,
+			'INVALID_INPUT',
+			'Check the organization details and reload the latest records.',
+		);
 	return result.data;
 }
 
@@ -28,7 +40,11 @@ export function organizationQuery(request: Request): Record<string, string> {
 	const result: Record<string, string> = {};
 	for (const [key, value] of params) {
 		if (Object.hasOwn(result, key) || !['limit', 'status', 'cursor'].includes(key)) {
-			throw new BffError(400, 'INVALID_INPUT', 'Use a valid status, limit and cursor to list gyms.');
+			throw new BffError(
+				400,
+				'INVALID_INPUT',
+				'Use a valid status, limit and cursor to list gyms.',
+			);
 		}
 		result[key] = value;
 	}
@@ -48,12 +64,21 @@ export function organizationRouteError(request: Request, error: unknown) {
 	return response;
 }
 
-export function verifyOrganizationResult(row: Organization, expected: Partial<Pick<Organization, 'id' | 'name' | 'slug' | 'status'>>) {
-	if ((expected.id !== undefined && row.id !== expected.id) ||
+export function verifyOrganizationResult(
+	row: Organization,
+	expected: Partial<Pick<Organization, 'id' | 'name' | 'slug' | 'status'>>,
+) {
+	if (
+		(expected.id !== undefined && row.id !== expected.id) ||
 		(expected.name !== undefined && row.name !== expected.name) ||
 		(expected.slug !== undefined && row.slug !== expected.slug) ||
-		(expected.status !== undefined && row.status !== expected.status)) {
-		throw new BffError(502, 'INVALID_SERVICE_RESPONSE', 'The organization result was incompatible. Review current records before retrying.');
+		(expected.status !== undefined && row.status !== expected.status)
+	) {
+		throw new BffError(
+			502,
+			'INVALID_SERVICE_RESPONSE',
+			'The organization result was incompatible. Review current records before retrying.',
+		);
 	}
 	return row;
 }
