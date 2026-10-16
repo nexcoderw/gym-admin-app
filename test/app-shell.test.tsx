@@ -54,9 +54,9 @@ describe('workspace shell', () => {
 		const sidebar = screen.getByRole('complementary', { name: 'Platform workspace' });
 		expect(within(sidebar).getByText('NEXCODE')).toBeDefined();
 		expect(within(sidebar).getByRole('navigation', { name: 'Platform navigation' })).toBeDefined();
-		expect(within(sidebar).getByRole('link', { name: 'Overview' }).getAttribute('aria-current')).toBe(
-			'page',
-		);
+		expect(
+			within(sidebar).getByRole('link', { name: 'Overview' }).getAttribute('aria-current'),
+		).toBe('page');
 	});
 
 	it('lists only permitted destinations and never activates a lookalike path prefix', () => {
