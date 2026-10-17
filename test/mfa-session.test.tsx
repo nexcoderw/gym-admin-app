@@ -44,8 +44,7 @@ describe('MFA to live session integration', () => {
 			)
 			.mockResolvedValueOnce(
 				Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
-			)
-			.mockResolvedValueOnce(Response.json(session));
+			);
 		render(
 			<MfaForm
 				challenge={{ ...challenge, methods: ['totp', 'recovery_code', 'email_otp'] }}
@@ -77,7 +76,6 @@ describe('MFA to live session integration', () => {
 		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
 			'/api/auth/mfa/email',
 			'/api/auth/mfa/verify',
-			'/api/auth/session',
 		]);
 		expect(fetchMock.mock.calls[1]?.[1]?.body).toBe(
 			JSON.stringify({ challengeToken: token, method: 'email_otp', emailOtpCode: '012345' }),
@@ -109,6 +107,19 @@ describe('MFA to live session integration', () => {
 				recoveryCode: 'fictional-recovery-code',
 			}),
 		);
+	});
+
+	it('confirms an uncertain MFA outcome through the session endpoint without replaying the code', async () => {
+		const onAuthenticated = vi.fn<() => void>();
+		fetchMock
+			.mockResolvedValueOnce(Response.json({}, { status: 503 }))
+			.mockResolvedValueOnce(Response.json(session));
+		renderVerification(onAuthenticated);
+		await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce());
+		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
+			'/api/auth/mfa/verify',
+			'/api/auth/session',
+		]);
 	});
 
 	it('keeps email delivery failures safe and blocks verification before a confirmed send', async () => {
@@ -145,35 +156,20 @@ describe('MFA to live session integration', () => {
 		expect(onAuthenticated).not.toHaveBeenCalled();
 	});
 
-	it('confirms a live session before granting the navigation callback', async () => {
+	it('navigates after confirmed MFA without issuing a redundant session read', async () => {
 		const onAuthenticated = vi.fn<() => void>();
-		fetchMock
-			.mockResolvedValueOnce(
-				Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
-			)
-			.mockImplementationOnce(() => {
-				expect(onAuthenticated).not.toHaveBeenCalled();
-				return Promise.resolve(Response.json(session));
-			});
+		fetchMock.mockResolvedValueOnce(
+			Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
+		);
 		renderVerification(onAuthenticated);
 		await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce());
-		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
-			'/api/auth/mfa/verify',
-			'/api/auth/session',
-		]);
-		expect(fetchMock.mock.calls[1]?.[1]).toMatchObject({
-			credentials: 'same-origin',
-			cache: 'no-store',
-			redirect: 'error',
-		});
+		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual(['/api/auth/mfa/verify']);
 	});
 
-	it('retries only session confirmation after an outage, without replaying MFA', async () => {
+	it('retries only session confirmation after an uncertain outcome, without replaying MFA', async () => {
 		const onAuthenticated = vi.fn<() => void>();
 		fetchMock
-			.mockResolvedValueOnce(
-				Response.json({ status: 'authenticated', expiresAt: expiration, csrfToken: csrf }),
-			)
+			.mockResolvedValueOnce(Response.json({}, { status: 503 }))
 			.mockResolvedValueOnce(Response.json({ secret: 'never display' }, { status: 502 }))
 			.mockResolvedValueOnce(Response.json(session));
 		renderVerification(onAuthenticated);
@@ -181,7 +177,7 @@ describe('MFA to live session integration', () => {
 		expect(onAuthenticated).not.toHaveBeenCalled();
 		expect(screen.getByRole('alert').textContent).not.toContain('never display');
 		expect(screen.getByLabelText('Six-digit code').hasAttribute('disabled')).toBe(true);
-		fireEvent.click(screen.getByRole('button', { name: 'Open platform' }));
+		fireEvent.click(screen.getByRole('button', { name: 'Check session' }));
 		await waitFor(() => expect(onAuthenticated).toHaveBeenCalledOnce());
 		expect(fetchMock.mock.calls.map(([path]) => path)).toEqual([
 			'/api/auth/mfa/verify',
