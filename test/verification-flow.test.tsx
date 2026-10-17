@@ -96,19 +96,18 @@ describe('separate verification page flow', () => {
 		expect(fetchMock).toHaveBeenCalledOnce();
 	});
 
-	it('confirms the live session before navigating to the dashboard', async () => {
+	it('navigates after the BFF confirms MFA and leaves dashboard session validation to the server', async () => {
 		await enterVerification();
-		fetchMock
-			.mockResolvedValueOnce(
-				Response.json({ status: 'authenticated', expiresAt: session.expiresAt, csrfToken: csrf }),
-			)
-			.mockResolvedValueOnce(Response.json(session));
+		fetchMock.mockResolvedValueOnce(
+			Response.json({ status: 'authenticated', expiresAt: session.expiresAt, csrfToken: csrf }),
+		);
 		fireEvent.change(screen.getByLabelText('Six-digit code'), { target: { value: '123456' } });
 		fireEvent.click(screen.getByRole('button', { name: 'Open platform' }));
 		await waitFor(() => expect(router.replace).toHaveBeenCalledWith('/dashboard'));
 		expect(router.replace).not.toHaveBeenCalledWith('/login');
 		expect(router.refresh).toHaveBeenCalledOnce();
 		expect(screen.queryByLabelText('Six-digit code')).toBeNull();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
 	});
 
 	it('ignores a password response that arrives after leaving the page', async () => {
