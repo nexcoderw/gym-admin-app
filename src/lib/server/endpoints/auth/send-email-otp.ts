@@ -11,5 +11,7 @@ export function sendEmailOtp(input: { readonly challengeToken: string }, context
 		emailOtpSentSchema,
 		context,
 		emailOtpRequestSchema.parse(input),
+		200,
+		{ policy: 'auth-command' },
 	);
 }
