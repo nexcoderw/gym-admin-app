@@ -9,8 +9,15 @@ import { serverEnvironment } from '../environment';
 import { BffError, upstreamFailure } from './errors';
 import { boundedJson } from './json';
 
-// Leaves transport headroom beyond the API's 18s total session validation budget.
-const UPSTREAM_TIMEOUT_MS = 20_000;
+type UpstreamPolicy = 'standard' | 'auth-command' | 'resilient-read';
+
+const upstreamPolicies = {
+	standard: { timeoutMs: 30_000, attempts: 1 },
+	'auth-command': { timeoutMs: 45_000, attempts: 1 },
+	'resilient-read': { timeoutMs: 30_000, attempts: 2 },
+} as const satisfies Record<UpstreamPolicy, { timeoutMs: number; attempts: number }>;
+
+const transientReadStatuses = new Set([502, 503, 504]);
 
 export interface ForwardContext {
 	readonly cookie: string;
@@ -26,31 +33,46 @@ export async function upstream<T>(
 	body?: unknown,
 	expectedStatus: 200 | 201 | 202 | 204 = 200,
 	options?: {
-		readonly domain: 'organizations' | 'owner-invitations';
+		readonly domain?: 'organizations' | 'owner-invitations';
 		readonly query?: URLSearchParams;
 		readonly ifMatch?: string;
+		readonly policy?: UpstreamPolicy;
 	},
 ): Promise<{ data: T; cookies: string[]; etag?: string | null }> {
 	const env = serverEnvironment();
 	try {
 		const url = new URL(path, env.apiOrigin);
 		if (options?.query) url.search = options.query.toString();
-		const response = await fetch(url, {
-			method,
-			cache: 'no-store',
-			redirect: 'error',
-			signal: AbortSignal.timeout(UPSTREAM_TIMEOUT_MS),
-			headers: {
-				Accept: 'application/json',
-				Origin: env.adminOrigin,
-				...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
-				...(context.cookie ? { Cookie: context.cookie } : {}),
-				...(context.csrf ? { 'x-platform-csrf-token': context.csrf } : {}),
-				...(options?.ifMatch ? { 'If-Match': options.ifMatch } : {}),
-			},
-			...(body === undefined ? {} : { body: JSON.stringify(body) }),
-		});
-		if (options && response.headers.getSetCookie().length > 0) {
+		const policyName = options?.policy ?? 'standard';
+		const policy = upstreamPolicies[policyName];
+		let response: Response | undefined;
+		for (let attempt = 1; attempt <= policy.attempts; attempt += 1) {
+			response = await fetch(url, {
+				method,
+				cache: 'no-store',
+				redirect: 'error',
+				signal: AbortSignal.timeout(policy.timeoutMs),
+				headers: {
+					Accept: 'application/json',
+					Origin: env.adminOrigin,
+					...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
+					...(context.cookie ? { Cookie: context.cookie } : {}),
+					...(context.csrf ? { 'x-platform-csrf-token': context.csrf } : {}),
+					...(options?.ifMatch ? { 'If-Match': options.ifMatch } : {}),
+				},
+				...(body === undefined ? {} : { body: JSON.stringify(body) }),
+			});
+			const retryable =
+				policyName === 'resilient-read' &&
+				method === 'GET' &&
+				transientReadStatuses.has(response.status) &&
+				attempt < policy.attempts;
+			if (!retryable) break;
+			await response.body?.cancel();
+		}
+		if (!response)
+			throw new BffError(503, 'SERVICE_UNAVAILABLE', 'The service is unavailable. Try again.');
+		if (options?.domain && response.headers.getSetCookie().length > 0) {
 			await response.body?.cancel();
 			throw new BffError(
 				502,
@@ -61,7 +83,7 @@ export async function upstream<T>(
 			);
 		}
 		if (!response.ok) {
-			if (options) {
+			if (options?.domain) {
 				let code: string | undefined;
 				if (response.status === 503 || response.status === 409) {
 					try {
@@ -125,7 +147,7 @@ export async function upstream<T>(
 		return {
 			data: parsed.data,
 			cookies: response.headers.getSetCookie(),
-			...(options === undefined ? {} : { etag: response.headers.get('etag') }),
+			...(options?.domain === undefined ? {} : { etag: response.headers.get('etag') }),
 		};
 	} catch (error) {
 		if (error instanceof BffError && error.status !== 413 && error.code !== 'INVALID_INPUT')
@@ -133,7 +155,7 @@ export async function upstream<T>(
 		throw new BffError(
 			503,
 			'SERVICE_UNAVAILABLE',
-			options
+			options?.domain
 				? 'The result could not be confirmed. Reload current records before retrying a change.'
 				: 'The service is unavailable. Try again.',
 		);
