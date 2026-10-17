@@ -1,6 +1,9 @@
 import { browserApi } from '@/constants/routes';
 import { sessionSchema, type PlatformSession } from '@/lib/contracts/auth';
 
+// The browser must leave headroom for the BFF's bounded resilient session read.
+export const SESSION_CONFIRMATION_TIMEOUT_MS = 65_000;
+
 /** Confirm the HttpOnly session through the fixed BFF endpoint, never a browser-held token. */
 export async function readLiveSession(): Promise<PlatformSession> {
 	let response: Response;
@@ -9,7 +12,7 @@ export async function readLiveSession(): Promise<PlatformSession> {
 			credentials: 'same-origin',
 			cache: 'no-store',
 			redirect: 'error',
-			signal: AbortSignal.timeout(25_000),
+			signal: AbortSignal.timeout(SESSION_CONFIRMATION_TIMEOUT_MS),
 		});
 	} catch {
 		throw new Error('Your session could not be confirmed. Try again.');
