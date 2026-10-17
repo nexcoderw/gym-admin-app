@@ -15,6 +15,9 @@ export async function getSummary(context: ForwardContext) {
 		'GET',
 		summarySchema,
 		context,
+		undefined,
+		200,
+		{ policy: 'resilient-read' },
 	);
 	if (result.cookies.length > 0)
 		throw new BffError(
