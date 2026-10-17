@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 import { browserApi, routes } from '@/constants/routes';
+import { SESSION_CONFIRMATION_TIMEOUT_MS } from '@/lib/client/session';
 
 /** Expiry/focus checks only: background polling would silently extend server-side idle lifetime. */
 export function SessionLifecycle({ expiresAt }: { readonly expiresAt: string }) {
@@ -15,7 +16,10 @@ export function SessionLifecycle({ expiresAt }: { readonly expiresAt: string }) 
 			if (disposed || request || document.visibilityState === 'hidden') return;
 			const controller = new AbortController();
 			request = controller;
-			const deadline = window.setTimeout(() => controller.abort(), 20_000);
+			const deadline = window.setTimeout(
+				() => controller.abort(),
+				SESSION_CONFIRMATION_TIMEOUT_MS,
+			);
 			try {
 				const response = await fetch(browserApi.session, {
 					credentials: 'same-origin',
