@@ -11,5 +11,7 @@ export function verifyMfa(input: MfaRequest, context: ForwardContext) {
 		verifiedSchema,
 		context,
 		verifyMfaRequestSchema.parse(input),
+		200,
+		{ policy: 'auth-command' },
 	);
 }
