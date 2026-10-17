@@ -14,7 +14,7 @@ import { Button } from '@/components/shared/button';
 import { Input } from '@/components/shared/input';
 import { browserApi } from '@/constants/routes';
 import { emailOtpSentSchema, verifiedSchema, type MfaChallenge } from '@/lib/contracts/auth';
-import { post } from '@/lib/client/mutations';
+import { AuthRequestError, post } from '@/lib/client/mutations';
 import { readLiveSession } from '@/lib/client/session';
 import styles from './mfa-form.module.css';
 
@@ -61,12 +61,12 @@ export function MfaForm({
 		const timer = setTimeout(() => setRetryAt(0), Math.max(0, retryAt - Date.now()));
 		return () => clearTimeout(timer);
 	}, [retryAt]);
-	const [sessionEstablished, setSessionEstablished] = useState(false);
+	const [verificationOutcomeUnconfirmed, setVerificationOutcomeUnconfirmed] = useState(false);
 	const [error, setError] = useState('');
 	const busy = pending || sending;
 	const numericCode = method !== 'recovery_code';
 	async function sendEmail() {
-		if (inFlight.current || retryAt !== 0 || sessionEstablished) return;
+		if (inFlight.current || retryAt !== 0 || verificationOutcomeUnconfirmed) return;
 		inFlight.current = true;
 		setSending(true);
 		setError('');
@@ -96,36 +96,59 @@ export function MfaForm({
 	}
 	async function submit(event: FormEvent<HTMLFormElement>) {
 		event.preventDefault();
-		if (inFlight.current || (method === 'email_otp' && !emailSent && !sessionEstablished)) return;
+		if (
+			inFlight.current ||
+			(method === 'email_otp' && !emailSent && !verificationOutcomeUnconfirmed)
+		)
+			return;
 		inFlight.current = true;
 		const form = event.currentTarget;
 		const code = new FormData(form).get('code');
 		setPending(true);
 		setError('');
+		let submittedVerification = false;
 		try {
-			if (!sessionEstablished) {
-				if (Date.parse(challenge.expiresAt) <= Date.now())
-					throw new Error('Verification expired. Start sign-in again.');
-				await post(
-					browserApi.verifyMfa,
-					{
-						challengeToken: challenge.challengeToken,
-						method,
-						...(method === 'email_otp'
-							? { emailOtpCode: code }
-							: method === 'totp'
-								? { totpCode: code }
-								: { recoveryCode: code }),
-					},
-					verifiedSchema,
-					challenge.csrfToken,
-				);
-				if (!mounted.current) return;
-				setSessionEstablished(true);
+			if (verificationOutcomeUnconfirmed) {
+				await readLiveSession();
+				if (mounted.current) onAuthenticated();
+				return;
 			}
-			await readLiveSession();
+			if (Date.parse(challenge.expiresAt) <= Date.now())
+				throw new Error('Verification expired. Start sign-in again.');
+			submittedVerification = true;
+			await post(
+				browserApi.verifyMfa,
+				{
+					challengeToken: challenge.challengeToken,
+					method,
+					...(method === 'email_otp'
+						? { emailOtpCode: code }
+						: method === 'totp'
+							? { totpCode: code }
+							: { recoveryCode: code }),
+				},
+				verifiedSchema,
+				challenge.csrfToken,
+			);
+			if (!mounted.current) return;
 			if (mounted.current) onAuthenticated();
 		} catch (failure) {
+			if (
+				submittedVerification &&
+				failure instanceof AuthRequestError &&
+				failure.status >= 500
+			) {
+				if (mounted.current) setVerificationOutcomeUnconfirmed(true);
+				try {
+					await readLiveSession();
+					if (mounted.current) {
+						onAuthenticated();
+					}
+					return;
+				} catch {
+					/* The verification outcome remains unconfirmed; retain the original safe error. */
+				}
+			}
 			if (mounted.current)
 				setError(failure instanceof Error ? failure.message : 'Verification failed. Try again.');
 		} finally {
@@ -150,7 +173,7 @@ export function MfaForm({
 				</h1>
 				<p className={styles.help}>Choose a method and enter your code to securely continue.</p>
 			</div>
-			<fieldset disabled={busy || sessionEstablished} className={styles.methods}>
+			<fieldset disabled={busy || verificationOutcomeUnconfirmed} className={styles.methods}>
 				<legend>Verification method</legend>
 				<div className={styles.methodOptions}>
 					{(['totp', 'recovery_code', 'email_otp'] as const)
@@ -185,7 +208,7 @@ export function MfaForm({
 						variant="secondary"
 						onClick={sendEmail}
 						pending={sending}
-						disabled={pending || sessionEstablished || retryAt !== 0}
+						disabled={pending || verificationOutcomeUnconfirmed || retryAt !== 0}
 					>
 						Send email code
 					</Button>
@@ -216,7 +239,9 @@ export function MfaForm({
 				minLength={numericCode ? 6 : 12}
 				maxLength={numericCode ? 6 : 128}
 				required
-				disabled={busy || sessionEstablished || (method === 'email_otp' && !emailSent)}
+				disabled={
+					busy || verificationOutcomeUnconfirmed || (method === 'email_otp' && !emailSent)
+				}
 			/>
 			{error ? (
 				<p role="alert" className="error-message">
@@ -229,9 +254,12 @@ export function MfaForm({
 					icon={ShieldKeyIcon}
 					width="full"
 					pending={pending}
-					disabled={sending || (method === 'email_otp' && !emailSent && !sessionEstablished)}
+					disabled={
+						sending ||
+						(method === 'email_otp' && !emailSent && !verificationOutcomeUnconfirmed)
+					}
 				>
-					Open platform
+					{verificationOutcomeUnconfirmed ? 'Check session' : 'Open platform'}
 				</Button>
 				<Button
 					variant="secondary"
