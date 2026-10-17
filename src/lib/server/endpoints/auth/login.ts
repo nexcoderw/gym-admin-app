@@ -11,5 +11,7 @@ export function login(input: LoginRequest, context: ForwardContext) {
 		challengeSchema,
 		context,
 		loginRequestSchema.parse(input),
+		200,
+		{ policy: 'auth-command' },
 	);
 }
