@@ -57,6 +57,11 @@ export function OwnerInvitationList({
 	const router = useRouter();
 	const [state, setState] = useState<ReadState>({ phase: 'loading' });
 	const [sendingId, setSendingId] = useState<string | null>(null);
+	const [sendFailure, setSendFailure] = useState<{
+		readonly invitationId: string;
+		readonly message: string;
+		readonly blocked: boolean;
+	} | null>(null);
 	const { limit, status, cursor } = query;
 	useEffect(() => {
 		const controller = new AbortController();
@@ -161,6 +166,11 @@ export function OwnerInvitationList({
 									Delivery: {invitation.deliveryStatus.toLowerCase().replace('_', ' ')}.
 								</p>
 							) : null}
+							{sendFailure?.invitationId === invitation.id ? (
+								<p role="alert" className={styles.error}>
+									{sendFailure.message}
+								</p>
+							) : null}
 							<dl className={styles.dates}>
 								{(
 									[
@@ -195,14 +205,20 @@ export function OwnerInvitationList({
 									Revoke invitation
 								</Button>
 							) : null}
-							{canSend && invitation.status === 'PENDING_DELIVERY' ? (
+							{canSend &&
+							invitation.status === 'PENDING_DELIVERY' &&
+							invitation.deliveryStatus === null ? (
 								<Button
 									icon={MailSend01Icon}
 									size="sm"
 									width="auto"
-									disabled={sendingId !== null}
+									disabled={
+										sendingId !== null ||
+										(sendFailure?.invitationId === invitation.id && sendFailure.blocked)
+									}
 									onClick={async () => {
 										setSendingId(invitation.id);
+										setSendFailure(null);
 										try {
 											const result = await browserRequest(
 												browserApi.sendOwnerInvitation(organizationId, invitation.id),
@@ -212,16 +228,37 @@ export function OwnerInvitationList({
 												browserCsrf(),
 												{ domain: 'owner-invitations', expectedStatus: 202 },
 											);
+											setState((current) =>
+												current.phase === 'ready'
+													? {
+															phase: 'ready',
+															data: {
+																...current.data,
+																items: current.data.items.map((row) =>
+																	row.id === invitation.id
+																		? { ...row, deliveryStatus: result.status }
+																		: row,
+																),
+															},
+														}
+													: current,
+											);
 											onDeliveryQueued(result.message);
 										} catch (failure) {
-											setState({
-												phase: 'error',
-												status: failure instanceof OrganizationRequestError ? failure.status : 503,
+											const status =
+												failure instanceof OrganizationRequestError ? failure.status : 503;
+											setSendFailure({
+												invitationId: invitation.id,
 												message:
 													failure instanceof OrganizationRequestError
 														? failure.message
 														: 'Delivery could not be queued.',
+												blocked: status >= 500,
 											});
+											if (status === 401) {
+												router.replace(routes.login);
+												router.refresh();
+											}
 										} finally {
 											setSendingId(null);
 										}
