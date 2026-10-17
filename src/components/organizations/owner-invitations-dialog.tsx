@@ -210,10 +210,7 @@ export function OwnerInvitationsDialog({
 								canSend={canSend && !reviewRequired}
 								hasPrevious={trail.length > 0}
 								onLoaded={onLoaded}
-								onDeliveryQueued={(message) => {
-									toast.success(message);
-									reload();
-								}}
+								onDeliveryQueued={(message) => toast.success(message)}
 								onRevoke={(invitation) => setView({ kind: 'revoke', invitation })}
 								onNext={(cursor) => {
 									setTrail((current) => [...current, query.cursor]);
