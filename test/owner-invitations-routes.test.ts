@@ -104,6 +104,22 @@ describe('owner invitation BFF security', () => {
 		expect(headers.get('authorization')).toBeNull();
 		if (operation.suffix) expect(call?.[1]?.body).toBeUndefined();
 	});
+	it('accepts a runtime-provided empty stream for bodyless mutations', async () => {
+		permissions = [ownerInvitationPermissions.send];
+		reply = () =>
+			Response.json(
+				{ status: 'QUEUED', message: 'Invitation delivery has been queued.' },
+				{ status: 202 },
+			);
+		const streamedEmpty = new Request(`http://localhost:4000${base}`, {
+			method: 'POST',
+			headers: request('POST').headers,
+			body: '',
+		});
+
+		expect((await send(streamedEmpty, revokeParams)).status).toBe(202);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
 	it.each(operations)(
 		'rejects missing $permission even with a platform.owner role',
 		async (operation) => {
