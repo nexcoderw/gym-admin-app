@@ -34,3 +34,21 @@ export async function requestBody<T>(request: Request, schema: z.ZodType<T>): Pr
 		throw new BffError(400, 'INVALID_INPUT', 'Check the supplied details and try again.');
 	return parsed.data;
 }
+
+/** Accepts both a missing body and an empty runtime stream, while rejecting any supplied bytes. */
+export async function assertEmptyRequestBody(request: Request, message: string): Promise<void> {
+	if (request.body === null) return;
+	const reader = request.body.getReader();
+	try {
+		while (true) {
+			const { done, value } = await reader.read();
+			if (done) return;
+			if (value.byteLength > 0) {
+				await reader.cancel();
+				throw new BffError(400, 'OWNER_INVITATION_INVALID_INPUT', message);
+			}
+		}
+	} finally {
+		reader.releaseLock();
+	}
+}
