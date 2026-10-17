@@ -53,12 +53,47 @@ describe('verified fixed upstream operations', () => {
 		},
 	);
 
-	it('keeps a bounded deadline beyond the backend session transaction budget', async () => {
+	it('uses a bounded resilient-read deadline for session validation', async () => {
 		const deadline = vi.spyOn(AbortSignal, 'timeout');
 		try {
 			fetchMock.mockResolvedValueOnce(Response.json(session));
 			await getSession(context);
-			expect(deadline).toHaveBeenCalledWith(20_000);
+			expect(deadline).toHaveBeenCalledWith(30_000);
+		} finally {
+			deadline.mockRestore();
+		}
+	});
+	it('retries one transient session response but never replays auth commands', async () => {
+		fetchMock
+			.mockResolvedValueOnce(Response.json({}, { status: 503 }))
+			.mockResolvedValueOnce(Response.json(session));
+		await expect(getSession(context)).resolves.toEqual(session);
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+
+		fetchMock.mockReset();
+		fetchMock.mockResolvedValueOnce(Response.json({}, { status: 503 }));
+		await expect(
+			login({ email: 'operator@example.invalid', password: 'fictional long password' }, context),
+		).rejects.toMatchObject({ status: 503 });
+		expect(fetchMock).toHaveBeenCalledOnce();
+	});
+	it('gives auth commands a longer non-replayed deadline', async () => {
+		const deadline = vi.spyOn(AbortSignal, 'timeout');
+		try {
+			fetchMock.mockResolvedValueOnce(
+				Response.json({
+					challengeToken: token,
+					csrfToken: csrf,
+					expiresAt: expiration,
+					methods: ['totp'],
+				}),
+			);
+			await login(
+				{ email: 'operator@example.invalid', password: 'fictional long password' },
+				context,
+			);
+			expect(deadline).toHaveBeenCalledWith(45_000);
+			expect(fetchMock).toHaveBeenCalledOnce();
 		} finally {
 			deadline.mockRestore();
 		}

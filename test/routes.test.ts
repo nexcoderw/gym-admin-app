@@ -67,7 +67,7 @@ describe('frontend-owned BFF routes', () => {
 	it.each([500, 503])(
 		'keeps cookies when the session service is unavailable: %s',
 		async (status) => {
-			fetchMock.mockResolvedValueOnce(Response.json({}, { status }));
+			fetchMock.mockResolvedValue(Response.json({}, { status }));
 			const response = await getSession(
 				new Request('http://localhost:4000/api/auth/session', {
 					headers: { Cookie: `nexcode-platform-session=${token}` },
@@ -75,6 +75,7 @@ describe('frontend-owned BFF routes', () => {
 			);
 			expect(response.status).toBe(status === 503 ? 503 : 502);
 			expect(response.headers.get('set-cookie')).toBeNull();
+			expect(fetchMock).toHaveBeenCalledTimes(status === 503 ? 2 : 1);
 		},
 	);
 
