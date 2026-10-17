@@ -232,6 +232,40 @@ describe('owner invitation dialogs', () => {
 		expect(mutation?.[1]?.body).toBeUndefined();
 	});
 
+	it('keeps the list mounted and shows queued delivery after sending', async () => {
+		fetchMock.mockImplementation(async (_path, init) =>
+			init?.method === 'POST'
+				? Response.json(
+						{ status: 'QUEUED', message: 'Invitation delivery has been queued.' },
+						{ status: 202 },
+					)
+				: Response.json({ items: [ownerInvitation], nextCursor: null }),
+		);
+		management();
+		await screen.findByText(ownerInvitation.email);
+		fireEvent.click(screen.getByRole('button', { name: 'Send invitation' }));
+		expect(await screen.findByText('Delivery: queued.')).toBeTruthy();
+		expect(await screen.findByText('Invitation delivery has been queued.')).toBeTruthy();
+		expect(screen.queryByRole('button', { name: 'Send invitation' })).toBeNull();
+		expect(fetchMock).toHaveBeenCalledTimes(2);
+	});
+
+	it('keeps invitation details visible and blocks an unconfirmed send', async () => {
+		fetchMock.mockImplementation(async (_path, init) => {
+			if (init?.method === 'POST') throw new TypeError('unconfirmed');
+			return Response.json({ items: [ownerInvitation], nextCursor: null });
+		});
+		management();
+		await screen.findByText(ownerInvitation.email);
+		fireEvent.click(screen.getByRole('button', { name: 'Send invitation' }));
+		expect(await screen.findByRole('alert')).toBeTruthy();
+		expect(screen.getByText(ownerInvitation.email)).toBeTruthy();
+		expect(screen.queryByText('Invitations unavailable')).toBeNull();
+		expect(screen.getByRole('button', { name: 'Send invitation' }).hasAttribute('disabled')).toBe(
+			true,
+		);
+	});
+
 	it('requires a fresh read after an uncertain revocation instead of blindly replaying', async () => {
 		fetchMock.mockImplementation(async (_path, init) => {
 			if (init?.method === 'POST') throw new TypeError('unconfirmed');
