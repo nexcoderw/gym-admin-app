@@ -2,6 +2,18 @@ import type { z } from 'zod';
 import { organizationFailure } from '@/lib/contracts/organizations';
 import { ownerInvitationFailure } from '@/lib/contracts/owner-invitations';
 
+const AUTH_COMMAND_TIMEOUT_MS = 55_000;
+const DOMAIN_COMMAND_TIMEOUT_MS = 35_000;
+
+export class AuthRequestError extends Error {
+	constructor(
+		readonly status: number,
+		message: string,
+	) {
+		super(message);
+	}
+}
+
 export class OrganizationRequestError extends Error {
 	constructor(
 		readonly status: number,
@@ -19,7 +31,7 @@ export async function post<T>(
 	schema: z.ZodType<T>,
 	csrf?: string,
 ): Promise<T> {
-	return browserRequest(path, 'POST', body, schema, csrf);
+	return browserRequest(path, 'POST', body, schema, csrf, undefined, AUTH_COMMAND_TIMEOUT_MS);
 }
 
 /** Private-domain options are explicit; auth callers retain their established error semantics. */
@@ -35,6 +47,7 @@ export async function browserRequest<T>(
 		readonly ifMatch?: string;
 		readonly signal?: AbortSignal;
 	},
+	timeoutMs = DOMAIN_COMMAND_TIMEOUT_MS,
 ): Promise<T> {
 	let response: Response;
 	try {
@@ -44,8 +57,8 @@ export async function browserRequest<T>(
 			cache: 'no-store',
 			redirect: 'error',
 			signal: options?.signal
-				? AbortSignal.any([AbortSignal.timeout(25_000), options.signal])
-				: AbortSignal.timeout(25_000),
+				? AbortSignal.any([AbortSignal.timeout(timeoutMs), options.signal])
+				: AbortSignal.timeout(timeoutMs),
 			headers: {
 				...(body === undefined ? {} : { 'Content-Type': 'application/json' }),
 				...(csrf ? { 'x-platform-csrf-token': csrf } : {}),
@@ -60,7 +73,7 @@ export async function browserRequest<T>(
 				'OUTCOME_UNCONFIRMED',
 				'The result could not be confirmed. Review current records before retrying this change.',
 			);
-		throw new Error('The service could not be reached. Try again.');
+		throw new AuthRequestError(503, 'The service could not be reached. Try again.');
 	}
 	if (options && !response.ok) {
 		let code: string | undefined;
@@ -93,7 +106,8 @@ export async function browserRequest<T>(
 		throw new OrganizationRequestError(safe.status, safe.code, safe.message);
 	}
 	if (!response.ok)
-		throw new Error(
+		throw new AuthRequestError(
+			response.status,
 			response.status === 429
 				? 'Too many attempts. Wait before trying again.'
 				: response.status === 401
@@ -121,7 +135,7 @@ export async function browserRequest<T>(
 				'OUTCOME_UNCONFIRMED',
 				'The result could not be read. Review current records before retrying.',
 			);
-		throw new Error('The service returned an unexpected response. Try again.');
+		throw new AuthRequestError(502, 'The service returned an unexpected response. Try again.');
 	}
 	const parsed = schema.safeParse(value);
 	if (!parsed.success) {
@@ -131,7 +145,7 @@ export async function browserRequest<T>(
 				'OUTCOME_UNCONFIRMED',
 				'The result was incompatible. Review current records before retrying.',
 			);
-		throw new Error('The service returned an unexpected response. Try again.');
+		throw new AuthRequestError(502, 'The service returned an unexpected response. Try again.');
 	}
 	return parsed.data;
 }
