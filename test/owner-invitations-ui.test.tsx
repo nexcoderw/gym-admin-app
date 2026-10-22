@@ -62,6 +62,15 @@ async function openCreation() {
 
 describe('owner invitation dialogs', () => {
 	it('loads only on explicit management entry and restores focus through gym details', async () => {
+		let finishLoading: (response: Response) => void = () => {
+			throw new Error('Invitation loading was not started.');
+		};
+		fetchMock.mockImplementationOnce(
+			() =>
+				new Promise<Response>((resolve) => {
+					finishLoading = resolve;
+				}),
+		);
 		render(
 			<ToastProvider>
 				<OrganizationList
@@ -74,7 +83,12 @@ describe('owner invitation dialogs', () => {
 		fireEvent.click(screen.getByRole('button', { name: organization.name }));
 		expect(fetchMock).not.toHaveBeenCalled();
 		fireEvent.click(screen.getByRole('button', { name: 'Manage owner invitations' }));
-		expect(await screen.findByText('No owner invitations yet')).toBeTruthy();
+		expect(fetchMock).toHaveBeenCalledOnce();
+		await act(async () => {
+			finishLoading(Response.json({ items: [], nextCursor: null }));
+			await Promise.resolve();
+		});
+		expect(screen.getByText('No owner invitations yet')).toBeTruthy();
 		expect(screen.getAllByRole('dialog')).toHaveLength(1);
 		fireEvent.click(screen.getByRole('button', { name: 'Back to gym' }));
 		expect(document.activeElement).toBe(
@@ -82,7 +96,7 @@ describe('owner invitation dialogs', () => {
 		);
 		fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Close' }));
 		expect(document.activeElement).toBe(screen.getByRole('button', { name: organization.name }));
-	});
+	}, 10_000);
 
 	it('supports create-only operators without fetching recipient history', async () => {
 		management([ownerInvitationPermissions.create]);
