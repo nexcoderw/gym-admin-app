@@ -16,10 +16,7 @@ export function SessionLifecycle({ expiresAt }: { readonly expiresAt: string }) 
 			if (disposed || request || document.visibilityState === 'hidden') return;
 			const controller = new AbortController();
 			request = controller;
-			const deadline = window.setTimeout(
-				() => controller.abort(),
-				SESSION_CONFIRMATION_TIMEOUT_MS,
-			);
+			const deadline = window.setTimeout(() => controller.abort(), SESSION_CONFIRMATION_TIMEOUT_MS);
 			try {
 				const response = await fetch(browserApi.session, {
 					credentials: 'same-origin',
