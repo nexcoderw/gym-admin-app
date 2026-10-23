@@ -52,10 +52,12 @@ async function enterVerification(expiresAt = new Date(Date.now() + 300_000).toIS
 describe('separate verification page flow', () => {
 	it('carries the challenge in the shared layout and clears it on restart', async () => {
 		const view = await enterVerification();
+		const localStorage = Reflect.get(window, 'localStorage') as Storage | undefined;
+		const sessionStorage = Reflect.get(window, 'sessionStorage') as Storage | undefined;
 		expect(screen.getByRole('heading', { name: 'Verify it’s you' })).toBeDefined();
 		expect(screen.queryByLabelText('Password')).toBeNull();
-		expect(window.localStorage.length).toBe(0);
-		expect(window.sessionStorage.length).toBe(0);
+		expect(localStorage?.length ?? 0).toBe(0);
+		expect(sessionStorage?.length ?? 0).toBe(0);
 		fireEvent.click(screen.getByRole('button', { name: 'Start sign-in again' }));
 		expect(router.replace).toHaveBeenCalledWith('/login');
 		expect(screen.queryByLabelText('Six-digit code')).toBeNull();
