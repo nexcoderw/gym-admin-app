@@ -29,6 +29,8 @@ release_id="$(date -u +%Y%m%dT%H%M%SZ)-${target_sha:0:12}-$run_reference"
 release_directory="$component_releases/$release_id"
 staged_repository="$release_directory/source"
 rollback_directory="$release_directory/rollback"
+pending_next_directory="$live_repository/.next.next-$release_id"
+pending_node_modules_directory="$live_repository/node_modules.next-$release_id"
 old_commit=''
 service_touched=0
 promotion_complete=0
@@ -115,6 +117,7 @@ on_exit() {
 			service_command start || true
 			wait_for_admin || true
 		fi
+		rm -rf -- "$pending_next_directory" "$pending_node_modules_directory"
 		rm -rf -- "$release_directory"
 		git -C "$live_repository" worktree prune || true
 	elif ((promotion_complete == 1)); then
@@ -127,8 +130,10 @@ on_exit() {
 }
 trap on_exit EXIT
 
-if [[ -n "$(git -C "$live_repository" status --porcelain)" ]]; then
+repository_status="$(git -C "$live_repository" status --porcelain)"
+if [[ -n "$repository_status" ]]; then
 	echo 'The production admin repository contains uncommitted files.' >&2
+	printf '%s\n' "$repository_status" >&2
 	exit 1
 fi
 
@@ -152,8 +157,8 @@ install -m 600 "$live_repository/.env.production" "$staged_repository/.env.produ
 	test -f .next/BUILD_ID
 )
 
-cp -a "$staged_repository/.next" "$live_repository/.next.next-$release_id"
-cp -a "$staged_repository/node_modules" "$live_repository/node_modules.next-$release_id"
+cp -a "$staged_repository/.next" "$pending_next_directory"
+cp -a "$staged_repository/node_modules" "$pending_node_modules_directory"
 
 service_command stop
 service_touched=1
@@ -161,8 +166,8 @@ git -C "$live_repository" checkout --detach "$target_sha"
 install -d -m 750 "$rollback_directory"
 mv "$live_repository/.next" "$rollback_directory/.next"
 mv "$live_repository/node_modules" "$rollback_directory/node_modules"
-mv "$live_repository/.next.next-$release_id" "$live_repository/.next"
-mv "$live_repository/node_modules.next-$release_id" "$live_repository/node_modules"
+mv "$pending_next_directory" "$live_repository/.next"
+mv "$pending_node_modules_directory" "$live_repository/node_modules"
 service_command start
 
 wait_for_admin
