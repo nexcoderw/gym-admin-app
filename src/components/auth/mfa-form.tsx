@@ -133,11 +133,7 @@ export function MfaForm({
 			if (!mounted.current) return;
 			if (mounted.current) onAuthenticated();
 		} catch (failure) {
-			if (
-				submittedVerification &&
-				failure instanceof AuthRequestError &&
-				failure.status >= 500
-			) {
+			if (submittedVerification && failure instanceof AuthRequestError && failure.status >= 500) {
 				if (mounted.current) setVerificationOutcomeUnconfirmed(true);
 				try {
 					await readLiveSession();
@@ -239,9 +235,7 @@ export function MfaForm({
 				minLength={numericCode ? 6 : 12}
 				maxLength={numericCode ? 6 : 128}
 				required
-				disabled={
-					busy || verificationOutcomeUnconfirmed || (method === 'email_otp' && !emailSent)
-				}
+				disabled={busy || verificationOutcomeUnconfirmed || (method === 'email_otp' && !emailSent)}
 			/>
 			{error ? (
 				<p role="alert" className="error-message">
@@ -255,8 +249,7 @@ export function MfaForm({
 					width="full"
 					pending={pending}
 					disabled={
-						sending ||
-						(method === 'email_otp' && !emailSent && !verificationOutcomeUnconfirmed)
+						sending || (method === 'email_otp' && !emailSent && !verificationOutcomeUnconfirmed)
 					}
 				>
 					{verificationOutcomeUnconfirmed ? 'Check session' : 'Open platform'}
